@@ -55,13 +55,14 @@ export async function getWinningSponsoredProducts(
       .from("ad_campaigns")
       .select("id, product_id, cpc_eur, daily_budget_eur, daily_spend_eur, impressions, clicks")
       .eq("status", "active")
-      .filter("daily_spend_eur", "lt", "daily_budget_eur"); // raw filter won't work for column comparison
+      .order("cpc_eur", { ascending: false })
+      .limit(10);
 
     if (error || !data?.length) return DEMO_SPONSORED;
 
     // Filter: only campaigns with budget remaining
     const eligible = (data as RawCampaign[]).filter(
-      (c) => c.daily_spend_eur < c.daily_budget_eur && c.product_id
+      (c) => Number(c.daily_spend_eur) < Number(c.daily_budget_eur)
     );
 
     // Rank: cpc_eur × quality_score (descending)

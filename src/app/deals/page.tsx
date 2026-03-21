@@ -7,7 +7,7 @@ import { calculateAIPrice } from "@/lib/aiPricing";
 // ─── Sponsored slot types ─────────────────────────────────────────────────────
 
 interface SponsoredSlot {
-  productId: string;
+  productId: string | null;
   campaignId: string;
   cpcEur: number;
   position: 1 | 2 | 3;
@@ -291,10 +291,35 @@ export default function DealsPage() {
 
   useEffect(() => {
     fetchProducts().then((p) => { setProducts(p); setLoading(false); });
-    fetch("/api/ads/sponsored?category=all")
-      .then((r) => r.json())
-      .then((d) => { if (d.sponsored?.length) setSponsored(d.sponsored); })
-      .catch(() => {});
+
+    // Fetch sponsored slots directly from Supabase
+    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (sbUrl && sbKey && sbKey !== "placeholder") {
+      import("@supabase/supabase-js").then(({ createClient }) => {
+        const sb = createClient(sbUrl, sbKey);
+        Promise.resolve(
+          sb.from("ad_campaigns")
+            .select("id, supplier_id, product_id, cpc_eur, daily_budget_eur, daily_spend_eur, impressions, clicks")
+            .eq("status", "active")
+            .order("cpc_eur", { ascending: false })
+            .limit(6)
+        ).then(({ data }) => {
+          if (!data?.length) return;
+          const eligible = data.filter(
+            (c) => Number(c.daily_spend_eur) < Number(c.daily_budget_eur)
+          );
+          const slots: SponsoredSlot[] = eligible.slice(0, 3).map((c, i) => ({
+            productId: (c.product_id as string) ?? null,
+            campaignId: c.id as string,
+            cpcEur: Number(c.cpc_eur),
+            position: (i + 1) as 1 | 2 | 3,
+            supplierName: c.supplier_id as string,
+          }));
+          if (slots.length) setSponsored(slots);
+        }).catch(() => {});
+      });
+    }
   }, []);
 
   const handleAddToCart = (id: string) => {
@@ -470,8 +495,9 @@ export default function DealsPage() {
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
                   {sponsored.slice(0, 3).map((slot) => {
-                    const product = products.find((p) => p.id === slot.productId)
-                      ?? filtered[slot.position - 1];
+                    const product = (slot.productId ? products.find((p) => p.id === slot.productId) : null)
+                      ?? filtered[slot.position - 1]
+                      ?? filtered[0];
                     if (!product) return null;
                     return (
                       <SponsoredCard

@@ -99,12 +99,23 @@ export default function CampaignsPage() {
     ? JSON.parse(localStorage.getItem("fulflo_demo_supplier") ?? "{}").id ?? "demo-nestle"
     : "demo-nestle";
 
-  // Fetch analytics on load
+  // Fetch campaigns directly from Supabase
   useEffect(() => {
-    fetch(`/api/ads/analytics?supplierId=${supplierId}`)
-      .then((r) => r.json())
-      .then((data) => { if (data.campaigns?.length) setCampaigns(data.campaigns); })
-      .catch(() => {});
+    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!sbUrl || !sbKey || sbKey === "placeholder") return;
+
+    import("@supabase/supabase-js").then(({ createClient }) => {
+      const sb = createClient(sbUrl, sbKey);
+      Promise.resolve(
+        sb.from("ad_campaigns")
+          .select("*")
+          .eq("supplier_id", supplierId)
+          .order("created_at", { ascending: false })
+      ).then(({ data, error }) => {
+        if (!error && data?.length) setCampaigns(data as Campaign[]);
+      }).catch(() => {});
+    });
   }, [supplierId]);
 
   const handleCreate = async (e: React.FormEvent) => {
