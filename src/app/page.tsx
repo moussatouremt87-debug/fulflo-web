@@ -17,6 +17,7 @@ import {
   Tag,
   Zap,
 } from "lucide-react";
+import HeroEssentials from "@/components/HeroEssentials";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -436,6 +437,11 @@ export default function Home() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* ══ HERO ESSENTIALS BANNER ═════════════════════════════════════════════ */}
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
+        <HeroEssentials />
       </div>
 
       {/* ══ 5. HERO — 3 COLUMNS ════════════════════════════════════════════════ */}
