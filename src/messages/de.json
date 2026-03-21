@@ -4,7 +4,8 @@
     "products": "Produkte",
     "analytics": "Analytik",
     "settings": "Einstellungen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "campaigns": "Kampagnen"
   },
   "login": {
     "title": "Lieferantenportal",

@@ -4,7 +4,8 @@
     "products": "المنتجات",
     "analytics": "التحليلات",
     "settings": "الإعدادات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "campaigns": "الحملات"
   },
   "login": {
     "title": "بوابة الموردين",

@@ -4,8 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useI18n, LOCALES } from "@/lib/i18n";
 
 const NAV = [
-  { key: "dashboard", icon: "📊", href: "/supplier/dashboard" },
-  { key: "products",  icon: "📦", href: "/supplier/products" },
+  { key: "dashboard",  icon: "📊", href: "/supplier/dashboard" },
+  { key: "products",   icon: "📦", href: "/supplier/products" },
+  { key: "campaigns",  icon: "📢", href: "/supplier/campaigns" },
 ] as const;
 
 export default function Sidebar() {

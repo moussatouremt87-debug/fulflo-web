@@ -4,7 +4,8 @@
     "products": "Produits",
     "analytics": "Analytique",
     "settings": "Paramètres",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "campaigns": "Campagnes"
   },
   "login": {
     "title": "Portail Fournisseur",

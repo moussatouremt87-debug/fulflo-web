@@ -1,8 +1,145 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import ProductCard, { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
+
+// ─── Sponsored slot types ─────────────────────────────────────────────────────
+
+interface SponsoredSlot {
+  productId: string;
+  campaignId: string;
+  cpcEur: number;
+  position: 1 | 2 | 3;
+  supplierName?: string;
+}
+
+// ─── Sponsored card component ─────────────────────────────────────────────────
+
+function SponsoredCard({
+  product,
+  slot,
+  userSession,
+  onAddToCart,
+  added,
+}: {
+  product: ProductCardProps;
+  slot: SponsoredSlot;
+  userSession: string;
+  onAddToCart: (id: string) => void;
+  added: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const impressionFired = useRef(false);
+
+  // Fire impression once when card enters viewport
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !impressionFired.current) {
+          impressionFired.current = true;
+          fetch("/api/ads/impression", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              campaignId: slot.campaignId,
+              productId: slot.productId,
+              userSession,
+            }),
+          }).catch(() => {});
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [slot.campaignId, slot.productId, userSession]);
+
+  const handleClick = async () => {
+    await fetch("/api/ads/click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        campaignId: slot.campaignId,
+        productId: slot.productId,
+        userSession,
+      }),
+    }).catch(() => {});
+    onAddToCart(product.id);
+  };
+
+  const discount = Math.round(
+    ((product.original_price - product.current_price) / product.original_price) * 100
+  );
+
+  return (
+    <div
+      ref={ref}
+      className="relative bg-white rounded-2xl border-l-2 border-[#10B981] shadow-sm overflow-hidden group transition-all hover:shadow-md"
+    >
+      {/* Sponsored badge */}
+      <div className="absolute top-3 left-3 z-10">
+        <span className="text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
+          Sponsorisé
+        </span>
+      </div>
+
+      {/* Brand circle */}
+      <div className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center">
+        <span className="text-white text-xs font-bold">{product.brand[0]}</span>
+      </div>
+
+      {/* Added overlay */}
+      {added && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#10B981]/10 rounded-2xl backdrop-blur-sm">
+          <div className="bg-[#1B4332] text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
+            ✅ Ajouté
+          </div>
+        </div>
+      )}
+
+      <div className="p-4 pt-10">
+        {/* Product info */}
+        <div className="bg-slate-50 rounded-xl h-32 flex items-center justify-center mb-3 overflow-hidden">
+          <span className="text-4xl">
+            {product.category === "hygiene" ? "🧴"
+              : product.category === "alimentation" ? "🍝"
+              : product.category === "entretien" ? "🧹"
+              : product.category === "boissons" ? "💧"
+              : "📦"}
+          </span>
+        </div>
+
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{product.brand}</p>
+        <p className="font-bold text-gray-900 text-sm leading-snug mb-1">{product.name}</p>
+        {product.size && <p className="text-xs text-gray-400 mb-2">{product.size}</p>}
+
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg font-black text-[#1B4332]">€{product.current_price.toFixed(2)}</span>
+          <span className="text-xs text-gray-400 line-through">€{product.original_price.toFixed(2)}</span>
+          <span className="text-[10px] font-black bg-[#ff955a] text-[#552100] px-1.5 py-0.5 rounded-md ml-auto">
+            -{discount}%
+          </span>
+        </div>
+
+        <button
+          onClick={handleClick}
+          className="w-full bg-[#1B4332] text-white font-bold text-sm py-2 rounded-xl hover:bg-[#2d6a4f] transition-colors mb-2"
+        >
+          Ajouter au panier
+        </button>
+
+        <a
+          href="#"
+          className="block text-center text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          En savoir plus sur {product.brand} →
+        </a>
+      </div>
+    </div>
+  );
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,17 +270,31 @@ async function fetchProducts(): Promise<ProductCardProps[]> {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// Stable session ID for impression/click tracking
+function getSession(): string {
+  if (typeof window === "undefined") return "ssr";
+  let s = sessionStorage.getItem("fulflo_session");
+  if (!s) { s = crypto.randomUUID(); sessionStorage.setItem("fulflo_session", s); }
+  return s;
+}
+
 export default function DealsPage() {
-  const [products, setProducts] = useState<ProductCardProps[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [category, setCategory] = useState<Category>("all");
-  const [sort, setSort]         = useState<SortKey>("discount_max");
-  const [search, setSearch]     = useState("");
+  const [products, setProducts]   = useState<ProductCardProps[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [category, setCategory]   = useState<Category>("all");
+  const [sort, setSort]           = useState<SortKey>("discount_max");
+  const [search, setSearch]       = useState("");
   const [cartCount, setCartCount] = useState(0);
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [addedIds, setAddedIds]   = useState<Set<string>>(new Set());
+  const [sponsored, setSponsored] = useState<SponsoredSlot[]>([]);
+  const userSession = useRef(typeof window !== "undefined" ? getSession() : "ssr");
 
   useEffect(() => {
     fetchProducts().then((p) => { setProducts(p); setLoading(false); });
+    fetch("/api/ads/sponsored?category=all")
+      .then((r) => r.json())
+      .then((d) => { if (d.sponsored?.length) setSponsored(d.sponsored); })
+      .catch(() => {});
   }, []);
 
   const handleAddToCart = (id: string) => {
@@ -313,24 +464,58 @@ export default function DealsPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((p) => (
-              <div key={p.id} className="relative">
-                {addedIds.has(p.id) && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-mint/10 rounded-2xl backdrop-blur-sm">
-                    <div className="bg-forest text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
-                      ✅ Ajouté au panier
+          <>
+            {/* ── SPONSORED SLOTS (top 3) ─────────────────────────────── */}
+            {sponsored.length > 0 && (
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
+                  {sponsored.slice(0, 3).map((slot) => {
+                    const product = products.find((p) => p.id === slot.productId)
+                      ?? filtered[slot.position - 1];
+                    if (!product) return null;
+                    return (
+                      <SponsoredCard
+                        key={slot.campaignId}
+                        product={product}
+                        slot={slot}
+                        userSession={userSession.current}
+                        onAddToCart={handleAddToCart}
+                        added={addedIds.has(product.id)}
+                      />
+                    );
+                  })}
+                </div>
+                {/* Separator */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 border-t border-gray-100" />
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Autres offres surplus
+                  </span>
+                  <div className="flex-1 border-t border-gray-100" />
+                </div>
+              </>
+            )}
+
+            {/* ── ORGANIC PRODUCTS ───────────────────────────────────── */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {filtered.map((p) => (
+                <div key={p.id} className="relative">
+                  {addedIds.has(p.id) && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-mint/10 rounded-2xl backdrop-blur-sm">
+                      <div className="bg-forest text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
+                        ✅ Ajouté au panier
+                      </div>
                     </div>
-                  </div>
-                )}
-                <ProductCard
-                  {...p}
-                  onAddToCart={handleAddToCart}
-                  featured={!!p.flash_sale_end_time}
-                />
-              </div>
-            ))}
-          </div>
+                  )}
+                  <ProductCard
+                    {...p}
+                    onAddToCart={handleAddToCart}
+                    featured={!!p.flash_sale_end_time}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* ── AUTH NOTICE ───────────────────────────────────────────────── */}
