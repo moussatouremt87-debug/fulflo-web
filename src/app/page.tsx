@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 
 // ─── Countdown hook ────────────────────────────────────────────────────────────
 
@@ -107,57 +108,57 @@ export default function Home() {
     <div className="min-h-screen bg-[#f6f6ff] text-[#272e42] antialiased">
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm">
+      <nav className="fixed top-0 w-full z-50 bg-[#1B4332] backdrop-blur-xl shadow-sm">
         <div className="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto">
           <div className="flex items-center gap-8">
-            <span className="text-2xl font-black tracking-tighter text-[#006a2d]">
-              fulflo<span className="text-[#6bff8f]">.</span>
+            <span className="text-2xl font-black tracking-tighter text-white">
+              fulflo<span className="text-[#10B981]">.</span>
             </span>
             <div className="hidden md:flex gap-6">
-              <Link href="/deals" className="text-[#006a2d] font-bold border-b-2 border-[#006a2d] text-sm">
+              <Link href="/deals" className="text-white font-bold border-b-2 border-white/60 text-sm">
                 Catalog
               </Link>
-              <Link href="/supplier/login" className="text-slate-600 hover:text-[#006a2d] transition-colors text-sm font-medium">
+              <Link href="/supplier/login" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                 Brands
               </Link>
-              <a href="#why" className="text-slate-600 hover:text-[#006a2d] transition-colors text-sm font-medium">
+              <Link href="/deals" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                 Surplus Economy
-              </a>
-              <a href="#footer" className="text-slate-600 hover:text-[#006a2d] transition-colors text-sm font-medium">
+              </Link>
+              <a href="#footer" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                 About
               </a>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center bg-[#eef0ff] rounded-full px-4 py-2 w-64">
-              <span className="material-symbols-outlined text-[#6f768e] text-sm mr-2">search</span>
+            <div className="hidden lg:flex items-center bg-white/10 rounded-full px-4 py-2 w-64">
+              <span className="material-symbols-outlined text-white/60 text-sm mr-2">search</span>
               <input
-                className="bg-transparent border-none outline-none text-sm w-full placeholder:text-[#6f768e]"
+                className="bg-transparent border-none outline-none text-sm w-full text-white placeholder:text-white/50"
                 placeholder="Search brands..."
                 type="text"
               />
             </div>
             <div className="flex items-center gap-3">
-              <button className="p-2 text-[#272e42] hover:bg-slate-50 rounded-full transition-all duration-200">
-                <span className="material-symbols-outlined">shopping_cart</span>
+              <button className="p-2 text-white hover:bg-white/10 rounded-full transition-all duration-200">
+                <ShoppingCart size={20} />
               </button>
-              <div className="h-6 w-px bg-slate-200 mx-1" />
+              <div className="h-6 w-px bg-white/20 mx-1" />
               <Link
                 href="/supplier/login"
-                className="hidden sm:block text-sm font-semibold text-slate-600 px-4 py-2 hover:bg-slate-50 rounded-lg transition-all"
+                className="hidden sm:block text-sm font-semibold text-white px-4 py-2 hover:bg-white/10 rounded-lg transition-all"
               >
                 Login
               </Link>
               <Link
                 href="/invite"
-                className="bg-[#006a2d] text-[#ceffd0] px-5 py-2 rounded-lg font-bold text-sm shadow-md hover:scale-95 transition-transform"
+                className="bg-white text-[#1B4332] px-5 py-2 rounded-lg font-bold text-sm shadow-md hover:scale-95 transition-transform"
               >
                 Sign Up
               </Link>
             </div>
           </div>
         </div>
-        <div className="bg-slate-100/50 h-px" />
+        <div className="bg-white/10 h-px" />
       </nav>
 
       <main className="pt-20">
