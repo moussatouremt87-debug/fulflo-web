@@ -1,21 +1,20 @@
 "use client";
 
-import Image from "next/image";
-
+// Heights: left 140px, center 170px, right 150px (staggered)
 const IMGS = [
   {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuA1WqcYeuYq97DUxakBFtP6OExe6suxFahIFaVsJK6D7P4IxAaomZSzv92GNzpRfRtIpdOWjxBqrvsRVvi6hLJihDTjoFuMvm4x9mYe5I8gSRMo1UIJhlPs1xMlkGyPUescRg5VVVBLVoLCx4kUgHttkuH4lopf0WfyXxQKHu2I-1NOhHVm5BiQL3tOyh5NwP6pJXC0zJWci5bOMGv_7xWzfxEnZj5pcLvyHUwlncmFtw6QFssUXEfJMyB9MDrD_C_K89hCrIfGReKV",
-    alt: "Ariel",
+    src: "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=300&q=80",
+    alt: "Ariel détergent lessive",
     height: 140,
   },
   {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBEkZtoHBRieF2HglisIFeHBsZwyEvQNhjT_aK29jJUaUiLapXqDHJi_Q1npuKEeerWDiukTzOnHD5QEM_WLHuEQb4NweUJKcHKGHNnE9Xm2QcH58PDemOwS1cKivywIoPruN0s-nQjFa4oo2Q90Hein7rqvF-LDtcEChEwCdVklou2aB1QYb4rTdI7jlY9INFlcigCYMvXBtgtLWrlHXOlJiqD4uzn5ZFtBoAgZIvFzYVs9PqpXgHoPJgt0i6kj3kdSkpITPwlVJ69",
-    alt: "Nescafé",
+    src: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300&q=80",
+    alt: "Nescafé café soluble",
     height: 170,
   },
   {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBfPw2tDQ_5HNLOQBNCTmpZ2sgw9iS4URycepczvo0L4T2iof2FlM7iqD_Jwie9imW0juSmaeoXH8wdf9rqJ7s9u3cB5VOroS70SJB_YTaGaB19sUN5uenI29Djg1nt-oEa3th-455zFD8Jta8ucRZl5ZYy1Lb2Zm-AqwalYB4TbelXJT7vw1vYfviNZl8hkyb7Hf5bT7TetYR5S1WfSoi_FoZt53h64aEIh-VFtZwsEynud4G3W3GpZAz8TMLjjWa--CPnvmXhQyvu",
-    alt: "Colgate",
+    src: "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=300&q=80",
+    alt: "Colgate dentifrice",
     height: 150,
   },
 ];
@@ -76,7 +75,7 @@ export default function HeroEssentials() {
           </p>
         </div>
 
-        {/* Floating product images */}
+        {/* Floating product images — <img> for CSS drop-shadow support */}
         <div
           style={{
             position: "absolute",
@@ -90,31 +89,26 @@ export default function HeroEssentials() {
           }}
         >
           {IMGS.map((img) => (
-            <div
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
               key={img.alt}
+              src={img.src}
+              alt={img.alt}
               style={{
                 height: img.height,
-                width: img.height * 0.82,
-                position: "relative",
+                width: "auto",
+                objectFit: "contain",
                 filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.18))",
                 transition: "transform 0.2s ease",
                 pointerEvents: "auto",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
+                (e.currentTarget as HTMLImageElement).style.transform = "translateY(-4px)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLImageElement).style.transform = "translateY(0)";
               }}
-            >
-              <Image
-                src={img.src}
-                alt={img.alt}
-                fill
-                unoptimized
-                className="object-contain"
-              />
-            </div>
+            />
           ))}
         </div>
       </div>
