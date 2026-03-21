@@ -131,7 +131,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center bg-white/10 rounded-full px-4 py-2 w-64">
-              <span className="material-symbols-outlined text-white/60 text-sm mr-2">search</span>
+              <span className="text-white/60 text-sm mr-2">🔍</span>
               <input
                 className="bg-transparent border-none outline-none text-sm w-full text-white placeholder:text-white/50"
                 placeholder="Search brands..."
@@ -188,7 +188,7 @@ export default function Home() {
                   className="hero-gradient text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-[#006a2d]/20 hover:scale-105 transition-transform flex items-center gap-2"
                 >
                   Shop the Surplus
-                  <span className="material-symbols-outlined">arrow_forward</span>
+                  →
                 </Link>
                 <a
                   href="#why"
@@ -276,29 +276,24 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-12">
               {[
                 {
-                  icon: "inventory_2",
+                  icon: "🏭",
                   title: "Surplus Economy",
                   desc: "We source direct from manufacturer overstock and seasonal clearances. Same product, smarter price.",
                 },
                 {
-                  icon: "verified",
+                  icon: "✅",
                   title: "Guaranteed Quality",
                   desc: "Same brands, same shelf-life, same quality you find in retail stores. Zero compromise on standards.",
                 },
                 {
-                  icon: "percent",
+                  icon: "🏷️",
                   title: "Up to 70% Off",
                   desc: "By cutting out traditional retail middlemen and logistics waste, we pass 100% of the savings to you.",
                 },
               ].map((v) => (
                 <div key={v.title} className="flex flex-col items-center text-center group">
                   <div className="w-16 h-16 bg-[#006a2d]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span
-                      className="material-symbols-outlined text-[#006a2d] text-3xl"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      {v.icon}
-                    </span>
+                    <span className="text-3xl">{v.icon}</span>
                   </div>
                   <h3 className="text-xl font-bold mb-3">{v.title}</h3>
                   <p className="text-[#535b71] leading-relaxed">{v.desc}</p>
@@ -431,7 +426,7 @@ export default function Home() {
                       {p.save}
                     </div>
                     <button className="absolute bottom-3 right-3 bg-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="material-symbols-outlined text-[#006a2d]">add</span>
+                      <span className="text-[#006a2d] font-bold text-xl leading-none">+</span>
                     </button>
                   </div>
                   <div className="px-2">
