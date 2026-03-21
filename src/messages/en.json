@@ -1,0 +1,136 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Supplier Portal",
+    "subtitle": "Manage your surplus inventory with AI",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Sign in",
+    "demo": "Demo login (Nestlé)",
+    "forgotPassword": "Forgot password?",
+    "error": "Invalid credentials. Please try again."
+  },
+  "dashboard": {
+    "welcome": "Hello",
+    "subtitle": "Here's your surplus overview for today",
+    "kpi": {
+      "totalProducts": "Active products",
+      "totalRevenue": "Total revenue",
+      "avgDiscount": "Average discount",
+      "stockValue": "Stock value"
+    },
+    "insights": {
+      "title": "AI Recommendations",
+      "action": "Apply",
+      "dismiss": "Dismiss"
+    },
+    "chart": {
+      "title": "Clearance velocity",
+      "subtitle": "Units sold per day, last 30 days",
+      "units": "units"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "event": "Event",
+      "product": "Product",
+      "change": "Change",
+      "date": "Date"
+    }
+  },
+  "products": {
+    "title": "My surplus products",
+    "add": "Add product",
+    "search": "Search products…",
+    "filter": "Filter",
+    "export": "Export CSV",
+    "columns": {
+      "name": "Product",
+      "category": "Category",
+      "stock": "Stock",
+      "price": "Current price",
+      "discount": "Discount",
+      "expiry": "Expiry",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "critical": "Critical",
+      "expired": "Expired",
+      "flash": "Flash Sale"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "flashSale": "Flash Sale"
+    },
+    "empty": "No products found. Add your first surplus batch.",
+    "bulkDelete": "Delete selected",
+    "selected": "selected"
+  },
+  "newProduct": {
+    "title": "Add surplus batch",
+    "steps": {
+      "details": "Product details",
+      "pricing": "AI Pricing",
+      "logistics": "Logistics",
+      "review": "Review"
+    },
+    "fields": {
+      "brand": "Brand",
+      "name": "Product name",
+      "category": "Category",
+      "size": "Pack size",
+      "ean": "EAN barcode",
+      "description": "Description",
+      "generateDescription": "Generate with AI",
+      "stockUnits": "Available units",
+      "retailPrice": "Recommended retail price (€)",
+      "expiryDate": "Expiry date",
+      "warehouseLocation": "Warehouse",
+      "moq": "Minimum order quantity"
+    },
+    "pricing": {
+      "title": "AI Price simulation",
+      "suggestedPrice": "Suggested price",
+      "discount": "Estimated discount",
+      "clearanceDays": "Days to clearance",
+      "confidence": "AI confidence",
+      "accept": "Accept this price",
+      "override": "Set manually"
+    },
+    "submit": "Publish batch",
+    "saving": "Publishing…",
+    "success": "Batch published successfully!"
+  },
+  "ai": {
+    "generating": "Generating…",
+    "descriptionPlaceholder": "AI will generate an optimized conversion-focused description…",
+    "insightTypes": {
+      "price_drop": "Price reduction recommended",
+      "flash_sale": "Flash sale suggested",
+      "restock": "Restock suggested",
+      "expiry_alert": "Expiry alert"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "success": "Success",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "days": "days",
+    "units": "units",
+    "currency": "€"
+  }
+}

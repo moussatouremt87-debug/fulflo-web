@@ -1,0 +1,136 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "products": "Produits",
+    "analytics": "Analytique",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "login": {
+    "title": "Portail Fournisseur",
+    "subtitle": "Gérez vos stocks surplus avec l'IA",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "demo": "Connexion démo (Nestlé)",
+    "forgotPassword": "Mot de passe oublié ?",
+    "error": "Identifiants invalides. Réessayez."
+  },
+  "dashboard": {
+    "welcome": "Bonjour",
+    "subtitle": "Voici votre aperçu surplus du jour",
+    "kpi": {
+      "totalProducts": "Produits actifs",
+      "totalRevenue": "Revenus totaux",
+      "avgDiscount": "Remise moyenne",
+      "stockValue": "Valeur en stock"
+    },
+    "insights": {
+      "title": "Recommandations IA",
+      "action": "Appliquer",
+      "dismiss": "Ignorer"
+    },
+    "chart": {
+      "title": "Vitesse de liquidation",
+      "subtitle": "Unités vendues par jour, 30 derniers jours",
+      "units": "unités"
+    },
+    "activity": {
+      "title": "Activité récente",
+      "event": "Événement",
+      "product": "Produit",
+      "change": "Variation",
+      "date": "Date"
+    }
+  },
+  "products": {
+    "title": "Mes produits surplus",
+    "add": "Ajouter un produit",
+    "search": "Rechercher un produit…",
+    "filter": "Filtrer",
+    "export": "Exporter CSV",
+    "columns": {
+      "name": "Produit",
+      "category": "Catégorie",
+      "stock": "Stock",
+      "price": "Prix actuel",
+      "discount": "Remise",
+      "expiry": "Expiration",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Actif",
+      "critical": "Critique",
+      "expired": "Expiré",
+      "flash": "Flash Sale"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "flashSale": "Flash Sale"
+    },
+    "empty": "Aucun produit trouvé. Ajoutez votre premier lot surplus.",
+    "bulkDelete": "Supprimer la sélection",
+    "selected": "sélectionné(s)"
+  },
+  "newProduct": {
+    "title": "Ajouter un lot surplus",
+    "steps": {
+      "details": "Informations produit",
+      "pricing": "Tarification IA",
+      "logistics": "Logistique",
+      "review": "Vérification"
+    },
+    "fields": {
+      "brand": "Marque",
+      "name": "Nom du produit",
+      "category": "Catégorie",
+      "size": "Conditionnement",
+      "ean": "Code EAN",
+      "description": "Description",
+      "generateDescription": "Générer avec l'IA",
+      "stockUnits": "Unités disponibles",
+      "retailPrice": "Prix de vente conseillé (€)",
+      "expiryDate": "Date d'expiration",
+      "warehouseLocation": "Entrepôt",
+      "moq": "Quantité minimum de commande"
+    },
+    "pricing": {
+      "title": "Simulation de prix IA",
+      "suggestedPrice": "Prix suggéré",
+      "discount": "Remise estimée",
+      "clearanceDays": "Jours avant liquidation",
+      "confidence": "Confiance IA",
+      "accept": "Accepter ce prix",
+      "override": "Définir manuellement"
+    },
+    "submit": "Publier le lot",
+    "saving": "Publication en cours…",
+    "success": "Lot publié avec succès !"
+  },
+  "ai": {
+    "generating": "Génération en cours…",
+    "descriptionPlaceholder": "L'IA va générer une description optimisée pour la conversion…",
+    "insightTypes": {
+      "price_drop": "Réduction de prix recommandée",
+      "flash_sale": "Flash Sale suggérée",
+      "restock": "Réapprovisionnement suggéré",
+      "expiry_alert": "Alerte expiration proche"
+    }
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue",
+    "success": "Succès",
+    "back": "Retour",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "days": "jours",
+    "units": "unités",
+    "currency": "€"
+  }
+}

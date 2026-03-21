@@ -1,0 +1,136 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Produkte",
+    "analytics": "Analytik",
+    "settings": "Einstellungen",
+    "logout": "Abmelden"
+  },
+  "login": {
+    "title": "Lieferantenportal",
+    "subtitle": "Verwalten Sie Ihren Überschuss mit KI",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "demo": "Demo-Login (Nestlé)",
+    "forgotPassword": "Passwort vergessen?",
+    "error": "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+  },
+  "dashboard": {
+    "welcome": "Hallo",
+    "subtitle": "Hier ist Ihre heutige Überschuss-Übersicht",
+    "kpi": {
+      "totalProducts": "Aktive Produkte",
+      "totalRevenue": "Gesamtumsatz",
+      "avgDiscount": "Durchschnittlicher Rabatt",
+      "stockValue": "Lagerwert"
+    },
+    "insights": {
+      "title": "KI-Empfehlungen",
+      "action": "Anwenden",
+      "dismiss": "Verwerfen"
+    },
+    "chart": {
+      "title": "Abverkaufsgeschwindigkeit",
+      "subtitle": "Verkaufte Einheiten pro Tag, letzte 30 Tage",
+      "units": "Einheiten"
+    },
+    "activity": {
+      "title": "Letzte Aktivitäten",
+      "event": "Ereignis",
+      "product": "Produkt",
+      "change": "Änderung",
+      "date": "Datum"
+    }
+  },
+  "products": {
+    "title": "Meine Überschussprodukte",
+    "add": "Produkt hinzufügen",
+    "search": "Produkte suchen…",
+    "filter": "Filtern",
+    "export": "CSV exportieren",
+    "columns": {
+      "name": "Produkt",
+      "category": "Kategorie",
+      "stock": "Lager",
+      "price": "Aktueller Preis",
+      "discount": "Rabatt",
+      "expiry": "Ablauf",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "critical": "Kritisch",
+      "expired": "Abgelaufen",
+      "flash": "Flash-Sale"
+    },
+    "actions": {
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "flashSale": "Flash-Sale"
+    },
+    "empty": "Keine Produkte gefunden. Fügen Sie Ihre erste Überschusscharge hinzu.",
+    "bulkDelete": "Auswahl löschen",
+    "selected": "ausgewählt"
+  },
+  "newProduct": {
+    "title": "Überschusscharge hinzufügen",
+    "steps": {
+      "details": "Produktdetails",
+      "pricing": "KI-Preisgestaltung",
+      "logistics": "Logistik",
+      "review": "Überprüfung"
+    },
+    "fields": {
+      "brand": "Marke",
+      "name": "Produktname",
+      "category": "Kategorie",
+      "size": "Packungsgröße",
+      "ean": "EAN-Barcode",
+      "description": "Beschreibung",
+      "generateDescription": "Mit KI generieren",
+      "stockUnits": "Verfügbare Einheiten",
+      "retailPrice": "Empfohlener Verkaufspreis (€)",
+      "expiryDate": "Ablaufdatum",
+      "warehouseLocation": "Lager",
+      "moq": "Mindestbestellmenge"
+    },
+    "pricing": {
+      "title": "KI-Preissimulation",
+      "suggestedPrice": "Vorgeschlagener Preis",
+      "discount": "Geschätzter Rabatt",
+      "clearanceDays": "Tage bis zur Räumung",
+      "confidence": "KI-Konfidenz",
+      "accept": "Diesen Preis akzeptieren",
+      "override": "Manuell festlegen"
+    },
+    "submit": "Charge veröffentlichen",
+    "saving": "Wird veröffentlicht…",
+    "success": "Charge erfolgreich veröffentlicht!"
+  },
+  "ai": {
+    "generating": "Wird generiert…",
+    "descriptionPlaceholder": "KI erstellt eine optimierte konversionsorientierte Beschreibung…",
+    "insightTypes": {
+      "price_drop": "Preissenkung empfohlen",
+      "flash_sale": "Flash-Sale vorgeschlagen",
+      "restock": "Nachbestellung vorgeschlagen",
+      "expiry_alert": "Ablauf-Warnung"
+    }
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "loading": "Laden…",
+    "error": "Ein Fehler ist aufgetreten",
+    "success": "Erfolg",
+    "back": "Zurück",
+    "next": "Weiter",
+    "finish": "Fertigstellen",
+    "days": "Tage",
+    "units": "Einheiten",
+    "currency": "€"
+  }
+}
