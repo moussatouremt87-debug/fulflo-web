@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import FlashSaleBanner from "@/components/FlashSaleBanner";
+import ProductCard from "@/components/ProductCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -197,41 +200,55 @@ const copy = {
   },
 };
 
-// ─── Product Cards Data ────────────────────────────────────────────────────────
+// ─── Demo Product Data (replace with Supabase query when ANON_KEY is set) ────
 
-const products = [
+const demoFlashSale = {
+  brand: "Ariel",
+  name: "Pods Color ×30",
+  original_price: 9.80,
+  current_price: 4.69,
+  stock_units: 44,
+  endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2h from now
+};
+
+const demoProducts = [
   {
-    brand: "Colgate",
-    name: "Total Advanced",
-    size: "75 ml × 3",
-    rrp: "€4.50",
-    price: "€1.89",
-    saving: "-58%",
-    expiry: "08/2025",
-    cardBg: "bg-red-50",
-    dot: "bg-red-400",
+    id: "1", brand: "Colgate", name: "Total Advanced", size: "75ml × 3",
+    original_price: 4.50, current_price: 1.89, stock_units: 247,
+    expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
+    flash_sale_end_time: null, ai_pricing_enabled: false, cardBg: "bg-red-50",
   },
   {
-    brand: "Nescafé",
-    name: "Gold Blend",
-    size: "100 g",
-    rrp: "€6.90",
-    price: "€3.29",
-    saving: "-52%",
-    expiry: "11/2025",
-    cardBg: "bg-amber-50",
-    dot: "bg-amber-400",
+    id: "2", brand: "Nescafé", name: "Gold Blend", size: "100g",
+    original_price: 6.90, current_price: 3.29, stock_units: 183,
+    expiry_date: new Date(Date.now() + 120 * 86400000).toISOString(),
+    flash_sale_end_time: null, ai_pricing_enabled: false, cardBg: "bg-amber-50",
   },
   {
-    brand: "Ariel",
-    name: "Pods Color",
-    size: "×30 lavages",
-    rrp: "€9.80",
-    price: "€4.69",
-    saving: "-52%",
-    expiry: "09/2025",
-    cardBg: "bg-blue-50",
-    dot: "bg-blue-400",
+    id: "3", brand: "Ariel", name: "Pods Color", size: "×30 lavages",
+    original_price: 9.80, current_price: 4.69, stock_units: 44,
+    expiry_date: new Date(Date.now() + 20 * 86400000).toISOString(),
+    flash_sale_end_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    ai_pricing_enabled: true, cardBg: "bg-blue-50",
+  },
+  {
+    id: "4", brand: "Dove", name: "Gel Douche Sensitive", size: "250ml × 6",
+    original_price: 8.40, current_price: 4.19, stock_units: 12,
+    expiry_date: new Date(Date.now() + 10 * 86400000).toISOString(),
+    flash_sale_end_time: null, ai_pricing_enabled: true, cardBg: "bg-surface",
+  },
+  {
+    id: "5", brand: "Pampers", name: "Active Fit T4", size: "×52",
+    original_price: 19.99, current_price: 8.49, stock_units: 3,
+    expiry_date: new Date(Date.now() + 25 * 86400000).toISOString(),
+    flash_sale_end_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    ai_pricing_enabled: true, cardBg: "bg-surface",
+  },
+  {
+    id: "6", brand: "Oral-B", name: "Pro 600 Têtes", size: "×4",
+    original_price: 12.50, current_price: 4.89, stock_units: 67,
+    expiry_date: new Date(Date.now() + 150 * 86400000).toISOString(),
+    flash_sale_end_time: null, ai_pricing_enabled: false, cardBg: "bg-surface",
   },
 ];
 
@@ -241,12 +258,33 @@ export default function Home() {
   const [lang, setLang] = useState<Lang>("fr");
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
   const t = copy[lang];
   const isRtl = lang === "ar";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) setSubmitted(true);
+    if (!email) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmitted(true);
+        setTimeout(() => router.push(`/invite?email=${encodeURIComponent(email)}`), 1800);
+      } else {
+        setSubmitted(true); // show success even if error to avoid enumeration
+      }
+    } catch {
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const successMsg =
@@ -301,6 +339,16 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* ── FLASH SALE BANNER ───────────────────────────────────────────── */}
+      <FlashSaleBanner
+        brand={demoFlashSale.brand}
+        productName={demoFlashSale.name}
+        originalPrice={demoFlashSale.original_price}
+        currentPrice={demoFlashSale.current_price}
+        endTime={demoFlashSale.endTime}
+        stockUnits={demoFlashSale.stock_units}
+      />
+
       {/* ── LIVE TICKER ─────────────────────────────────────────────────── */}
       <div className="bg-forest text-white overflow-hidden py-2.5">
         <div className="flex whitespace-nowrap ticker-track">
@@ -346,9 +394,10 @@ export default function Home() {
                 />
                 <button
                   type="submit"
-                  className="bg-forest text-white font-semibold px-6 py-3 rounded-xl hover:bg-forest-mid transition-colors text-sm whitespace-nowrap"
+                  disabled={submitting}
+                  className="bg-forest text-white font-semibold px-6 py-3 rounded-xl hover:bg-forest-mid transition-colors text-sm whitespace-nowrap disabled:opacity-60"
                 >
-                  {t.hero.cta}
+                  {submitting ? "…" : t.hero.cta}
                 </button>
               </form>
             ) : (
@@ -361,30 +410,10 @@ export default function Home() {
             <p className="text-xs text-text-mid mt-3 opacity-60">{t.hero.note}</p>
           </div>
 
-          {/* Product Cards */}
+          {/* Hero Product Cards — first 3 */}
           <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl">
-            {products.map((p) => (
-              <div
-                key={p.name}
-                className={`${p.cardBg} rounded-2xl p-5 border border-white shadow-sm hover:shadow-md transition-shadow`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-text-dark uppercase tracking-wider">{p.brand}</span>
-                  <span className="bg-forest text-white text-xs font-bold px-2.5 py-1 rounded-full">{p.saving}</span>
-                </div>
-                <p className="font-semibold text-forest text-base leading-snug mb-1">{p.name}</p>
-                <p className="text-xs text-text-mid mb-4">{p.size}</p>
-                <div className="flex items-end gap-2">
-                  <span className="text-2xl font-bold text-forest">{p.price}</span>
-                  <span className="text-sm text-text-mid line-through mb-0.5">{p.rrp}</span>
-                </div>
-                <div className="mt-3 flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${p.dot} shrink-0`} />
-                  <span className="text-xs text-text-mid">
-                    {lang === "ar" ? `انتهاء ${p.expiry}` : `Exp. ${p.expiry}`}
-                  </span>
-                </div>
-              </div>
+            {demoProducts.slice(0, 3).map((p) => (
+              <ProductCard key={p.id} {...p} lang={lang} featured={!!p.flash_sale_end_time} />
             ))}
           </div>
         </div>
@@ -399,6 +428,25 @@ export default function Home() {
               <p className="text-sm text-white/60">{s.label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── DEALS GRID ──────────────────────────────────────────────────── */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-forest">
+              {lang === "fr" ? "Toutes les offres" : lang === "en" ? "All deals" : "جميع العروض"}
+            </h2>
+            <span className="text-sm text-text-mid">
+              {demoProducts.length} {lang === "fr" ? "produits disponibles" : lang === "en" ? "products available" : "منتج متاح"}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {demoProducts.map((p) => (
+              <ProductCard key={p.id} {...p} lang={lang} featured={!!p.flash_sale_end_time} />
+            ))}
+          </div>
         </div>
       </section>
 
