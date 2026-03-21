@@ -41,12 +41,17 @@ export default function SupplierDashboard() {
   const session = typeof window !== "undefined"
     ? JSON.parse(sessionStorage.getItem("supplier_session") ?? "{}")
     : {};
-  const firstName = session.company?.split(" ")[0] ?? "Nestlé";
+  const demoSupplier = typeof window !== "undefined"
+    ? JSON.parse(localStorage.getItem("fulflo_demo_supplier") ?? "null")
+    : null;
+  const isDemo = !!demoSupplier?.isDemo;
+  const companyName = demoSupplier?.company_name ?? session.company ?? "Nestlé Suisse SA";
+  const firstName = companyName.split(" ")[0];
 
   return (
     <div>
       <Header
-        title={`${t("dashboard.welcome")}, ${firstName} 👋`}
+        title={`${t("dashboard.welcome")}, ${firstName} 👋${isDemo ? " (Demo)" : ""}`}
         subtitle={t("dashboard.subtitle")}
         action={
           <a

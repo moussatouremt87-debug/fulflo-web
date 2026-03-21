@@ -16,6 +16,21 @@ export default function SupplierLogin() {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
 
+  const handleDemoLogin = () => {
+    localStorage.setItem("fulflo_demo_supplier", JSON.stringify({
+      id: "demo-nestle",
+      company_name: "Nestlé Suisse SA",
+      contact_name: "Demo User",
+      email: "demo@nestle.com",
+      isDemo: true,
+    }));
+    sessionStorage.setItem(
+      "supplier_session",
+      JSON.stringify({ email: DEMO_EMAIL, company: DEMO_COMPANY, role: "supplier" })
+    );
+    window.location.href = "/supplier/dashboard";
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
@@ -24,11 +39,8 @@ export default function SupplierLogin() {
     await new Promise((r) => setTimeout(r, 800)); // simulate auth
 
     if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      sessionStorage.setItem(
-        "supplier_session",
-        JSON.stringify({ email, company: DEMO_COMPANY, role: "supplier" })
-      );
-      router.push("/supplier/dashboard");
+      handleDemoLogin();
+      return;
     } else {
       // Try Supabase auth
       try {
@@ -58,10 +70,6 @@ export default function SupplierLogin() {
     setLoading(false);
   };
 
-  const demoLogin = () => {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
-  };
 
   return (
     <div dir={dir} className="min-h-screen bg-[#F0FDF4] flex flex-col">
@@ -104,7 +112,7 @@ export default function SupplierLogin() {
             {/* Demo banner */}
             <button
               type="button"
-              onClick={demoLogin}
+              onClick={handleDemoLogin}
               className="w-full mb-5 py-2.5 rounded-xl border-2 border-dashed border-[#10B981] text-[#065F46] text-sm font-semibold hover:bg-[#ecfdf5] transition-colors flex items-center justify-center gap-2"
             >
               🎯 {t("login.demo")}
