@@ -1,0 +1,222 @@
+{
+  "name": "Fulflo — Fulfillment Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "" }]
+        },
+        "event": "insert",
+        "schema": "public",
+        "tableName": "orders"
+      },
+      "name": "Supabase — New Order",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "trigger-new-order",
+      "notes": "Fires on every new row inserted into the orders table"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "confirmed"
+            }
+          ]
+        }
+      },
+      "name": "Filter — Confirmed Orders Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "filter-confirmed"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FULFLO_BASE_URL }}/api/fulfillment/create",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"orderId\": \"{{ $json.id }}\",\n  \"customer\": {\n    \"name\": \"{{ $json.customer_name }}\",\n    \"address\": \"{{ $json.customer_address }}\",\n    \"city\": \"{{ $json.customer_city }}\",\n    \"country\": \"{{ $json.customer_country }}\",\n    \"zip\": \"{{ $json.customer_zip }}\",\n    \"phone\": \"{{ $json.customer_phone }}\",\n    \"email\": \"{{ $json.customer_email }}\"\n  },\n  \"supplier\": {\n    \"id\": \"{{ $json.supplier_id }}\",\n    \"address\": \"Entrepôt fournisseur\",\n    \"city\": \"Paris\",\n    \"country\": \"FR\"\n  },\n  \"items\": {{ $json.items }},\n  \"preferredDelivery\": \"standard\"\n}"
+      },
+      "name": "POST — Create Shipment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 220],
+      "id": "create-shipment"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Shipment Created?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 220],
+      "id": "check-success"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "orders",
+        "filters": {
+          "conditions": [
+            { "keyName": "id", "keyValue": "={{ $('Supabase — New Order').item.json.id }}" }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldName": "fulfillment_status", "fieldValue": "picked" },
+            { "fieldName": "shipment_id",        "fieldValue": "={{ $json.shipment.shipmentId }}" },
+            { "fieldName": "tracking_number",    "fieldValue": "={{ $json.shipment.trackingNumber }}" },
+            { "fieldName": "tracking_url",       "fieldValue": "={{ $json.shipment.trackingUrl }}" },
+            { "fieldName": "carrier",            "fieldValue": "={{ $json.shipment.carrier }}" }
+          ]
+        }
+      },
+      "name": "Supabase — Update Order",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 140],
+      "id": "update-order-success"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To",   "value": "={{ $('Supabase — New Order').item.json.customer_phone }}" },
+            { "name": "From", "value": "={{ $env.TWILIO_PHONE_NUMBER }}" },
+            { "name": "Body", "value": "=Fulflo: Votre commande est en route ! Suivez votre colis: {{ $('POST — Create Shipment').item.json.shipment.trackingUrl }}" }
+          ]
+        }
+      },
+      "name": "Twilio — Send Tracking SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 140],
+      "id": "send-sms"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_MOUSSA_CHAT_ID }}",
+        "text": "=✅ <b>Expédition créée</b>\nCommande: <code>{{ $('Supabase — New Order').item.json.id }}</code>\nTransporteur: {{ $('POST — Create Shipment').item.json.shipment.carrier }}\nTracking: {{ $('POST — Create Shipment').item.json.shipment.trackingNumber }}\nFournisseur: {{ $('POST — Create Shipment').item.json.provider }}",
+        "additionalFields": { "parse_mode": "HTML" }
+      },
+      "name": "Telegram — Success Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1340, 280],
+      "id": "telegram-success"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "orders",
+        "filters": {
+          "conditions": [
+            { "keyName": "id", "keyValue": "={{ $('Supabase — New Order').item.json.id }}" }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldName": "fulfillment_status", "fieldValue": "failed" }
+          ]
+        }
+      },
+      "name": "Supabase — Mark Failed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 360],
+      "id": "update-order-failed"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_MOUSSA_CHAT_ID }}",
+        "text": "=❌ <b>Fulfillment échoué</b>\nCommande: <code>{{ $('Supabase — New Order').item.json.id }}</code>\nClient: {{ $('Supabase — New Order').item.json.customer_name }} ({{ $('Supabase — New Order').item.json.customer_country }})\nErreur: {{ $json.error }}\n\n⚠️ Action manuelle requise.",
+        "additionalFields": { "parse_mode": "HTML" }
+      },
+      "name": "Telegram — Failure Alert Moussa",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1340, 360],
+      "id": "telegram-failure"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_MOUSSA_CHAT_ID }}",
+        "text": "=⏩ <b>Commande ignorée (non confirmée)</b>\nID: <code>{{ $json.id }}</code>\nStatut: {{ $json.status }}",
+        "additionalFields": { "parse_mode": "HTML" }
+      },
+      "name": "Telegram — Skip Non-Confirmed",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [680, 420],
+      "id": "telegram-skip"
+    }
+  ],
+  "connections": {
+    "Supabase — New Order": {
+      "main": [[{ "node": "Filter — Confirmed Orders Only", "type": "main", "index": 0 }]]
+    },
+    "Filter — Confirmed Orders Only": {
+      "main": [
+        [{ "node": "POST — Create Shipment", "type": "main", "index": 0 }],
+        [{ "node": "Telegram — Skip Non-Confirmed", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST — Create Shipment": {
+      "main": [[{ "node": "Shipment Created?", "type": "main", "index": 0 }]]
+    },
+    "Shipment Created?": {
+      "main": [
+        [
+          { "node": "Supabase — Update Order",       "type": "main", "index": 0 },
+          { "node": "Telegram — Success Alert",       "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Supabase — Mark Failed",          "type": "main", "index": 0 },
+          { "node": "Telegram — Failure Alert Moussa", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Supabase — Update Order": {
+      "main": [[{ "node": "Twilio — Send Tracking SMS", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
