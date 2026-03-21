@@ -1,534 +1,556 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import FlashSaleBanner from "@/components/FlashSaleBanner";
-import ProductCard from "@/components/ProductCard";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Countdown hook ────────────────────────────────────────────────────────────
 
-type Lang = "fr" | "en" | "ar";
+const FLASH_END = new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000 + 12 * 1000);
 
-// ─── Copy ─────────────────────────────────────────────────────────────────────
+function useCountdown(endTime: Date) {
+  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+  useEffect(() => {
+    const update = () => {
+      const diff = Math.max(0, endTime.getTime() - Date.now());
+      setTimeLeft({
+        h: Math.floor(diff / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [endTime]);
+  return timeLeft;
+}
 
-const copy = {
-  fr: {
-    nav: {
-      deals: "Deals",
-      categories: "Catégories",
-      brands: "Pour les Marques",
-      cta: "Accès anticipé",
-    },
-    hero: {
-      badge: "SURPLUS · ZÉRO GASPILLAGE",
-      h1a: "Les grandes marques",
-      h1b: "à -40% à -70%.",
-      h1c: "Pour de vrai.",
-      sub: "Colgate, Nestlé, Ariel, P&G — surplus fabriqué, livré chez vous. Pas de discount. Du vrai stock.",
-      emailPlaceholder: "Votre email...",
-      cta: "Rejoindre la liste d'attente",
-      note: "Accès anticipé · France uniquement · Gratuit",
-    },
-    ticker: [
-      "Colgate Total 75ml  —59%",
-      "Nescafé Gold 100g  —51%",
-      "Ariel Pods ×30  —52%",
-      "Gillette Fusion  —48%",
-      "Dove Gel douche  —44%",
-      "Pampers Active  —57%",
-      "Head & Shoulders  —46%",
-      "Oral-B Pro  —61%",
-    ],
-    stats: [
-      { value: "−55%", label: "économie moyenne" },
-      { value: "20+", label: "marques partenaires" },
-      { value: "0 kg", label: "gaspillés" },
-      { value: "24h", label: "livraison France" },
-    ],
-    why: {
-      title: "Pourquoi Fulflo ?",
-      cards: [
-        { icon: "🏭", title: "Directement du fabricant", desc: "Surplus d'usine, stocks fins de série. Aucun intermédiaire." },
-        { icon: "✅", title: "100% authentiques", desc: "Produits originaux, emballage intact. Jamais de contrefaçon." },
-        { icon: "🌱", title: "Zéro gaspillage", desc: "Chaque commande évite la destruction. Bon pour vous. Bon pour la planète." },
-        { icon: "💶", title: "Économies réelles", desc: "Pas de faux barèmes. Prix validé contre le RRP fabricant." },
-      ],
-    },
-    how: {
-      title: "Comment ça marche ?",
-      steps: [
-        { n: "01", title: "Parcourez", desc: "Nouvelles offres chaque semaine. Stock limité par nature." },
-        { n: "02", title: "Commandez", desc: "Paiement sécurisé. Carte, Apple Pay, PayPal." },
-        { n: "03", title: "Livré en 24h", desc: "Colissimo, Mondial Relay ou livraison express." },
-      ],
-    },
-    supplier: {
-      badge: "POUR LES MARQUES",
-      title: "Votre surplus mérite mieux que la destruction.",
-      sub: "Fulflo est le canal de liquidation contrôlé que les grandes marques attendaient. Brand-safe. Données consommateurs. Commission transparente.",
-      pills: ["Commission 15–20%", "Brand-safe", "Données consommateurs", "Go-live en 48h"],
-      cta: "Parler à notre équipe",
-    },
-    footer: {
-      links: ["Mentions légales", "CGV", "Confidentialité", "Contact"],
-      copy: "© 2026 Fulflo SAS. France. Tous droits réservés.",
-    },
-  },
-  en: {
-    nav: {
-      deals: "Deals",
-      categories: "Categories",
-      brands: "For Brands",
-      cta: "Early access",
-    },
-    hero: {
-      badge: "SURPLUS · ZERO WASTE",
-      h1a: "Top brands",
-      h1b: "at −40% to −70%.",
-      h1c: "For real.",
-      sub: "Colgate, Nestlé, Ariel, P&G — factory surplus, delivered to you. Not discount. Real stock.",
-      emailPlaceholder: "Your email...",
-      cta: "Join the waitlist",
-      note: "Early access · France only · Free",
-    },
-    ticker: [
-      "Colgate Total 75ml  −59%",
-      "Nescafé Gold 100g  −51%",
-      "Ariel Pods ×30  −52%",
-      "Gillette Fusion  −48%",
-      "Dove Shower Gel  −44%",
-      "Pampers Active  −57%",
-      "Head & Shoulders  −46%",
-      "Oral-B Pro  −61%",
-    ],
-    stats: [
-      { value: "−55%", label: "average saving" },
-      { value: "20+", label: "brand partners" },
-      { value: "0 kg", label: "wasted" },
-      { value: "24h", label: "France delivery" },
-    ],
-    why: {
-      title: "Why Fulflo?",
-      cards: [
-        { icon: "🏭", title: "Direct from manufacturer", desc: "Factory surplus, end-of-line stock. Zero middlemen." },
-        { icon: "✅", title: "100% authentic", desc: "Original products, intact packaging. Never counterfeit." },
-        { icon: "🌱", title: "Zero waste", desc: "Every order prevents destruction. Good for you. Good for the planet." },
-        { icon: "💶", title: "Real savings", desc: "No fake markups. Prices validated against manufacturer RRP." },
-      ],
-    },
-    how: {
-      title: "How it works",
-      steps: [
-        { n: "01", title: "Browse", desc: "New deals every week. Limited stock by nature." },
-        { n: "02", title: "Order", desc: "Secure payment. Card, Apple Pay, PayPal." },
-        { n: "03", title: "Delivered in 24h", desc: "Colissimo, Mondial Relay or express delivery." },
-      ],
-    },
-    supplier: {
-      badge: "FOR BRANDS",
-      title: "Your surplus deserves better than destruction.",
-      sub: "Fulflo is the controlled liquidation channel top brands have been waiting for. Brand-safe. Consumer data. Transparent commission.",
-      pills: ["15–20% commission", "Brand-safe", "Consumer data", "Go-live in 48h"],
-      cta: "Talk to our team",
-    },
-    footer: {
-      links: ["Legal", "Terms", "Privacy", "Contact"],
-      copy: "© 2026 Fulflo SAS. France. All rights reserved.",
-    },
-  },
-  ar: {
-    nav: {
-      deals: "العروض",
-      categories: "الفئات",
-      brands: "للعلامات التجارية",
-      cta: "الوصول المبكر",
-    },
-    hero: {
-      badge: "فائض · صفر هدر",
-      h1a: "أكبر العلامات التجارية",
-      h1b: "بخصم -٤٠٪ إلى -٧٠٪.",
-      h1c: "بجدية تامة.",
-      sub: "Colgate وNestlé وAriel وP&G — فائض المصنع يُسلَّم إليك مباشرة.",
-      emailPlaceholder: "بريدك الإلكتروني...",
-      cta: "انضم إلى قائمة الانتظار",
-      note: "وصول مبكر · فرنسا فقط · مجاني",
-    },
-    ticker: [
-      "Colgate Total 75ml  −٥٩٪",
-      "Nescafé Gold 100g  −٥١٪",
-      "Ariel Pods ×30  −٥٢٪",
-      "Gillette Fusion  −٤٨٪",
-      "Dove جل الاستحمام  −٤٤٪",
-      "Pampers Active  −٥٧٪",
-      "Head & Shoulders  −٤٦٪",
-      "Oral-B Pro  −٦١٪",
-    ],
-    stats: [
-      { value: "−٥٥٪", label: "متوسط التوفير" },
-      { value: "+٢٠", label: "علامة تجارية شريكة" },
-      { value: "٠ كغ", label: "مهدور" },
-      { value: "٢٤س", label: "توصيل بفرنسا" },
-    ],
-    why: {
-      title: "لماذا Fulflo؟",
-      cards: [
-        { icon: "🏭", title: "مباشرة من المصنع", desc: "فائض المصنع، مخزون نهاية السلسلة. بدون وسطاء." },
-        { icon: "✅", title: "١٠٠٪ أصلية", desc: "منتجات أصلية، تغليف سليم. لا مزيف أبداً." },
-        { icon: "🌱", title: "صفر هدر", desc: "كل طلب يمنع التدمير. جيد لك. جيد للكوكب." },
-        { icon: "💶", title: "توفير حقيقي", desc: "لا أسعار مزيفة. أسعار مُتحقَّق منها مقابل RRP." },
-      ],
-    },
-    how: {
-      title: "كيف يعمل؟",
-      steps: [
-        { n: "٠١", title: "تصفّح", desc: "عروض جديدة كل أسبوع. مخزون محدود بطبيعته." },
-        { n: "٠٢", title: "اطلب", desc: "دفع آمن. بطاقة، Apple Pay، PayPal." },
-        { n: "٠٣", title: "توصيل خلال ٢٤ ساعة", desc: "Colissimo أو Mondial Relay أو توصيل سريع." },
-      ],
-    },
-    supplier: {
-      badge: "للعلامات التجارية",
-      title: "فائضك يستحق أفضل من التدمير.",
-      sub: "Fulflo هو قناة التصفية المنضبطة التي طال انتظارها. آمنة للعلامة التجارية. بيانات المستهلكين. عمولة شفافة.",
-      pills: ["عمولة ١٥–٢٠٪", "آمنة للعلامة", "بيانات المستهلكين", "انطلق خلال ٤٨س"],
-      cta: "تحدث إلى فريقنا",
-    },
-    footer: {
-      links: ["قانوني", "الشروط", "الخصوصية", "اتصل بنا"],
-      copy: "© 2026 Fulflo SAS. فرنسا. جميع الحقوق محفوظة.",
-    },
-  },
-};
+function pad(n: number) { return String(n).padStart(2, "0"); }
 
-// ─── Demo Product Data (replace with Supabase query when ANON_KEY is set) ────
+// ─── Data ──────────────────────────────────────────────────────────────────────
 
-const demoFlashSale = {
-  brand: "Ariel",
-  name: "Pods Color ×30",
-  original_price: 9.80,
-  current_price: 4.69,
-  stock_units: 44,
-  endTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2h from now
-};
-
-const demoProducts = [
+const HERO_CARDS = [
   {
-    id: "1", brand: "Colgate", name: "Total Advanced", size: "75ml × 3",
-    original_price: 4.50, current_price: 1.89, stock_units: 247,
-    expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
-    flash_sale_end_time: null, ai_pricing_enabled: false, cardBg: "bg-red-50",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuA1WqcYeuYq97DUxakBFtP6OExe6suxFahIFaVsJK6D7P4IxAaomZSzv92GNzpRfRtIpdOWjxBqrvsRVvi6hLJihDTjoFuMvm4x9mYe5I8gSRMo1UIJhlPs1xMlkGyPUescRg5VVVBLVoLCx4kUgHttkuH4lopf0WfyXxQKHu2I-1NOhHVm5BiQL3tOyh5NwP6pJXC0zJWci5bOMGv_7xWzfxEnZj5pcLvyHUwlncmFtw6QFssUXEfJMyB9MDrD_C_K89hCrIfGReKV",
+    label: "Household", name: "Ariel Matic 2L", discount: "-55%", rotate: "-4deg",
   },
   {
-    id: "2", brand: "Nescafé", name: "Gold Blend", size: "100g",
-    original_price: 6.90, current_price: 3.29, stock_units: 183,
-    expiry_date: new Date(Date.now() + 120 * 86400000).toISOString(),
-    flash_sale_end_time: null, ai_pricing_enabled: false, cardBg: "bg-amber-50",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBEkZtoHBRieF2HglisIFeHBsZwyEvQNhjT_aK29jJUaUiLapXqDHJi_Q1npuKEeerWDiukTzOnHD5QEM_WLHuEQb4NweUJKcHKGHNnE9Xm2QcH58PDemOwS1cKivywIoPruN0s-nQjFa4oo2Q90Hein7rqvF-LDtcEChEwCdVklou2aB1QYb4rTdI7jlY9INFlcigCYMvXBtgtLWrlHXOlJiqD4uzn5ZFtBoAgZIvFzYVs9PqpXgHoPJgt0i6kj3kdSkpITPwlVJ69",
+    label: "Pantry", name: "Kellogg's Oats", discount: "-40%", rotate: "2deg",
   },
   {
-    id: "3", brand: "Ariel", name: "Pods Color", size: "×30 lavages",
-    original_price: 9.80, current_price: 4.69, stock_units: 44,
-    expiry_date: new Date(Date.now() + 20 * 86400000).toISOString(),
-    flash_sale_end_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    ai_pricing_enabled: true, cardBg: "bg-blue-50",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBfPw2tDQ_5HNLOQBNCTmpZ2sgw9iS4URycepczvo0L4T2iof2FlM7iqD_Jwie9imW0juSmaeoXH8wdf9rqJ7s9u3cB5VOroS70SJB_YTaGaB19sUN5uenI29Djg1nt-oEa3th-455zFD8Jta8ucRZl5ZYy1Lb2Zm-AqwalYB4TbelXJT7vw1vYfviNZl8hkyb7Hf5bT7TetYR5S1WfSoi_FoZt53h64aEIh-VFtZwsEynud4G3W3GpZAz8TMLjjWa--CPnvmXhQyvu",
+    label: "Oral Care", name: "Colgate Max White", discount: "-62%", rotate: "6deg",
   },
   {
-    id: "4", brand: "Dove", name: "Gel Douche Sensitive", size: "250ml × 6",
-    original_price: 8.40, current_price: 4.19, stock_units: 12,
-    expiry_date: new Date(Date.now() + 10 * 86400000).toISOString(),
-    flash_sale_end_time: null, ai_pricing_enabled: true, cardBg: "bg-surface",
-  },
-  {
-    id: "5", brand: "Pampers", name: "Active Fit T4", size: "×52",
-    original_price: 19.99, current_price: 8.49, stock_units: 3,
-    expiry_date: new Date(Date.now() + 25 * 86400000).toISOString(),
-    flash_sale_end_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    ai_pricing_enabled: true, cardBg: "bg-surface",
-  },
-  {
-    id: "6", brand: "Oral-B", name: "Pro 600 Têtes", size: "×4",
-    original_price: 12.50, current_price: 4.89, stock_units: 67,
-    expiry_date: new Date(Date.now() + 150 * 86400000).toISOString(),
-    flash_sale_end_time: null, ai_pricing_enabled: false, cardBg: "bg-surface",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBoSn2CX3YgHLC2JqfuQBhrvaWRSpJMw76cGgXKHmd2OG-Gx9Ia7CxBgCnT4jFYqMkAZQOFd2l6WJ0D-_9Dd88OLw4F95iewyWNo-Jwc5zA75ktckh-wdlwiu31RO-aojWKTjYaUAIMRM9Qf4iAEO9-ySejtIg6l8lKx1pFRGv2iUExx8kUJT1i5y1gHDwwN2q3ONNgWl0k39dgHQw7cj7nWcIhhj4rld8tsh94mEPbXPHOICeQfof9eZrOszL-VVvRnPhHTIhZzH1u",
+    label: "Drinks", name: "Nestlé Gold 200g", discount: "-35%", rotate: "-3deg",
   },
 ];
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const BEST_SELLERS = [
+  {
+    brand: "Ariel", name: "Matic Liquid Detergent 2L",
+    price: "€8.99", original: "€24.50", save: "SAVE 65%",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAx0_QXl6S5d8-Xo_oAdSwcsEuMB54SanRcp6BNno7og2bFdCNTqwe97JwRMt-rJZ-DBJTxD-45lc5wr7M0D6wQNsHyJkUOnqkN5-TC8cp50r79yAbNhhggCdUhlhrR3b-jtSgSVh95P16gTEF-eDUu_FsHP2NKNRcrVtgwP7CZDgka1NVSmVgun0CQ2L7b6CHjdHFq9Bl4OSGSqPPy1FAUwWX62fSxcb1hfAZzy_Qn7csufiFtlGCvbKiglwW_6eRTEQISzlhnU68V",
+  },
+  {
+    brand: "Kellogg's", name: "Corn Flakes Family Pack 1kg",
+    price: "€4.50", original: "€7.50", save: "SAVE 40%",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzaqA1LOz-UMET5Tf0K7rdhQD72yh1LxaScreQQE3dJxn0xKFWVKf-QszvwFAqICf7B2pqikOKFk-xhDhL0bzHDaBvpQskMhMJcV46qJsjkhAeqTYyMIfebcVD-qKxlZFF-7-zx6OHnzbpRdXTxzc5pHQK9lK7WkTThs_3JdnGjld0XgFBVNJ39iHWZzfzrhMdQ3XTR5QpPQbqtpg773rFZ7scZDZyn2StBvPsXJnw_VPbZ9mC4slxofTSX2bJDYGZoJLQPkFds",
+  },
+  {
+    brand: "Colgate", name: "Advanced White 150ml x3",
+    price: "€5.99", original: "€19.99", save: "SAVE 70%",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCwLforUgcT8qXGGOFmgsY4B5a30-HxzYGM0xUmdlrUgdkLlEC7xbTw7BT4DWmQ8n41YfXTaWQJs6LNjxJFJ78giY8XUgJqDMzml4X4oypl7lOguTCTtoeORXA3QsgKKUidk3vUehFuDlSxYUuL0PSp5yqe_vMaE66_EifXXgJOzxjD18-z2XynhHZFYXIgLalvH3NYDJsAScY_Pc_9RkmZp3IS7V559fAipQFHbmkmduyUHcw5J_8CvYIu890oQ59YddHhgAAQ2dIl",
+  },
+  {
+    brand: "Nestlé", name: "Fitness Cereal Bars x12",
+    price: "€3.99", original: "€7.99", save: "SAVE 50%",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDNLNTLM6R0H_azoATBQ0QFB-cJTD_-zYcG7Aopmf2KacQnUCtciOIgOysyXcOxf8VC0HsN6HPeIu-ydppSKTEaIFInlyqS7tlJM2qyzFdcSIYi7Zw0ObLUHDM_8KUNM6vE7zEPPKOnqHG0XBIHSPGEWl9SzLI8xhzVA5_PT6e_o-gN3gMOwRB1bG1p8nAhsLjRLeJeNpTIz_h8Fxz2JCWtOeyntGyWotQkTK5R9qu8rJN7W1QaOtKD3hGIO_VLabSX8F7y7xU4QPm0",
+  },
+];
+
+const FLASH_PRODUCTS = [
+  {
+    name: "Monster Energy x24", price: "€19.99", original: "€48.00",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCATSsuntPUnkUGKMYgm8Bw847Kjavk6QGa1vdadbYqhMKO_1JG0N_bjeQLZFGAb8lKoHxcWm1ebiWca18_lGFi3xaPybFEH2RU7FUzCZJYlAIX2Z6SbbtTcxA81Q2ZFXB8dpsKTkhbp6SCUofUAVNQCHvw30nSMBco8pHw6roGGYBcVU5rPGt1C1ptogx9gvRMsvar_aPnhFKbg7BsNPurfLubIz1ZDDO0ZDmT0GaHpI6pH57I2fA0RDG9N6Y7CvZEdTbFbR7qors9",
+  },
+  {
+    name: "Dove Beauty Kit", price: "€12.50", original: "€29.00",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDSxoVv-d8Mk9N-ODjPtg8L0eEZZNBs-TqtRR716pa-WuYNEK9tSjMTlQcdVMxl2yFh96CTNkOQjDFSZVbn6vcZbycOCD8-yutni9XtWVeDEk0GcGorvo_eNYFjfwCXCFUYAn0olyRVSzioIPZ1gpPSZfU9Zs12S8ze1wAvnvZQEkInGWfqdr9ZfQG8dUz9CyFEJ6Yp1eo_Y_94rzdmHx0jDqPeAmPbUqti7UT6lz3E2UUkgR1xQmn0bPiDiC4bFFvqhCteHMFta6qw",
+  },
+];
+
+const PAYMENT_LOGOS = [
+  {
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuAkl4aEcM3hRAp9bkaVjO2_c3QidotoYnzzIbqTpuq7gK9G5qQWsEV-MQJ6mo1Z_U66zZweOa0adB2PSkdS2x4O5AMqksge0c5XuFdPf6YA4cY_cdcysB3aOzkP8UOiRDs5zvgaHN44NYn7jbJ4yjo4WdSUGyKNWzTwVZcUSyU3TgTgeNdrxliyMY25ldpR556CLPY6NYpMNkzRgNgory0NabQ4VZUZtIk7lgfnIXI_1cn3m7gDAk4LOEwF9TNaOF1Nn2beiK3zDSj6",
+    alt: "Visa",
+  },
+  {
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBf-FQxGjabvyjnQqQKDN262Kd5mPtLOp2pFOpTUUEN5GrG92BRORt5JE5zqxAR5FDVsMUyGsJCMFyHRQ8afrU9WKW9NJnSyXwW6cuZa71ZBIHyNETYmuXevQDMNujgU4Z4rVQVEirR7X0_bEAW8114Fbs3HhF-TIvXbPHJY_wCiYNtiyNkCR0E6CSsdMozlPkTuPFjDjOqUxsxRGPgBwpq92TyZZS6e8thSfBH4GpvcbKv-NZWR14OXWkeVpJ-PatwAsu6UH7GfpfM",
+    alt: "Mastercard",
+  },
+  {
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCscYVCPTYCx99ZElWTO-RC6_7nTNqR9whWWu0kUG0u3DmraE-sLg4oF9GFgQ49wj05wmFqU-GVGMIgB8wTGXghOk90IYCERhbp9lSZ1Z2hgPYftwm-9KHOHPfQDDZXQhAZUpxP9fDzB87EnvGymbE7E21EXE8WIDL0fcJCZjSOKy2dhgrFGSso636DqcU4vsWCP7UTUdtYbbVl3PIx_TROFSSFu4KP74l4x4Xyn10EGh2CXoOu2-kmc3v2xDIxMEyVeSPn2UzgTnYh",
+    alt: "Apple Pay",
+  },
+];
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [lang, setLang] = useState<Lang>("fr");
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const router = useRouter();
-  const t = copy[lang];
-  const isRtl = lang === "ar";
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSubmitted(true);
-        setTimeout(() => router.push(`/invite?email=${encodeURIComponent(email)}`), 1800);
-      } else {
-        setSubmitted(true); // show success even if error to avoid enumeration
-      }
-    } catch {
-      setSubmitted(true);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const successMsg =
-    lang === "fr"
-      ? "Parfait\u00a0! On vous contacte bientôt."
-      : lang === "en"
-      ? "Perfect! We'll be in touch soon."
-      : "رائع! سنتواصل معك قريباً.";
+  const timer = useCountdown(FLASH_END);
 
   return (
-    <div className="min-h-screen bg-white" dir={isRtl ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-[#f6f6ff] text-[#272e42] antialiased">
 
       {/* ── NAV ─────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-mint-light">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <span className="text-2xl font-bold tracking-tight text-forest shrink-0">
-            fulflo<span className="text-mint">.</span>
-          </span>
-
-          <div className="hidden md:flex items-center gap-8">
-            {[t.nav.deals, t.nav.categories, t.nav.brands].map((label) => (
-              <a
-                key={label}
-                href="#"
-                className="text-sm font-medium text-text-dark hover:text-mint transition-colors"
-              >
-                {label}
+      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm">
+        <div className="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-8">
+            <span className="text-2xl font-black tracking-tighter text-[#006a2d]">
+              fulflo<span className="text-[#6bff8f]">.</span>
+            </span>
+            <div className="hidden md:flex gap-6">
+              <Link href="/deals" className="text-[#006a2d] font-bold border-b-2 border-[#006a2d] text-sm">
+                Catalog
+              </Link>
+              <Link href="/supplier/login" className="text-slate-600 hover:text-[#006a2d] transition-colors text-sm font-medium">
+                Brands
+              </Link>
+              <a href="#why" className="text-slate-600 hover:text-[#006a2d] transition-colors text-sm font-medium">
+                Surplus Economy
               </a>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center bg-surface rounded-full p-1 gap-0.5">
-              {(["fr", "en", "ar"] as Lang[]).map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                    lang === l
-                      ? "bg-forest text-white shadow-sm"
-                      : "text-text-dark hover:text-forest"
-                  }`}
-                >
-                  {l.toUpperCase()}
-                </button>
-              ))}
+              <a href="#footer" className="text-slate-600 hover:text-[#006a2d] transition-colors text-sm font-medium">
+                About
+              </a>
             </div>
-            <button className="hidden sm:block bg-forest text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-forest-mid transition-colors">
-              {t.nav.cta}
-            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center bg-[#eef0ff] rounded-full px-4 py-2 w-64">
+              <span className="material-symbols-outlined text-[#6f768e] text-sm mr-2">search</span>
+              <input
+                className="bg-transparent border-none outline-none text-sm w-full placeholder:text-[#6f768e]"
+                placeholder="Search brands..."
+                type="text"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="p-2 text-[#272e42] hover:bg-slate-50 rounded-full transition-all duration-200">
+                <span className="material-symbols-outlined">shopping_cart</span>
+              </button>
+              <div className="h-6 w-px bg-slate-200 mx-1" />
+              <Link
+                href="/supplier/login"
+                className="hidden sm:block text-sm font-semibold text-slate-600 px-4 py-2 hover:bg-slate-50 rounded-lg transition-all"
+              >
+                Login
+              </Link>
+              <Link
+                href="/invite"
+                className="bg-[#006a2d] text-[#ceffd0] px-5 py-2 rounded-lg font-bold text-sm shadow-md hover:scale-95 transition-transform"
+              >
+                Sign Up
+              </Link>
+            </div>
           </div>
         </div>
+        <div className="bg-slate-100/50 h-px" />
       </nav>
 
-      {/* ── FLASH SALE BANNER ───────────────────────────────────────────── */}
-      <FlashSaleBanner
-        brand={demoFlashSale.brand}
-        productName={demoFlashSale.name}
-        originalPrice={demoFlashSale.original_price}
-        currentPrice={demoFlashSale.current_price}
-        endTime={demoFlashSale.endTime}
-        stockUnits={demoFlashSale.stock_units}
-      />
+      <main className="pt-20">
 
-      {/* ── LIVE TICKER ─────────────────────────────────────────────────── */}
-      <div className="bg-forest text-white overflow-hidden py-2.5">
-        <div className="flex whitespace-nowrap ticker-track">
-          {[...t.ticker, ...t.ticker].map((item, i) => (
-            <span key={i} className="inline-flex items-center gap-2 mx-8 text-sm font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-mint inline-block shrink-0" />
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
+        {/* ── HERO ──────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden pt-16 pb-24 px-6">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
 
-      {/* ── HERO ────────────────────────────────────────────────────────── */}
-      <section className="bg-surface pt-16 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-mint-light text-text-dark text-xs font-bold tracking-widest px-4 py-1.5 rounded-full mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-mint animate-pulse" />
-              {t.hero.badge}
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-forest mb-6">
-              {t.hero.h1a}
-              <br />
-              <span className="text-mint">{t.hero.h1b}</span>
-              <br />
-              {t.hero.h1c}
-            </h1>
-
-            <p className="text-lg text-text-mid mb-8 max-w-xl leading-relaxed">
-              {t.hero.sub}
-            </p>
-
-            {!submitted ? (
-              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t.hero.emailPlaceholder}
-                  className="flex-1 px-4 py-3 rounded-xl border border-mint-light bg-white text-forest placeholder:text-text-mid/50 focus:outline-none focus:ring-2 focus:ring-mint text-sm"
-                />
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="bg-forest text-white font-semibold px-6 py-3 rounded-xl hover:bg-forest-mid transition-colors text-sm whitespace-nowrap disabled:opacity-60"
+            {/* Left copy */}
+            <div className="z-10">
+              <div className="inline-flex items-center gap-2 bg-[#6bff8f]/20 text-[#005d26] px-4 py-1.5 rounded-full mb-6 border border-[#006a2d]/10">
+                <span className="flex h-2 w-2 rounded-full bg-[#006a2d]" />
+                <span className="text-xs font-bold uppercase tracking-wider">New Surplus Drops Daily</span>
+              </div>
+              <h1 className="text-5xl md:text-7xl font-extrabold text-[#272e42] leading-[0.95] tracking-tight mb-6">
+                Massive Savings <br />
+                on the{" "}
+                <span className="text-[#006a2d]">Brands You Trust.</span>
+              </h1>
+              <p className="text-lg md:text-xl text-[#535b71] mb-10 max-w-xl leading-relaxed">
+                40–70% Off Daily Essentials from Nestlé, Colgate, Ariel, and more.
+                Direct from manufacturers, straight to your door.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/deals"
+                  className="hero-gradient text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-[#006a2d]/20 hover:scale-105 transition-transform flex items-center gap-2"
                 >
-                  {submitting ? "…" : t.hero.cta}
-                </button>
-              </form>
-            ) : (
-              <div className="flex items-center gap-3 bg-mint-light text-text-dark px-5 py-3 rounded-xl max-w-md">
-                <span className="text-xl">✅</span>
-                <span className="font-semibold text-sm">{successMsg}</span>
+                  Shop the Surplus
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </Link>
+                <a
+                  href="#why"
+                  className="bg-white border border-[#a5adc6]/20 px-8 py-4 rounded-xl font-bold text-lg text-[#272e42] hover:bg-white/80 transition-all"
+                >
+                  How it Works
+                </a>
               </div>
-            )}
-
-            <p className="text-xs text-text-mid mt-3 opacity-60">{t.hero.note}</p>
-          </div>
-
-          {/* Hero Product Cards — first 3 */}
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl">
-            {demoProducts.slice(0, 3).map((p) => (
-              <ProductCard key={p.id} {...p} lang={lang} featured={!!p.flash_sale_end_time} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── STATS BAR ───────────────────────────────────────────────────── */}
-      <section className="bg-forest py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {t.stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="text-4xl font-bold text-mint mb-1">{s.value}</p>
-              <p className="text-sm text-white/60">{s.label}</p>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ── DEALS GRID ──────────────────────────────────────────────────── */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-forest">
-              {lang === "fr" ? "Toutes les offres" : lang === "en" ? "All deals" : "جميع العروض"}
-            </h2>
-            <span className="text-sm text-text-mid">
-              {demoProducts.length} {lang === "fr" ? "produits disponibles" : lang === "en" ? "products available" : "منتج متاح"}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {demoProducts.map((p) => (
-              <ProductCard key={p.id} {...p} lang={lang} featured={!!p.flash_sale_end_time} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY FULFLO ──────────────────────────────────────────────────── */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-forest text-center mb-12">{t.why.title}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {t.why.cards.map((c) => (
-              <div
-                key={c.title}
-                className="bg-surface rounded-2xl p-6 hover:shadow-md transition-shadow border border-mint-pale"
-              >
-                <div className="text-4xl mb-4">{c.icon}</div>
-                <h3 className="font-bold text-forest mb-2 text-lg leading-snug">{c.title}</h3>
-                <p className="text-sm text-text-mid leading-relaxed">{c.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-forest text-center mb-14">{t.how.title}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {t.how.steps.map((s) => (
-              <div key={s.n} className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-forest flex items-center justify-center mb-5 shrink-0">
-                  <span className="text-mint font-bold text-lg">{s.n}</span>
+            {/* Right — tilted product cards */}
+            <div className="relative hidden lg:block">
+              <div className="absolute -top-20 -right-20 w-[500px] h-[500px] bg-[#6bff8f]/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="grid grid-cols-2 gap-6 relative z-10">
+                {/* Col 1 */}
+                <div className="space-y-6 pt-12">
+                  {HERO_CARDS.slice(0, 2).map((card) => (
+                    <div
+                      key={card.name}
+                      className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 hover:rotate-0 transition-transform duration-500 cursor-pointer"
+                      style={{ transform: `rotate(${card.rotate})` }}
+                    >
+                      <Image
+                        src={card.src}
+                        alt={card.name}
+                        width={200}
+                        height={160}
+                        unoptimized
+                        className="w-full h-40 object-contain mb-4"
+                      />
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs text-slate-400 font-bold uppercase">{card.label}</p>
+                          <p className="font-bold text-[#272e42]">{card.name}</p>
+                        </div>
+                        <span className="bg-[#ff955a] text-[#552100] text-[10px] font-black px-2 py-1 rounded-full">
+                          {card.discount}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="font-bold text-forest text-xl mb-2">{s.title}</h3>
-                <p className="text-sm text-text-mid leading-relaxed">{s.desc}</p>
+                {/* Col 2 */}
+                <div className="space-y-6">
+                  {HERO_CARDS.slice(2).map((card) => (
+                    <div
+                      key={card.name}
+                      className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 hover:rotate-0 transition-transform duration-500 cursor-pointer"
+                      style={{ transform: `rotate(${card.rotate})` }}
+                    >
+                      <Image
+                        src={card.src}
+                        alt={card.name}
+                        width={200}
+                        height={160}
+                        unoptimized
+                        className="w-full h-40 object-contain mb-4"
+                      />
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs text-slate-400 font-bold uppercase">{card.label}</p>
+                          <p className="font-bold text-[#272e42]">{card.name}</p>
+                        </div>
+                        <span className="bg-[#ff955a] text-[#552100] text-[10px] font-black px-2 py-1 rounded-full">
+                          {card.discount}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── SUPPLIER CTA ────────────────────────────────────────────────── */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-forest">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 border border-mint/30 text-mint text-xs font-bold tracking-widest px-4 py-1.5 rounded-full mb-6">
-            {t.supplier.badge}
+        {/* ── VALUE PROPS ───────────────────────────────────────────────── */}
+        <section id="why" className="py-24 bg-[#eef0ff]">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-extrabold mb-4">Why Fulflo?</h2>
+              <p className="text-[#535b71] max-w-2xl mx-auto italic">
+                High-velocity savings meets uncompromising quality. We rethink the supply chain so you save more.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-12">
+              {[
+                {
+                  icon: "inventory_2",
+                  title: "Surplus Economy",
+                  desc: "We source direct from manufacturer overstock and seasonal clearances. Same product, smarter price.",
+                },
+                {
+                  icon: "verified",
+                  title: "Guaranteed Quality",
+                  desc: "Same brands, same shelf-life, same quality you find in retail stores. Zero compromise on standards.",
+                },
+                {
+                  icon: "percent",
+                  title: "Up to 70% Off",
+                  desc: "By cutting out traditional retail middlemen and logistics waste, we pass 100% of the savings to you.",
+                },
+              ].map((v) => (
+                <div key={v.title} className="flex flex-col items-center text-center group">
+                  <div className="w-16 h-16 bg-[#006a2d]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span
+                      className="material-symbols-outlined text-[#006a2d] text-3xl"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {v.icon}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{v.title}</h3>
+                  <p className="text-[#535b71] leading-relaxed">{v.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-5 leading-tight">
-            {t.supplier.title}
-          </h2>
-          <p className="text-lg text-white/70 mb-8 max-w-2xl mx-auto leading-relaxed">
-            {t.supplier.sub}
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
-            {t.supplier.pills.map((pill) => (
-              <span
-                key={pill}
-                className="bg-forest-mid text-mint-light text-sm font-medium px-4 py-1.5 rounded-full border border-mint/20"
+        </section>
+
+        {/* ── BRAND TRUST BAR ───────────────────────────────────────────── */}
+        <section className="py-16 border-y border-[#a5adc6]/10">
+          <div className="max-w-7xl mx-auto px-6">
+            <p className="text-center text-xs font-black uppercase tracking-widest text-[#6f768e] mb-10">
+              Trusted Partner Ecosystem
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+              {["Nestlé", "ARIEL", "Colgate", "Kellogg's", "Unilever"].map((b) => (
+                <span key={b} className="text-2xl font-black text-slate-800">{b}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FLASH DEALS ───────────────────────────────────────────────── */}
+        <section className="py-24 px-6 overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-[#060e20] rounded-[2rem] p-8 md:p-16 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-1/3 h-full bg-[#006a2d]/20 blur-[100px] pointer-events-none" />
+              <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+
+                {/* Countdown side */}
+                <div>
+                  <div className="inline-block bg-[#994100] text-[#fff0e9] text-xs font-black px-3 py-1 rounded-md mb-6 animate-pulse">
+                    FLASH DEAL
+                  </div>
+                  <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+                    Velocity Drop: Midnight Clearance
+                  </h2>
+                  <p className="text-slate-300 text-lg mb-8">
+                    Grab these limited-stock CPG bundles before they vanish at sunrise.
+                  </p>
+                  <div className="flex gap-4 mb-10">
+                    {[
+                      { value: pad(timer.h), label: "Hours" },
+                      { value: pad(timer.m), label: "Mins" },
+                      { value: pad(timer.s), label: "Secs" },
+                    ].map((t) => (
+                      <div
+                        key={t.label}
+                        className="bg-white/10 backdrop-blur-md rounded-xl p-4 min-w-[80px] text-center border border-white/10"
+                      >
+                        <p className="text-3xl font-black text-[#6bff8f]">{t.value}</p>
+                        <p className="text-[10px] text-white/60 font-bold uppercase">{t.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href="/deals"
+                    className="inline-block bg-[#006a2d] text-[#004a1d] px-10 py-4 rounded-xl font-black text-lg hover:scale-105 transition-transform"
+                  >
+                    ENTER THE VAULT
+                  </Link>
+                </div>
+
+                {/* Flash product cards */}
+                <div className="grid grid-cols-2 gap-4">
+                  {FLASH_PRODUCTS.map((p) => (
+                    <div
+                      key={p.name}
+                      className="bg-white/5 border border-white/10 p-4 rounded-2xl group cursor-pointer hover:bg-white/10 transition-colors"
+                    >
+                      <Image
+                        src={p.img}
+                        alt={p.name}
+                        width={200}
+                        height={128}
+                        unoptimized
+                        className="w-full h-32 object-cover rounded-lg mb-4"
+                      />
+                      <p className="text-white font-bold text-sm">{p.name}</p>
+                      <p className="text-[#6bff8f] font-black">
+                        {p.price}{" "}
+                        <span className="text-slate-500 text-xs line-through ml-2">{p.original}</span>
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BEST SELLERS ──────────────────────────────────────────────── */}
+        <section className="pb-24 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+              <div>
+                <h2 className="text-4xl font-extrabold mb-2">Weekly Best Sellers</h2>
+                <p className="text-[#535b71]">The deals everyone is grabbing right now.</p>
+              </div>
+              <div className="flex gap-2">
+                <button className="bg-[#dae2fd] text-[#4a5167] px-4 py-2 rounded-full text-sm font-bold">
+                  All Products
+                </button>
+                <button className="bg-[#d9e2ff] text-[#535b71] px-4 py-2 rounded-full text-sm font-bold">
+                  Household
+                </button>
+                <button className="bg-[#d9e2ff] text-[#535b71] px-4 py-2 rounded-full text-sm font-bold">
+                  Snacks
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {BEST_SELLERS.map((p) => (
+                <div
+                  key={p.name}
+                  className="bg-white rounded-2xl p-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200 cursor-pointer"
+                >
+                  <div className="relative overflow-hidden rounded-xl mb-6 bg-slate-50 aspect-square flex items-center justify-center">
+                    <Image
+                      src={p.img}
+                      alt={p.name}
+                      width={200}
+                      height={200}
+                      unoptimized
+                      className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform"
+                    />
+                    <div className="absolute top-3 left-3 bg-[#ff955a] text-[#552100] text-[10px] font-black px-2 py-1 rounded-md">
+                      {p.save}
+                    </div>
+                    <button className="absolute bottom-3 right-3 bg-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="material-symbols-outlined text-[#006a2d]">add</span>
+                    </button>
+                  </div>
+                  <div className="px-2">
+                    <p className="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">{p.brand}</p>
+                    <h3 className="font-bold text-[#272e42] mb-2">{p.name}</h3>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl font-black text-[#006a2d]">{p.price}</span>
+                      <span className="text-sm text-[#535b71] line-through font-medium opacity-50">{p.original}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-16 text-center">
+              <Link
+                href="/deals"
+                className="inline-block bg-[#eef0ff] text-[#272e42] font-bold px-12 py-4 rounded-xl hover:bg-[#e2e7ff] transition-colors"
               >
-                {pill}
-              </span>
-            ))}
+                View Full Marketplace
+              </Link>
+            </div>
           </div>
-          <button className="bg-mint text-forest font-bold px-8 py-4 rounded-full text-base hover:bg-mint-light transition-colors shadow-lg">
-            {t.supplier.cta}
-          </button>
-        </div>
-      </section>
+        </section>
 
-      {/* ── FOOTER ──────────────────────────────────────────────────────── */}
-      <footer className="bg-forest-dark py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-2xl font-bold text-white tracking-tight">
-            fulflo<span className="text-mint">.</span>
-          </span>
-          <div className="flex items-center gap-6">
-            {t.footer.links.map((l) => (
-              <a key={l} href="#" className="text-xs text-white/50 hover:text-white/80 transition-colors">
-                {l}
-              </a>
-            ))}
+      </main>
+
+      {/* ── FOOTER ────────────────────────────────────────────────────────── */}
+      <footer id="footer" className="bg-slate-50 w-full py-12 px-6 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
+            {/* Brand col */}
+            <div className="col-span-2">
+              <span className="text-lg font-bold text-slate-900 block mb-6">
+                fulflo<span className="text-[#006a2d]">.</span>
+              </span>
+              <p className="text-slate-500 text-sm mb-6 max-w-xs leading-relaxed">
+                Curated kinetic savings on everyday CPG essentials. Join the surplus economy revolution.
+              </p>
+            </div>
+            {/* Marketplace */}
+            <div>
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-widest">Marketplace</h4>
+              <ul className="space-y-4">
+                {[
+                  { label: "Catalog", href: "/deals" },
+                  { label: "Brands", href: "/supplier/login" },
+                  { label: "New Drops", href: "/deals" },
+                  { label: "Flash Deals", href: "/deals" },
+                ].map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="text-slate-500 hover:text-slate-900 text-sm transition-all duration-200 hover:translate-x-1 inline-block">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Support */}
+            <div>
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-widest">Support</h4>
+              <ul className="space-y-4">
+                {["Shipping Info", "Returns", "Contact Us", "FAQ"].map((l) => (
+                  <li key={l}>
+                    <a href="#" className="text-slate-500 hover:text-slate-900 text-sm transition-all duration-200 hover:translate-x-1 inline-block">
+                      {l}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Company */}
+            <div>
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-widest">Company</h4>
+              <ul className="space-y-4">
+                {[
+                  { label: "About", href: "#" },
+                  { label: "Partner with Us", href: "/supplier/login" },
+                  { label: "Sustainability", href: "#" },
+                  { label: "Careers", href: "#" },
+                ].map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="text-slate-500 hover:text-slate-900 text-sm transition-all duration-200 hover:translate-x-1 inline-block">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Legal */}
+            <div>
+              <h4 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-widest">Legal</h4>
+              <ul className="space-y-4">
+                {["Privacy Policy", "Terms of Service"].map((l) => (
+                  <li key={l}>
+                    <a href="#" className="text-slate-500 hover:text-slate-900 text-sm transition-all duration-200 hover:translate-x-1 inline-block">
+                      {l}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <p className="text-xs text-white/40">{t.footer.copy}</p>
+
+          <div className="pt-12 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-slate-500 text-sm">© 2026 Fulflo SAS. Curated Kinetic Savings.</p>
+            <div className="flex gap-8">
+              {PAYMENT_LOGOS.map((l) => (
+                <Image
+                  key={l.alt}
+                  src={l.src}
+                  alt={l.alt}
+                  width={60}
+                  height={16}
+                  unoptimized
+                  className="h-4 w-auto grayscale opacity-50"
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
     </div>
