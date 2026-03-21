@@ -7,6 +7,7 @@ const NAV = [
   { key: "dashboard",  icon: "📊", href: "/supplier/dashboard" },
   { key: "products",   icon: "📦", href: "/supplier/products" },
   { key: "campaigns",  icon: "📢", href: "/supplier/campaigns" },
+  { key: "analytics",  icon: "📈", href: "/supplier/analytics" },
 ] as const;
 
 export default function Sidebar() {
