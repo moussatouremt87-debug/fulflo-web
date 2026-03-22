@@ -248,21 +248,27 @@ const DEMO: ProductCardProps[] = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function fetchProducts(): Promise<ProductCardProps[]> {
-  const url  = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key  = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key || key === "placeholder" || key === "") return DEMO;
 
   try {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(url, key);
+    // Fetch all active products (stock_units > 0 is enforced by RLS policy)
     const { data, error } = await sb
       .from("products")
-      .select("*")
-      .gt("stock_units", 0)
-      .order("expiry_date", { ascending: true });
+      .select("id, brand, name, size, original_price, current_price, stock_units, expiry_date, flash_sale_end_time, ai_pricing_enabled, category")
+      .gt("stock_units", 0);
 
     if (error || !data?.length) return DEMO;
-    return data as ProductCardProps[];
+
+    // Sort by discount % descending (highest savings first)
+    return (data as ProductCardProps[]).sort((a, b) => {
+      const da = (a.original_price - a.current_price) / a.original_price;
+      const db = (b.original_price - b.current_price) / b.original_price;
+      return db - da;
+    });
   } catch {
     return DEMO;
   }

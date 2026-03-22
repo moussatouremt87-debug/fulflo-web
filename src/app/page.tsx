@@ -159,6 +159,39 @@ const PRODUCTS: Product[] = [
 
 const FEATURED_SAVINGS = PRODUCTS.slice(0, 4);
 
+// Brand → Unsplash image map (for DB products that have no image_url yet)
+const BRAND_IMG: Record<string, string> = {
+  "Ariel":     "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
+  "Nestlé":    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80",
+  "Colgate":   "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=400&q=80",
+  "Evian":     "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80",
+  "Dove":      "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400&q=80",
+  "Kellogg's": "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400&q=80",
+  "Gillette":  "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?w=400&q=80",
+  "L'Oréal":   "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
+  "Maggi":     "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
+};
+
+function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
+  const orig = Number(row.original_price ?? 0);
+  const curr = Number(row.current_price ?? 0);
+  const brand = String(row.brand ?? "");
+  return {
+    id: String(row.id ?? idx),
+    brand,
+    name: [row.name, row.size].filter(Boolean).join(" — "),
+    price: curr,
+    originalPrice: orig,
+    savings: parseFloat((orig - curr).toFixed(2)),
+    savingsPct: orig > 0 ? Math.round(((orig - curr) / orig) * 100) : 0,
+    rating: 4.5,
+    reviews: 0,
+    img: BRAND_IMG[brand] ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+    badge: "Offre Surplus",
+    freeShipping: curr < 15,
+  };
+}
+
 const CATEGORIES = [
   {
     label: "Hygiène & Beauté",
@@ -324,7 +357,30 @@ function ProductCard({ product }: { product: Product }) {
 export default function Home() {
   const [cartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
   const { h, m, s } = useCountdown(4 * 3600 + 22 * 60 + 15);
+
+  // Fetch top products from Supabase (by discount %) — fallback to static PRODUCTS
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return;
+    import("@supabase/supabase-js").then(({ createClient }) => {
+      const sb = createClient(url, key);
+      Promise.resolve(
+        sb.from("products")
+          .select("id, brand, name, size, original_price, current_price, stock_units")
+          .gt("stock_units", 0)
+          .limit(8)
+      ).then(({ data }) => {
+        if (!data?.length) return;
+        const mapped = (data as Record<string, unknown>[])
+          .map((row, i) => dbRowToProduct(row, i))
+          .sort((a, b) => b.savingsPct - a.savingsPct);
+        setDbProducts(mapped);
+      }).catch(() => {});
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -613,9 +669,9 @@ export default function Home() {
               Tout voir →
             </Link>
           </div>
-          {/* 4 mini product cards */}
+          {/* 4 mini product cards — live Supabase data if available */}
           <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-gray-100">
-            {FEATURED_SAVINGS.map((p) => (
+            {(dbProducts.length ? dbProducts.slice(0, 4) : FEATURED_SAVINGS).map((p) => (
               <Link
                 key={p.id}
                 href="/deals"
@@ -656,7 +712,7 @@ export default function Home() {
               Meilleures Offres Surplus
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              {PRODUCTS.length} produits · Mis à jour aujourd&apos;hui
+              {(dbProducts.length || PRODUCTS.length)} produits · Mis à jour aujourd&apos;hui
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -671,7 +727,7 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {PRODUCTS.map((p) => (
+          {(dbProducts.length ? dbProducts : PRODUCTS).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
