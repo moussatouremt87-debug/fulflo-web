@@ -34,41 +34,97 @@ async function alertTelegram(message: string) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const orderId = session.metadata?.fulflo_order_id;
-  if (!orderId) return;
-
   const pi = session.payment_intent as string | null;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (url && key && key !== "placeholder") {
-    await db()
-      .from("orders")
-      .update({
-        status:            "confirmed",
-        stripe_session_id: session.id,
-        stripe_payment_id: pi ?? null,
-        customer_email:    session.customer_details?.email ?? null,
-        customer_name:     session.customer_details?.name  ?? null,
-        customer_phone:    session.customer_details?.phone ?? null,
-        customer_address:  session.customer_details?.address?.line1 ?? null,
-        customer_city:     session.customer_details?.address?.city  ?? null,
-        customer_country:  session.customer_details?.address?.country ?? "FR",
-        customer_zip:      session.customer_details?.address?.postal_code ?? null,
-        paid_at:           new Date().toISOString(),
-      })
-      .eq("id", orderId);
+    // ── 1. Update order to confirmed ─────────────────────────────────────────
+    const updatePayload = {
+      status:            "confirmed",
+      stripe_session_id: session.id,
+      stripe_payment_id: pi ?? null,
+      customer_email:    session.customer_details?.email ?? null,
+      customer_name:     session.customer_details?.name  ?? null,
+      customer_phone:    session.customer_details?.phone ?? null,
+      customer_address:  session.customer_details?.address?.line1 ?? null,
+      customer_city:     session.customer_details?.address?.city  ?? null,
+      customer_country:  session.customer_details?.address?.country ?? "FR",
+      customer_zip:      session.customer_details?.address?.postal_code ?? null,
+      paid_at:           new Date().toISOString(),
+    };
+    if (orderId) {
+      await db().from("orders").update(updatePayload).eq("id", orderId);
+    }
+
+    // ── 2. Decrement stock for each purchased item ───────────────────────────
+    let cartItems: Array<{ productId?: string; product_id?: string; quantity: number }> = [];
+
+    // Primary: read items from the order record in DB
+    if (orderId) {
+      const { data: orderRow } = await db()
+        .from("orders")
+        .select("items")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (Array.isArray(orderRow?.items)) {
+        cartItems = orderRow.items as typeof cartItems;
+      }
+    }
+    // Fallback: parse compact Stripe metadata
+    if (!cartItems.length) {
+      try {
+        const raw = session.metadata?.cart_items;
+        if (raw) cartItems = JSON.parse(raw);
+      } catch {}
+    }
+
+    for (const item of cartItems) {
+      const productId = item.productId ?? item.product_id;
+      if (!productId || !item.quantity) continue;
+      const { data: prod } = await db()
+        .from("products")
+        .select("id, stock_units")
+        .eq("id", productId)
+        .maybeSingle();
+      if (!prod || prod.stock_units < item.quantity) continue;
+      await db()
+        .from("products")
+        .update({ stock_units: prod.stock_units - item.quantity })
+        .eq("id", productId);
+    }
   }
 
+  // ── 3. Trigger n8n fulfillment workflow ───────────────────────────────────
+  const n8nUrl = process.env.N8N_WEBHOOK_URL;
+  if (n8nUrl) {
+    await fetch(n8nUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event:          "order.confirmed",
+        order_id:       orderId,
+        session_id:     session.id,
+        customer_email: session.customer_details?.email,
+        customer_name:  session.customer_details?.name,
+        amount_total:   session.amount_total,
+        currency:       session.currency,
+        paid_at:        new Date().toISOString(),
+      }),
+    }).catch(() => {});
+  }
+
+  // ── 4. Telegram alert ────────────────────────────────────────────────────
   const amountFormatted = session.amount_total
     ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase()}`
     : "—";
 
   await alertTelegram(
     `💳 <b>Paiement confirmé</b>\n` +
-    `Commande: <code>${orderId}</code>\n` +
+    `Commande: <code>${orderId ?? session.id}</code>\n` +
     `Client: ${session.customer_details?.name ?? "—"} (${session.customer_details?.email ?? "—"})\n` +
     `Montant: <b>${amountFormatted}</b>\n` +
-    `→ Fulfillment déclenché automatiquement.`
+    `→ n8n fulfillment déclenché.`
   );
 }
 

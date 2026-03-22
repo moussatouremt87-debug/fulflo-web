@@ -41,9 +41,12 @@ interface CheckoutItem {
 interface CheckoutRequest {
   items: CheckoutItem[];
   customer_email?: string;
-  currency?: string;      // "eur" | "chf" — defaults to "eur"
+  currency?: string;         // "eur" | "chf" — defaults to "eur"
   supplier_id?: string;
   metadata?: Record<string, string>;
+  service_fee_eur?: number;  // pre-calculated 5% service fee
+  shipping_eur?: number;     // pre-calculated shipping (0 or 4.90)
+  cart_items?: unknown[];    // full CartItem array for success page
 }
 
 // ─── CHF/EUR rate (static fallback — swap for live FX if needed) ─────────────
@@ -62,7 +65,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { items, customer_email, currency: rawCurrency = "eur", supplier_id, metadata = {} } = body;
+  const {
+    items,
+    customer_email,
+    currency: rawCurrency = "eur",
+    supplier_id,
+    metadata = {},
+    service_fee_eur,
+    shipping_eur,
+    cart_items,
+  } = body;
 
   if (!items?.length) {
     return NextResponse.json({ error: "items[] is required and must not be empty" }, { status: 400 });
@@ -87,6 +99,33 @@ export async function POST(req: NextRequest) {
       },
     };
   });
+
+  // Service fee line item (5% of subtotal)
+  const subtotalEur = items.reduce((s, i) => s + i.unit_price_eur * i.quantity, 0);
+  const feeEur = service_fee_eur ?? Math.round(subtotalEur * 0.05 * 100) / 100;
+  if (feeEur > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency,
+        unit_amount: Math.round(convertPrice(feeEur, currency) * 100),
+        product_data: { name: "Frais de service FulFlo" },
+      },
+    });
+  }
+
+  // Shipping line item (if not free)
+  const shipEur = shipping_eur ?? (subtotalEur >= 40 ? 0 : 4.9);
+  if (shipEur > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency,
+        unit_amount: Math.round(convertPrice(shipEur, currency) * 100),
+        product_data: { name: "Livraison FulFlo" },
+      },
+    });
+  }
 
   // Create order record in Supabase first (so we have an ID for metadata)
   let orderId: string | null = null;
@@ -117,12 +156,16 @@ export async function POST(req: NextRequest) {
       line_items: lineItems,
       currency,
       ...(customer_email ? { customer_email } : {}),
-      success_url: `${baseUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${baseUrl}/deals?checkout=cancelled`,
+      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${baseUrl}/cart`,
       metadata: {
         fulflo_order_id: orderId ?? "",
         supplier_id:     supplier_id ?? "",
         currency,
+        // Compact cart snapshot for success page (max 500 chars per Stripe limit)
+        cart_items: cart_items
+          ? JSON.stringify(cart_items).slice(0, 490)
+          : "",
         ...metadata,
       },
       payment_intent_data: {

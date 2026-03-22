@@ -3,6 +3,20 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import ProductCard, { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
+import { useCart } from "@/lib/cart";
+
+// Brand → Unsplash image map for cart thumbnails
+const BRAND_IMG: Record<string, string> = {
+  "Ariel":     "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
+  "Nestlé":    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80",
+  "Colgate":   "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=400&q=80",
+  "Evian":     "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80",
+  "Dove":      "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400&q=80",
+  "Kellogg's": "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400&q=80",
+  "Gillette":  "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?w=400&q=80",
+  "L'Oréal":   "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
+  "Maggi":     "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
+};
 
 // ─── Sponsored slot types ─────────────────────────────────────────────────────
 
@@ -162,115 +176,30 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "expiry_soon",  label: "Expire bientôt" },
 ];
 
-// ─── Demo products (used when Supabase not configured) ────────────────────────
-
-const DEMO: ProductCardProps[] = [
-  {
-    id: "1",
-    brand: "Colgate",
-    name: "Total Advanced Whitening",
-    size: "75 ml × 3",
-    original_price: 4.50,
-    current_price: 1.89,
-    stock_units: 247,
-    expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
-    flash_sale_end_time: null,
-    ai_pricing_enabled: false,
-    category: "hygiene",
-  },
-  {
-    id: "2",
-    brand: "Nestlé",
-    name: "Nescafé Gold Blend",
-    size: "200 g",
-    original_price: 8.90,
-    current_price: 3.99,
-    stock_units: 183,
-    expiry_date: new Date(Date.now() + 110 * 86400000).toISOString(),
-    flash_sale_end_time: null,
-    ai_pricing_enabled: false,
-    category: "alimentation",
-  },
-  {
-    id: "3",
-    brand: "Ariel",
-    name: "Pods Color & Style",
-    size: "×34 lavages",
-    original_price: 11.90,
-    current_price: 5.49,
-    stock_units: 44,
-    expiry_date: new Date(Date.now() + 18 * 86400000).toISOString(),
-    flash_sale_end_time: new Date(Date.now() + 2 * 3600000).toISOString(),
-    ai_pricing_enabled: true,
-    category: "entretien",
-  },
-  {
-    id: "4",
-    brand: "Dove",
-    name: "Gel Douche Sensitive",
-    size: "250 ml × 6",
-    original_price: 9.60,
-    current_price: 4.29,
-    stock_units: 12,
-    expiry_date: new Date(Date.now() + 22 * 86400000).toISOString(),
-    flash_sale_end_time: null,
-    ai_pricing_enabled: true,
-    category: "hygiene",
-  },
-  {
-    id: "5",
-    brand: "Evian",
-    name: "Eau Minérale Naturelle",
-    size: "1.5 L × 6",
-    original_price: 5.90,
-    current_price: 2.49,
-    stock_units: 320,
-    expiry_date: new Date(Date.now() + 180 * 86400000).toISOString(),
-    flash_sale_end_time: null,
-    ai_pricing_enabled: false,
-    category: "boissons",
-  },
-  {
-    id: "6",
-    brand: "Maggi",
-    name: "Bouillon de Poulet",
-    size: "×72 cubes",
-    original_price: 3.80,
-    current_price: 1.59,
-    stock_units: 6,
-    expiry_date: new Date(Date.now() + 35 * 86400000).toISOString(),
-    flash_sale_end_time: null,
-    ai_pricing_enabled: false,
-    category: "alimentation",
-  },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function fetchProducts(): Promise<ProductCardProps[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key || key === "placeholder" || key === "") return DEMO;
+  if (!url || !key) return [];
 
   try {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(url, key);
-    // Fetch all active products (stock_units > 0 is enforced by RLS policy)
     const { data, error } = await sb
       .from("products")
       .select("id, brand, name, size, original_price, current_price, stock_units, expiry_date, flash_sale_end_time, ai_pricing_enabled, category")
       .gt("stock_units", 0);
 
-    if (error || !data?.length) return DEMO;
+    if (error || !data?.length) return [];
 
-    // Sort by discount % descending (highest savings first)
     return (data as ProductCardProps[]).sort((a, b) => {
       const da = (a.original_price - a.current_price) / a.original_price;
       const db = (b.original_price - b.current_price) / b.original_price;
       return db - da;
     });
   } catch {
-    return DEMO;
+    return [];
   }
 }
 
@@ -285,13 +214,14 @@ function getSession(): string {
 }
 
 export default function DealsPage() {
+  const cart = useCart();
   const [products, setProducts]   = useState<ProductCardProps[]>([]);
   const [loading, setLoading]     = useState(true);
   const [category, setCategory]   = useState<Category>("all");
   const [sort, setSort]           = useState<SortKey>("discount_max");
   const [search, setSearch]       = useState("");
-  const [cartCount, setCartCount] = useState(0);
   const [addedIds, setAddedIds]   = useState<Set<string>>(new Set());
+  const [toast, setToast]         = useState<string | null>(null);
   const [sponsored, setSponsored] = useState<SponsoredSlot[]>([]);
   const userSession = useRef(typeof window !== "undefined" ? getSession() : "ssr");
 
@@ -329,8 +259,23 @@ export default function DealsPage() {
   }, []);
 
   const handleAddToCart = (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (product) {
+      cart.addItem({
+        productId:     product.id,
+        name:          product.name,
+        brand:         product.brand,
+        size:          product.size ?? "",
+        price:         product.current_price,
+        originalPrice: product.original_price,
+        image:         BRAND_IMG[product.brand] ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+        category:      product.category,
+      });
+      // Toast notification
+      setToast(`${product.brand} ${product.name} ajouté au panier ✓`);
+      setTimeout(() => setToast(null), 2500);
+    }
     setAddedIds((prev) => new Set(prev).add(id));
-    setCartCount((n) => n + 1);
     setTimeout(() => setAddedIds((prev) => { const s = new Set(prev); s.delete(id); return s; }), 1500);
   };
 
@@ -407,11 +352,11 @@ export default function DealsPage() {
             <a href="/invite" className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-text-dark hover:text-forest transition-colors">
               🎁 <span>€5 offerts</span>
             </a>
-            {/* Cart indicator */}
-            {cartCount > 0 && (
-              <div className="flex items-center gap-1.5 bg-forest text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                🛒 {cartCount}
-              </div>
+            {/* Cart indicator — links to cart page */}
+            {cart.itemCount > 0 && (
+              <a href="/cart" className="flex items-center gap-1.5 bg-forest text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-[#2d6a4f] transition-colors">
+                🛒 {cart.itemCount}
+              </a>
             )}
             <a href="/" className="text-xs text-text-mid hover:text-forest transition-colors">← Accueil</a>
           </div>
@@ -482,6 +427,12 @@ export default function DealsPage() {
               <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
             ))}
           </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-4xl mb-4">📦</p>
+            <p className="text-forest font-semibold text-lg mb-2">Aucun produit disponible</p>
+            <p className="text-text-mid text-sm">Le catalogue est en cours de mise à jour. Revenez bientôt.</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">🔍</p>
@@ -550,17 +501,31 @@ export default function DealsPage() {
           </>
         )}
 
-        {/* ── AUTH NOTICE ───────────────────────────────────────────────── */}
-        {cartCount > 0 && (
+        {/* ── TOAST NOTIFICATION ────────────────────────────────────────── */}
+        {toast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+            <div className="bg-[#1B4332] text-white rounded-full shadow-xl px-5 py-2.5 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+              ✓ {toast}
+            </div>
+          </div>
+        )}
+
+        {/* ── CART STICKY BAR (when items in cart) ───────────────────────── */}
+        {cart.itemCount > 0 && !toast && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
             <div className="bg-forest text-white rounded-2xl shadow-xl px-6 py-4 flex items-center gap-4">
               <div>
-                <p className="font-bold text-sm">{cartCount} article{cartCount > 1 ? "s" : ""} dans votre panier</p>
-                <p className="text-white/60 text-xs">Créez un compte pour finaliser</p>
+                <p className="font-bold text-sm">
+                  {cart.itemCount} article{cart.itemCount > 1 ? "s" : ""} · {cart.subtotal.toFixed(2).replace(".", ",")} €
+                </p>
+                <p className="text-white/60 text-xs">Économies: -{cart.totalSavings.toFixed(2).replace(".", ",")} €</p>
               </div>
-              <button className="bg-mint text-forest font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-mint-light transition-colors whitespace-nowrap">
-                Commander →
-              </button>
+              <a
+                href="/cart"
+                className="bg-mint text-forest font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-mint-light transition-colors whitespace-nowrap"
+              >
+                Voir le panier →
+              </a>
             </div>
           </div>
         )}
