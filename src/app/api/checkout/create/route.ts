@@ -3,11 +3,10 @@ import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
-function stripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
-  return new Stripe(key, { apiVersion: "2026-02-25.clover" });
-}
+// Initialise Stripe once — use SDK's pinned API version
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-02-25.clover",
+});
 
 const SUPPORTED_CURRENCIES = ["eur", "chf"] as const;
 type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number];
@@ -43,71 +42,77 @@ interface CheckoutRequest {
 }
 
 export async function POST(req: NextRequest) {
-  let body: CheckoutRequest;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  const { items, customer_email, currency: rawCurrency = "eur", service_fee_eur, shipping_eur } = body;
-
-  if (!items?.length) {
-    return NextResponse.json({ error: "items[] is required and must not be empty" }, { status: 400 });
-  }
-
-  const currency  = normaliseCurrency(rawCurrency);
-  const baseUrl   = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.fulflo.app";
-  const subtotalEur = items.reduce((s, i) => s + i.unit_price_eur * i.quantity, 0);
-
-  // Build Stripe line items
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
-    quantity: item.quantity,
-    price_data: {
-      currency,
-      unit_amount: Math.round(convertPrice(item.unit_price_eur, currency) * 100),
-      product_data: {
-        name: `${item.brand} — ${item.name}`,
-        ...(item.image_url ? { images: [item.image_url] } : {}),
-        metadata: { product_id: item.product_id },
-      },
-    },
-  }));
-
-  // Service fee (5%)
-  const feeEur = service_fee_eur ?? Math.round(subtotalEur * 0.05 * 100) / 100;
-  if (feeEur > 0) {
-    lineItems.push({
-      quantity: 1,
-      price_data: {
-        currency,
-        unit_amount: Math.round(convertPrice(feeEur, currency) * 100),
-        product_data: { name: "Frais de service FulFlo" },
-      },
-    });
-  }
-
-  // Shipping
-  const shipEur = shipping_eur ?? (subtotalEur >= 40 ? 0 : 4.9);
-  if (shipEur > 0) {
-    lineItems.push({
-      quantity: 1,
-      price_data: {
-        currency,
-        unit_amount: Math.round(convertPrice(shipEur, currency) * 100),
-        product_data: { name: "Livraison FulFlo" },
-      },
-    });
-  }
-
-  // Compact items for webhook stock decrement + success page lookup
-  // Format: [{"id":"uuid","qty":N}] — stays well under Stripe's 500-char limit
-  const itemsCompact = JSON.stringify(
-    items.map((i) => ({ id: i.product_id, qty: i.quantity }))
-  ).slice(0, 490);
+  // ── Debug: confirm env vars present ───────────────────────────────────────
+  console.log("[checkout/create] STRIPE_SECRET_KEY exists:", !!process.env.STRIPE_SECRET_KEY);
+  console.log("[checkout/create] STRIPE_SECRET_KEY starts:", process.env.STRIPE_SECRET_KEY?.substring(0, 12));
 
   try {
-    const session = await stripe().checkout.sessions.create({
+    let body: CheckoutRequest;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const { items, customer_email, currency: rawCurrency = "eur", service_fee_eur, shipping_eur } = body;
+
+    console.log("[checkout/create] items received:", items?.length ?? 0);
+
+    if (!items?.length) {
+      return NextResponse.json({ error: "items[] is required and must not be empty" }, { status: 400 });
+    }
+
+    const currency    = normaliseCurrency(rawCurrency);
+    const baseUrl     = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.fulflo.app";
+    const subtotalEur = items.reduce((s, i) => s + i.unit_price_eur * i.quantity, 0);
+
+    // Build Stripe line items — no image URLs (Stripe fetches them server-side
+    // and rejects sessions if the URL isn't publicly reachable/fast)
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
+      quantity: item.quantity,
+      price_data: {
+        currency,
+        unit_amount: Math.round(convertPrice(item.unit_price_eur, currency) * 100),
+        product_data: {
+          name: `${item.brand} — ${item.name}`,
+        },
+      },
+    }));
+
+    // Service fee (5%)
+    const feeEur = service_fee_eur ?? Math.round(subtotalEur * 0.05 * 100) / 100;
+    if (feeEur > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency,
+          unit_amount: Math.round(convertPrice(feeEur, currency) * 100),
+          product_data: { name: "Frais de service FulFlo (5%)" },
+        },
+      });
+    }
+
+    // Shipping
+    const shipEur = shipping_eur ?? (subtotalEur >= 40 ? 0 : 4.9);
+    if (shipEur > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency,
+          unit_amount: Math.round(convertPrice(shipEur, currency) * 100),
+          product_data: { name: "Livraison FulFlo" },
+        },
+      });
+    }
+
+    // Compact items for webhook stock decrement + success page lookup
+    const itemsCompact = JSON.stringify(
+      items.map((i) => ({ id: i.product_id, qty: i.quantity }))
+    ).slice(0, 490);
+
+    console.log("[checkout/create] creating Stripe session, lineItems:", lineItems.length);
+
+    const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -125,14 +130,18 @@ export async function POST(req: NextRequest) {
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
     });
 
+    console.log("[checkout/create] session created:", session.id);
+
     return NextResponse.json({
       url:          session.url,
       session_id:   session.id,
       currency,
       amount_total: session.amount_total,
     });
-  } catch (err) {
-    console.error("[checkout/create] Stripe error:", err);
-    return NextResponse.json({ error: "Failed to create checkout session", detail: String(err) }, { status: 502 });
+
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[checkout/create] error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
