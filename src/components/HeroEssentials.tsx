@@ -61,7 +61,7 @@ export default function HeroEssentials() {
               textAlign: "left",
             }}
           >
-            Everyday Essentials
+            Essentiels du Quotidien
           </h2>
           <p
             style={{

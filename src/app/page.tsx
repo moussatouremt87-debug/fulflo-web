@@ -18,6 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 import HeroEssentials from "@/components/HeroEssentials";
+import LangSwitcher from "@/components/LangSwitcher";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -195,7 +196,7 @@ function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
 const CATEGORIES = [
   {
     label: "Hygiène & Beauté",
-    desc: "Ariel, Colgate, Dove, Gillette",
+    desc: "Colgate, Dove, Gillette, L'Oréal",
     bg: "#1B4332",
     img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
   },
@@ -210,6 +211,24 @@ const CATEGORIES = [
     desc: "Ariel, Flash, Cillit Bang",
     bg: "#047857",
     img: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&q=80",
+  },
+  {
+    label: "Beauté",
+    desc: "L'Oréal, Maybelline, Nivea",
+    bg: "#065f46",
+    img: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=400&q=80",
+  },
+  {
+    label: "Bébé & Enfants",
+    desc: "Pampers, Aptamil, Huggies",
+    bg: "#047857",
+    img: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=400&q=80",
+  },
+  {
+    label: "Pharmacie & Santé",
+    desc: "Vitamines, soins, bien-être",
+    bg: "#1B4332",
+    img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
   },
 ];
 
@@ -456,6 +475,7 @@ export default function Home() {
 
           {/* Right icons */}
           <div className="flex items-center gap-4 ml-2 shrink-0">
+            <LangSwitcher />
             <Link href="/supplier/login" className="hidden sm:flex flex-col items-center text-white/80 hover:text-white transition-colors">
               <User size={18} />
               <span className="text-[10px] mt-0.5">Connexion</span>
@@ -488,7 +508,7 @@ export default function Home() {
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-xs text-gray-500">
-            {["Tout", "Hygiène", "Alimentaire", "Entretien", "Beauté"].map((c) => (
+            {["Tout", "Alimentation", "Hygiène", "Entretien", "Beauté", "Boissons"].map((c) => (
               <button key={c} className="hover:text-[#1B4332] font-medium transition-colors">
                 {c}
               </button>

@@ -158,17 +158,34 @@ function SponsoredCard({
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Category = "all" | "alimentation" | "hygiene" | "entretien" | "boissons";
+type Category =
+  | "all"
+  | "alimentation"
+  | "hygiene"
+  | "entretien"
+  | "beaute"
+  | "boissons"
+  | "bebe"
+  | "animaux"
+  | "sport"
+  | "pharmacie"
+  | "electromenager";
 type SortKey  = "price_asc" | "discount_max" | "expiry_soon";
 
 // ─── Filter / sort config ─────────────────────────────────────────────────────
 
 const CATEGORIES: { key: Category; label: string; emoji: string }[] = [
-  { key: "all",          label: "Tout",         emoji: "🛒" },
-  { key: "alimentation", label: "Alimentation",  emoji: "🍝" },
-  { key: "hygiene",      label: "Hygiène",       emoji: "🧴" },
-  { key: "entretien",    label: "Entretien",     emoji: "🧹" },
-  { key: "boissons",     label: "Boissons",      emoji: "💧" },
+  { key: "all",            label: "Tout",           emoji: "🛒" },
+  { key: "alimentation",   label: "Alimentation",   emoji: "🥫" },
+  { key: "hygiene",        label: "Hygiène",        emoji: "🧴" },
+  { key: "entretien",      label: "Entretien",      emoji: "🧹" },
+  { key: "beaute",         label: "Beauté",         emoji: "💄" },
+  { key: "boissons",       label: "Boissons",       emoji: "💧" },
+  { key: "bebe",           label: "Bébé",           emoji: "👶" },
+  { key: "animaux",        label: "Animaux",        emoji: "🐾" },
+  { key: "sport",          label: "Sport",          emoji: "💪" },
+  { key: "pharmacie",      label: "Pharmacie",      emoji: "💊" },
+  { key: "electromenager", label: "Électroménager", emoji: "⚡" },
 ];
 
 const SORTS: { key: SortKey; label: string }[] = [

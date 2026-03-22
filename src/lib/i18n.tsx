@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import fr from "@/messages/fr.json";
 import en from "@/messages/en.json";
 import de from "@/messages/de.json";
@@ -38,7 +38,18 @@ const I18nContext = createContext<I18nContextValue>({
 });
 
 export function I18nProvider({ children, defaultLocale = "fr" }: { children: ReactNode; defaultLocale?: Locale }) {
-  const [locale, setLocale] = useState<Locale>(defaultLocale);
+  const [locale, setLocaleState] = useState<Locale>(defaultLocale);
+
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("fulflo_locale") as Locale | null;
+    if (saved && saved in messages) setLocaleState(saved);
+  }, []);
+
+  const setLocale = (l: Locale) => {
+    setLocaleState(l);
+    localStorage.setItem("fulflo_locale", l);
+  };
 
   const t = (key: MessageKey, vars?: Record<string, string | number>): string => {
     let str = getNestedValue(messages[locale] as unknown as Record<string, unknown>, key);
@@ -51,7 +62,7 @@ export function I18nProvider({ children, defaultLocale = "fr" }: { children: Rea
   };
 
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t, dir: locale === "ar" ? "rtl" : "ltr" }}>
+    <I18nContext.Provider value={{ locale, setLocale, t, dir: locale === "ar" ? "rtl" : "ltr" }} key={locale}>
       {children}
     </I18nContext.Provider>
   );
