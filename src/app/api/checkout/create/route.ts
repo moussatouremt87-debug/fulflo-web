@@ -3,10 +3,13 @@ import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
-// Initialise Stripe once — use SDK's pinned API version
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
-});
+// Lazy init — read key at request time, not at module cold-start
+// (Vercel can inject env vars after module init in some cold-start scenarios)
+function getStripe(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
+  return new Stripe(key, { apiVersion: "2026-02-25.clover" });
+}
 
 const SUPPORTED_CURRENCIES = ["eur", "chf"] as const;
 type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number];
@@ -112,7 +115,7 @@ export async function POST(req: NextRequest) {
 
     console.log("[checkout/create] creating Stripe session, lineItems:", lineItems.length);
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       line_items: lineItems,
