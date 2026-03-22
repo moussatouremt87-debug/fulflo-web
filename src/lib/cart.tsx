@@ -16,7 +16,7 @@ export interface CartItem {
   name: string;
   brand: string;
   size: string;
-  price: number;        // current surplus price
+  price: number;
   originalPrice: number;
   quantity: number;
   image: string;
@@ -43,59 +43,80 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "fulflo_cart_v1";
 
+function readStorage(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStorage(items: CartItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {}
+}
+
 // ─── Provider ──────────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [ready, setReady] = useState(false);
 
-  // Hydrate from localStorage on mount (client only)
+  // Hydrate from localStorage on mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw) as CartItem[]);
-    } catch {}
-    setReady(true);
+    setItems(readStorage());
+
+    // Sync cart across tabs
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        setItems(e.newValue ? (JSON.parse(e.newValue) as CartItem[]) : []);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
-
-  // Persist on every change (after hydration)
-  useEffect(() => {
-    if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items, ready]);
 
   const addItem = useCallback((product: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.productId === product.productId);
-      if (existing) {
-        return prev.map((i) =>
-          i.productId === product.productId
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
+      const next = existing
+        ? prev.map((i) =>
+            i.productId === product.productId
+              ? { ...i, quantity: i.quantity + 1 }
+              : i
+          )
+        : [...prev, { ...product, quantity: 1 }];
+      // Write synchronously so navigation can't race the useEffect flush
+      writeStorage(next);
+      return next;
     });
   }, []);
 
   const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+    setItems((prev) => {
+      const next = prev.filter((i) => i.productId !== productId);
+      writeStorage(next);
+      return next;
+    });
   }, []);
 
   const updateQuantity = useCallback((productId: string, qty: number) => {
-    if (qty <= 0) {
-      setItems((prev) => prev.filter((i) => i.productId !== productId));
-    } else {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.productId === productId ? { ...i, quantity: qty } : i
-        )
-      );
-    }
+    setItems((prev) => {
+      const next =
+        qty <= 0
+          ? prev.filter((i) => i.productId !== productId)
+          : prev.map((i) =>
+              i.productId === productId ? { ...i, quantity: qty } : i
+            );
+      writeStorage(next);
+      return next;
+    });
   }, []);
 
   const clearCart = useCallback(() => {
     setItems([]);
-    localStorage.removeItem(STORAGE_KEY);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
   }, []);
 
   // Derived totals

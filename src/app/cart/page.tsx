@@ -47,14 +47,16 @@ export default function CartPage() {
       });
       const data = await res.json();
       if (data.url) {
-        clearCart();
+        // Don't clearCart() here — cart stays intact if user hits back or
+        // Stripe redirects fail. Success page clears it after confirmed payment.
         window.location.href = data.url;
       } else {
         setError(data.error ?? "Erreur lors de la création de la session.");
         setLoading(false);
       }
-    } catch {
-      setError("Impossible de contacter le serveur. Réessayez.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Impossible de contacter le serveur.";
+      setError(msg + " Réessayez.");
       setLoading(false);
     }
   };
