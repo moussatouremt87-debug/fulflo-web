@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import ProductCard, { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
 import { useCart } from "@/lib/cart";
+import AuthNav from "@/components/AuthNav";
 
 // Brand → Unsplash image map for cart thumbnails
 const BRAND_IMG: Record<string, string> = {
@@ -370,6 +371,7 @@ export default function DealsPage() {
                 🛒 {cart.itemCount}
               </a>
             )}
+            <AuthNav />
             <a href="/" className="text-xs text-text-mid hover:text-forest transition-colors">← Accueil</a>
           </div>
         </div>

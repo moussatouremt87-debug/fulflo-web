@@ -55,7 +55,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   }
 
-  // ── 3. Trigger n8n fulfillment workflow ───────────────────────────────────
+  // ── 3. Upsert customer record in Supabase ────────────────────────────────
+  const customerEmail = session.customer_details?.email;
+  if (customerEmail) {
+    const nameParts = (session.customer_details?.name ?? "").split(" ");
+    const firstName = nameParts[0] || null;
+    await db()
+      .from("customers")
+      .upsert({
+        email:      customerEmail.toLowerCase(),
+        first_name: firstName,
+      }, { onConflict: "email", ignoreDuplicates: true });
+  }
+
+  // ── 5. Trigger n8n fulfillment workflow ───────────────────────────────────
   const n8nUrl = process.env.N8N_WEBHOOK_URL;
   if (n8nUrl) {
     await fetch(n8nUrl, {
@@ -74,7 +87,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }).catch(() => {});
   }
 
-  // ── 4. Telegram alert ─────────────────────────────────────────────────────
+  // ── 6. Telegram alert ─────────────────────────────────────────────────────
   const amountFormatted = session.amount_total
     ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase()}`
     : "—";

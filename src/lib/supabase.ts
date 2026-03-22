@@ -1,85 +1,76 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+const URL  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+// ─── Server / API-route client (new instance per call) ────────────────────────
 export function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(url, key);
+  return createClient(URL, ANON);
+}
+
+// ─── Browser singleton — prevents "GoTrueClient: multiple instances" warning ──
+let _browser: SupabaseClient | null = null;
+
+export function supabaseBrowser(): SupabaseClient {
+  if (typeof window === "undefined") {
+    throw new Error("supabaseBrowser() must only be called on the client");
+  }
+  if (!_browser) {
+    _browser = createClient(URL, ANON, {
+      auth: { persistSession: true, storageKey: "fulflo_auth_v1" },
+    });
+  }
+  return _browser;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface Customer {
+  id: string;
+  email: string;
+  phone: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  preferred_language: string | null;
+  referral_code: string;
+  referred_by: string | null;
+  total_orders: number | null;
+  total_spent: number | null;
+  created_at: string;
+}
 
 export interface Product {
   id: string;
   brand: string;
   name: string;
-  size: string;
-  original_price: number;
-  current_price: number;
+  price_retail_eur: number;
+  price_surplus_eur: number;
   stock_units: number;
   expiry_date: string;
-  flash_sale_end_time: string | null;
-  ai_pricing_enabled: boolean;
   image_url: string | null;
   category: string;
-  created_at: string;
 }
 
-export interface Customer {
-  id: string;
-  email: string;
-  referral_code: string;
-  referred_by: string | null;
-  credit_pending: number;
-  credit_active: number;
-  invite_count: number;
-  first_purchase: boolean;
-  created_at: string;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ─── Referral helpers ─────────────────────────────────────────────────────────
-
-export async function getCustomerByCode(code: string): Promise<Partial<Customer> | null> {
+export async function getCustomerByEmail(email: string): Promise<Customer | null> {
   const { data } = await getSupabase()
     .from("customers")
-    .select("id, referral_code, invite_count, credit_active, credit_pending")
-    .eq("referral_code", code.toUpperCase())
-    .single();
-  return data ?? null;
-}
-
-export async function getCustomerByEmail(email: string): Promise<Partial<Customer> | null> {
-  const { data } = await getSupabase()
-    .from("customers")
-    .select("referral_code, invite_count, credit_active, credit_pending")
+    .select("*")
     .eq("email", email.toLowerCase())
-    .single();
+    .maybeSingle();
   return data ?? null;
 }
-
-// ─── Queries ──────────────────────────────────────────────────────────────────
 
 export async function getActiveFlashSale(): Promise<Product | null> {
   const now = new Date().toISOString();
-  const { data, error } = await getSupabase()
+  const { data } = await getSupabase()
     .from("products")
-    .select("*")
+    .select("id, brand, name, price_retail_eur, price_surplus_eur, stock_units, expiry_date, image_url, category")
     .gt("flash_sale_end_time", now)
     .gt("stock_units", 0)
     .order("flash_sale_end_time", { ascending: true })
     .limit(1)
-    .single();
-
-  if (error) return null;
-  return data;
-}
-
-export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await getSupabase()
-    .from("products")
-    .select("*")
-    .gt("stock_units", 0)
-    .order("expiry_date", { ascending: true });
-
-  if (error) return [];
-  return data ?? [];
+    .maybeSingle();
+  return data ?? null;
 }
