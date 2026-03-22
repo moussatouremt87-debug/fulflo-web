@@ -173,8 +173,8 @@ const BRAND_IMG: Record<string, string> = {
 };
 
 function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
-  const orig = Number(row.original_price ?? 0);
-  const curr = Number(row.current_price ?? 0);
+  const orig = Number(row.price_retail_eur ?? 0);
+  const curr = Number(row.price_surplus_eur ?? 0);
   const brand = String(row.brand ?? "");
   return {
     id: String(row.id ?? idx),
@@ -369,7 +369,7 @@ export default function Home() {
       const sb = createClient(url, key);
       Promise.resolve(
         sb.from("products")
-          .select("id, brand, name, size, original_price, current_price, discount_percent, stock_units, image_url, category")
+          .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, image_url, category")
           .eq("is_active", true)
           .gt("stock_units", 0)
           .order("discount_percent", { ascending: false })

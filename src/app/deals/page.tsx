@@ -188,16 +188,28 @@ async function fetchProducts(): Promise<ProductCardProps[]> {
     const sb = createClient(url, key);
     const { data, error } = await sb
       .from("products")
-      .select("id, brand, name, size, original_price, current_price, stock_units, expiry_date, flash_sale_end_time, ai_pricing_enabled, category")
-      .gt("stock_units", 0);
+      .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, expiry_date, is_active, category, image_url, typical_duration_days, description, is_sponsored")
+      .eq("is_active", true)
+      .gt("stock_units", 0)
+      .order("discount_percent", { ascending: false });
 
     if (error || !data?.length) return [];
 
-    return (data as ProductCardProps[]).sort((a, b) => {
-      const da = (a.original_price - a.current_price) / a.original_price;
-      const db = (b.original_price - b.current_price) / b.original_price;
-      return db - da;
-    });
+    // Map DB column names → ProductCardProps
+    return (data as Record<string, unknown>[]).map((row) => ({
+      id:                 String(row.id ?? ""),
+      brand:              String(row.brand ?? ""),
+      name:               String(row.name ?? ""),
+      size:               "",
+      original_price:     Number(row.price_retail_eur ?? 0),
+      current_price:      Number(row.price_surplus_eur ?? 0),
+      stock_units:        Number(row.stock_units ?? 0),
+      expiry_date:        String(row.expiry_date ?? new Date().toISOString().slice(0, 10)),
+      flash_sale_end_time: null,
+      ai_pricing_enabled: false,
+      category:           String(row.category ?? ""),
+      image_url:          String(row.image_url ?? ""),
+    })) as ProductCardProps[];
   } catch {
     return [];
   }
@@ -268,7 +280,7 @@ export default function DealsPage() {
         size:          product.size ?? "",
         price:         product.current_price,
         originalPrice: product.original_price,
-        image:         BRAND_IMG[product.brand] ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+        image:         (product as unknown as Record<string, string>).image_url || BRAND_IMG[product.brand] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
         category:      product.category,
       });
       // Toast notification
