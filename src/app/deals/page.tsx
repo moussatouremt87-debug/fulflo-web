@@ -258,9 +258,36 @@ export default function DealsPage() {
   useEffect(() => {
     fetchProducts().then((p) => { setProducts(p); setLoading(false); });
 
-    // Fetch sponsored slots directly from Supabase
+    // Supabase Realtime — subscribe to product stock changes
     const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (sbUrl && sbKey && sbKey !== "placeholder") {
+      import("@supabase/supabase-js").then(({ createClient }) => {
+        const sb = createClient(sbUrl, sbKey);
+        const channel = sb
+          .channel("stock-updates")
+          .on(
+            "postgres_changes",
+            { event: "UPDATE", schema: "public", table: "products" },
+            (payload: { new: Record<string, unknown> }) => {
+              setProducts((prev) =>
+                prev.map((p) =>
+                  p.id === payload.new.id
+                    ? {
+                        ...p,
+                        stock_units: Number(payload.new.stock_units ?? payload.new.stock_quantity ?? p.stock_units),
+                      }
+                    : p
+                )
+              );
+            }
+          )
+          .subscribe();
+        return () => { sb.removeChannel(channel); };
+      });
+    }
+
+    // Fetch sponsored slots directly from Supabase
     if (sbUrl && sbKey && sbKey !== "placeholder") {
       import("@supabase/supabase-js").then(({ createClient }) => {
         const sb = createClient(sbUrl, sbKey);
