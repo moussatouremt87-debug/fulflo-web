@@ -4,8 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-// Note: Next.js App Router streams the raw body via req.text() — no config needed.
-
 function stripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -30,68 +28,30 @@ async function alertTelegram(message: string) {
   }).catch(() => {});
 }
 
-// ─── Event handlers ───────────────────────────────────────────────────────────
-
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const orderId = session.metadata?.fulflo_order_id;
-  const pi = session.payment_intent as string | null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // ── 1. Parse items from metadata ─────────────────────────────────────────
+  let cartItems: Array<{ id: string; qty: number }> = [];
+  try {
+    const raw = session.metadata?.items_compact;
+    if (raw) cartItems = JSON.parse(raw);
+  } catch {}
 
-  if (url && key && key !== "placeholder") {
-    // ── 1. Update order to confirmed ─────────────────────────────────────────
-    const updatePayload = {
-      status:            "confirmed",
-      stripe_session_id: session.id,
-      stripe_payment_id: pi ?? null,
-      customer_email:    session.customer_details?.email ?? null,
-      customer_name:     session.customer_details?.name  ?? null,
-      customer_phone:    session.customer_details?.phone ?? null,
-      customer_address:  session.customer_details?.address?.line1 ?? null,
-      customer_city:     session.customer_details?.address?.city  ?? null,
-      customer_country:  session.customer_details?.address?.country ?? "FR",
-      customer_zip:      session.customer_details?.address?.postal_code ?? null,
-      paid_at:           new Date().toISOString(),
-    };
-    if (orderId) {
-      await db().from("orders").update(updatePayload).eq("id", orderId);
-    }
-
-    // ── 2. Decrement stock for each purchased item ───────────────────────────
-    let cartItems: Array<{ productId?: string; product_id?: string; quantity: number }> = [];
-
-    // Primary: read items from the order record in DB
-    if (orderId) {
-      const { data: orderRow } = await db()
-        .from("orders")
-        .select("items")
-        .eq("id", orderId)
-        .maybeSingle();
-      if (Array.isArray(orderRow?.items)) {
-        cartItems = orderRow.items as typeof cartItems;
-      }
-    }
-    // Fallback: parse compact Stripe metadata
-    if (!cartItems.length) {
-      try {
-        const raw = session.metadata?.cart_items;
-        if (raw) cartItems = JSON.parse(raw);
-      } catch {}
-    }
-
+  // ── 2. Decrement stock_units for each item ────────────────────────────────
+  const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (sbUrl && sbKey && sbKey !== "placeholder" && cartItems.length) {
     for (const item of cartItems) {
-      const productId = item.productId ?? item.product_id;
-      if (!productId || !item.quantity) continue;
+      if (!item.id || !item.qty) continue;
       const { data: prod } = await db()
         .from("products")
         .select("id, stock_units")
-        .eq("id", productId)
+        .eq("id", item.id)
         .maybeSingle();
-      if (!prod || prod.stock_units < item.quantity) continue;
+      if (!prod || prod.stock_units < item.qty) continue;
       await db()
         .from("products")
-        .update({ stock_units: prod.stock_units - item.quantity })
-        .eq("id", productId);
+        .update({ stock_units: prod.stock_units - item.qty, stock_quantity: prod.stock_units - item.qty })
+        .eq("id", item.id);
     }
   }
 
@@ -103,63 +63,41 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event:          "order.confirmed",
-        order_id:       orderId,
         session_id:     session.id,
         customer_email: session.customer_details?.email,
         customer_name:  session.customer_details?.name,
         amount_total:   session.amount_total,
         currency:       session.currency,
+        items:          cartItems,
         paid_at:        new Date().toISOString(),
       }),
     }).catch(() => {});
   }
 
-  // ── 4. Telegram alert ────────────────────────────────────────────────────
+  // ── 4. Telegram alert ─────────────────────────────────────────────────────
   const amountFormatted = session.amount_total
     ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase()}`
     : "—";
 
   await alertTelegram(
     `💳 <b>Paiement confirmé</b>\n` +
-    `Commande: <code>${orderId ?? session.id}</code>\n` +
+    `Session: <code>${session.id}</code>\n` +
     `Client: ${session.customer_details?.name ?? "—"} (${session.customer_details?.email ?? "—"})\n` +
     `Montant: <b>${amountFormatted}</b>\n` +
+    `Articles: ${cartItems.length} référence(s)\n` +
     `→ n8n fulfillment déclenché.`
   );
 }
 
 async function handlePaymentFailed(intent: Stripe.PaymentIntent) {
-  const orderId = intent.metadata?.fulflo_order_id;
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (orderId && url && key && key !== "placeholder") {
-    await db()
-      .from("orders")
-      .update({ status: "cancelled" })
-      .eq("id", orderId);
-  }
-
   await alertTelegram(
     `❌ <b>Paiement échoué</b>\n` +
-    `Commande: <code>${orderId ?? "—"}</code>\n` +
+    `Intent: <code>${intent.id}</code>\n` +
     `Raison: ${intent.last_payment_error?.message ?? "inconnue"}`
   );
 }
 
 async function handleRefund(charge: Stripe.Charge) {
-  const orderId = charge.metadata?.fulflo_order_id
-    ?? charge.payment_intent as string | null;
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (orderId && url && key && key !== "placeholder") {
-    await db()
-      .from("orders")
-      .update({ status: "refunded" })
-      .eq("stripe_payment_id", charge.payment_intent as string);
-  }
-
   const amountFormatted = `${(charge.amount_refunded / 100).toFixed(2)} ${charge.currency.toUpperCase()}`;
   await alertTelegram(
     `↩️ <b>Remboursement</b>\n` +
@@ -168,8 +106,6 @@ async function handleRefund(charge: Stripe.Charge) {
   );
 }
 
-// ─── Main webhook handler ─────────────────────────────────────────────────────
-
 export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -177,7 +113,7 @@ export async function POST(req: NextRequest) {
   }
 
   const sig  = req.headers.get("stripe-signature");
-  const body = await req.text(); // must be raw text for signature verification
+  const body = await req.text();
 
   let event: Stripe.Event;
   try {
@@ -192,22 +128,17 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed":
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
         break;
-
       case "payment_intent.payment_failed":
         await handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
         break;
-
       case "charge.refunded":
         await handleRefund(event.data.object as Stripe.Charge);
         break;
-
       default:
-        // Ignore unhandled events silently
         break;
     }
   } catch (err) {
     console.error(`[checkout/webhook] handler error for ${event.type}:`, err);
-    // Return 200 so Stripe doesn't retry — log for manual review
     return NextResponse.json({ received: true, warning: String(err) });
   }
 

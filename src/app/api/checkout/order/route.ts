@@ -13,7 +13,7 @@ function stripe() {
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 }
 
@@ -25,47 +25,56 @@ export async function GET(req: NextRequest) {
 
   try {
     // Verify payment with Stripe
-    const session = await stripe().checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"],
-    });
+    const session = await stripe().checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status !== "paid") {
       return NextResponse.json({ error: "payment_not_completed" }, { status: 402 });
     }
 
-    const orderId = session.metadata?.fulflo_order_id;
-
-    // Fetch order from Supabase if we have an orderId
-    let order = null;
-    if (orderId) {
-      const { data } = await db()
-        .from("orders")
-        .select("id, status, total_eur, items, customer_email, created_at, stripe_session_id")
-        .eq("id", orderId)
-        .maybeSingle();
-      order = data;
-    }
-
-    // Parse cart_items from Stripe metadata (compact backup)
-    let cartItems = null;
+    // Parse compact items from metadata
+    let compactItems: Array<{ id: string; qty: number }> = [];
     try {
-      const raw = session.metadata?.cart_items;
-      if (raw) cartItems = JSON.parse(raw);
+      const raw = session.metadata?.items_compact;
+      if (raw) compactItems = JSON.parse(raw);
     } catch {}
 
-    // Fall back to order.items if metadata not available
-    if (!cartItems && order?.items) cartItems = order.items;
+    // Fetch full product details from Supabase for success page display
+    let cartItems = null;
+    if (compactItems.length) {
+      const ids = compactItems.map((i) => i.id);
+      const { data: products } = await db()
+        .from("products")
+        .select("id, brand, name, price_retail_eur, price_surplus_eur, image_url, category")
+        .in("id", ids);
+
+      if (products?.length) {
+        cartItems = compactItems.map((ci) => {
+          const p = products.find((pr) => pr.id === ci.id);
+          return {
+            productId:     ci.id,
+            name:          p?.name ?? "",
+            brand:         p?.brand ?? "",
+            size:          "",
+            price:         Number(p?.price_surplus_eur ?? 0),
+            originalPrice: Number(p?.price_retail_eur ?? 0),
+            quantity:      ci.qty,
+            image:         p?.image_url ?? "",
+            category:      p?.category ?? "",
+          };
+        });
+      }
+    }
 
     return NextResponse.json({
-      orderId:       orderId ?? sessionId,
+      orderId:       session.id,
       sessionId:     session.id,
       status:        session.payment_status,
-      customerEmail: session.customer_details?.email ?? order?.customer_email ?? null,
+      customerEmail: session.customer_details?.email ?? null,
       customerName:  session.customer_details?.name ?? null,
-      amountTotal:   session.amount_total ?? 0,   // cents
+      amountTotal:   session.amount_total ?? 0,
       currency:      session.currency ?? "eur",
       cartItems,
-      order,
+      order:         null,
     });
   } catch (err) {
     console.error("[checkout/order]", err);

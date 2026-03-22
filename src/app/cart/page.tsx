@@ -33,17 +33,16 @@ export default function CartPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map((i) => ({
-            product_id:    i.productId,
-            name:          i.name,
-            brand:         i.brand,
-            quantity:      i.quantity,
+            product_id:     i.productId,
+            name:           i.name,
+            brand:          i.brand,
+            quantity:       i.quantity,
             unit_price_eur: i.price,
-            image_url:     i.image,
+            image_url:      i.image,
           })),
-          customer_email:   email || undefined,
-          service_fee_eur:  serviceFee,
-          shipping_eur:     shipping,
-          cart_items:       items,
+          customer_email:  email || undefined,
+          service_fee_eur: serviceFee,
+          shipping_eur:    shipping,
         }),
       });
       const data = await res.json();
