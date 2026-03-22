@@ -186,7 +186,7 @@ function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
     savingsPct: orig > 0 ? Math.round(((orig - curr) / orig) * 100) : 0,
     rating: 4.5,
     reviews: 0,
-    img: BRAND_IMG[brand] ?? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
+    img: String(row.image_url || BRAND_IMG[brand] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80"),
     badge: "Offre Surplus",
     freeShipping: curr < 15,
   };
@@ -369,8 +369,10 @@ export default function Home() {
       const sb = createClient(url, key);
       Promise.resolve(
         sb.from("products")
-          .select("id, brand, name, size, original_price, current_price, stock_units")
+          .select("id, brand, name, size, original_price, current_price, discount_percent, stock_units, image_url, category")
+          .eq("is_active", true)
           .gt("stock_units", 0)
+          .order("discount_percent", { ascending: false })
           .limit(8)
       ).then(({ data }) => {
         if (!data?.length) return;
