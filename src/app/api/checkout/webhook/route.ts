@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { sendOrderConfirmation, sendNewOrderToSupplier } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,55 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         email:      customerEmail.toLowerCase(),
         first_name: firstName,
       }, { onConflict: "email", ignoreDuplicates: true });
+  }
+
+  // ── 4. Transactional emails ───────────────────────────────────────────────
+  const emailAddr = session.customer_details?.email ?? "";
+  if (emailAddr && cartItems.length) {
+    // Fetch product details for email line items
+    const productIds = cartItems.map((i) => i.id).filter(Boolean);
+    const { data: productRows } = await db()
+      .from("products")
+      .select("id, brand, name, price_retail_eur, price_surplus_eur")
+      .in("id", productIds);
+
+    const emailItems = cartItems.map((ci) => {
+      const p = (productRows ?? []).find((r: Record<string, unknown>) => r.id === ci.id);
+      return {
+        brand:    String(p?.brand ?? "FulFlo"),
+        name:     String(p?.name ?? ci.id),
+        quantity: ci.qty,
+        price:    Number(p?.price_surplus_eur ?? 0),
+      };
+    });
+
+    const subtotal    = emailItems.reduce((s, i) => s + i.price * i.quantity, 0);
+    const serviceFee  = Math.round(subtotal * 0.05 * 100) / 100;
+    const total       = session.amount_total ? session.amount_total / 100 : subtotal + serviceFee;
+    const savings     = cartItems.reduce((s, ci) => {
+      const p = (productRows ?? []).find((r: Record<string, unknown>) => r.id === ci.id);
+      return s + (Number(p?.price_retail_eur ?? 0) - Number(p?.price_surplus_eur ?? 0)) * ci.qty;
+    }, 0);
+
+    const orderId     = session.id; // use Stripe session ID as order ref
+    const baseUrl     = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.fulflo.app";
+    const packingSlipUrl = `${baseUrl}/api/orders/${orderId}/packing-slip?secret=${process.env.ADMIN_SECRET ?? ""}`;
+
+    const emailData = {
+      customerEmail: emailAddr,
+      customerName:  session.customer_details?.name ?? undefined,
+      orderId,
+      items: emailItems,
+      subtotal,
+      serviceFee,
+      total,
+      savings,
+    };
+
+    await Promise.allSettled([
+      sendOrderConfirmation(emailData),
+      sendNewOrderToSupplier("james@fulflo.app", { ...emailData, packingSlipUrl }),
+    ]);
   }
 
   // ── 5. Trigger n8n fulfillment workflow ───────────────────────────────────
