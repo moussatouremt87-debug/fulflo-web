@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rateLimit";
+
+const clickLimiter = rateLimit({ limit: 30, windowMs: 60 * 1000 });
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +14,10 @@ function db() {
 }
 
 export async function POST(req: NextRequest) {
+  const { success: rateLimitOk } = clickLimiter(req);
+  if (!rateLimitOk) {
+    return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 });
+  }
   try {
     const { campaignId, productId, userSession } = await req.json();
     if (!campaignId || !productId) {

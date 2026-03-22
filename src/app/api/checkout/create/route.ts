@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { rateLimit } from "@/lib/rateLimit";
+
+const checkoutLimiter = rateLimit({ limit: 10, windowMs: 60 * 1000 });
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +48,14 @@ interface CheckoutRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const { success: rateLimitOk } = checkoutLimiter(req);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { error: "Trop de requêtes. Réessayez dans une minute." },
+      { status: 429 }
+    );
+  }
+
   // ── Debug: confirm env vars present ───────────────────────────────────────
   console.log("[checkout/create] STRIPE_SECRET_KEY exists:", !!process.env.STRIPE_SECRET_KEY);
   console.log("[checkout/create] STRIPE_SECRET_KEY starts:", process.env.STRIPE_SECRET_KEY?.substring(0, 12));

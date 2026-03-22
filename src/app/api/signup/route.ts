@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rateLimit";
+
+const signupLimiter = rateLimit({ limit: 5, windowMs: 60 * 60 * 1000 });
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +21,13 @@ function generateCode(): string {
 }
 
 export async function POST(req: NextRequest) {
+  const { success: rateLimitOk } = signupLimiter(req);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { error: "Trop d'inscriptions depuis cette adresse. Réessayez dans une heure." },
+      { status: 429 }
+    );
+  }
   const body = await req.json();
   const email: string = (body.email ?? "").toLowerCase().trim();
   const referral_code_used: string = (body.referral_code ?? "").toUpperCase().trim();

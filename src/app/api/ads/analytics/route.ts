@@ -10,6 +10,16 @@ function db() {
   );
 }
 
+async function isAuthorized(req: NextRequest): Promise<boolean> {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) return false;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+  const { data: { user } } = await createClient(url, key).auth.getUser(token);
+  return !!user;
+}
+
 export async function GET(req: NextRequest) {
   const supplierId = req.nextUrl.searchParams.get("supplierId");
   if (!supplierId) {
@@ -20,6 +30,11 @@ export async function GET(req: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key || key === "placeholder") {
     return NextResponse.json(DEMO_ANALYTICS);
+  }
+
+  const authorized = await isAuthorized(req);
+  if (!authorized) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
   try {
