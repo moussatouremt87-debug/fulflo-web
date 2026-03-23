@@ -36,17 +36,17 @@ const DEMO: RippleCampaign[] = [
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    active:           "bg-[#ecfdf5] text-[#065f46]",
-    paused:           "bg-yellow-50 text-yellow-700",
-    ended:            "bg-gray-100 text-gray-500",
-    budget_exhausted: "bg-red-50 text-red-600",
+    active:           "bg-emerald-100 text-emerald-800",
+    paused:           "bg-yellow-100 text-yellow-800",
+    ended:            "bg-gray-100 text-gray-600",
+    budget_exhausted: "bg-red-100 text-red-700",
   };
   const labels: Record<string, string> = {
     active: "Actif", paused: "Pausé", ended: "Terminé", budget_exhausted: "Budget épuisé",
   };
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${map[status] ?? "bg-gray-100 text-gray-500"}`}>
-      {status === "active" && <span className="inline-block w-1.5 h-1.5 bg-[#10B981] rounded-full mr-1 animate-pulse" />}
+    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${map[status] ?? "bg-gray-100 text-gray-600"}`}>
+      {status === "active" && <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1 animate-pulse" />}
       {labels[status] ?? status}
     </span>
   );
@@ -108,18 +108,18 @@ export default function RipplePage() {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <Share2 size={22} className="text-[#10B981]" />
-              <h1 className="text-2xl font-black text-white">FulFlo Ripple</h1>
-              <span className="text-[10px] font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 px-2 py-0.5 rounded-full uppercase tracking-wide">
+              <h1 className="text-2xl font-black text-gray-900">FulFlo Ripple</h1>
+              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wide">
                 Produit AdTech 5 · Social Commerce
               </span>
             </div>
-            <p className="text-white/60 text-sm">
+            <p className="text-gray-500 text-sm">
               Vos clients deviennent vos ambassadeurs. Vous payez uniquement les conversions.
             </p>
           </div>
           <button
             onClick={() => setShowForm((v) => !v)}
-            className="flex items-center gap-2 bg-[#10B981] text-[#1B4332] font-bold text-sm px-4 py-2 rounded-xl hover:bg-[#D1FAE5] transition-colors whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 bg-[#1B4332] text-white font-bold text-sm px-4 py-2 rounded-xl hover:bg-[#2d6a4f] transition-colors whitespace-nowrap shrink-0"
           >
             <Plus size={15} />
             Nouvelle campagne
@@ -127,7 +127,7 @@ export default function RipplePage() {
         </div>
 
         {/* ── Pricing card ──────────────────────────────────────────────── */}
-        <div className="bg-[#0f2d1e] border border-[#10B981]/20 rounded-2xl p-5">
+        <div className="bg-[#1B4332] rounded-2xl p-5">
           <p className="text-[#10B981] text-xs font-bold uppercase tracking-widest mb-4">
             Structure tarifaire Ripple
           </p>
@@ -141,7 +141,7 @@ export default function RipplePage() {
               <div key={item.label} className="text-center">
                 <p className="text-2xl font-black text-white">{item.value}</p>
                 <p className="text-[10px] text-[#10B981] font-semibold">{item.label}</p>
-                <p className="text-[10px] text-white/40">{item.sub}</p>
+                <p className="text-[10px] text-white/50">{item.sub}</p>
               </div>
             ))}
           </div>
@@ -156,22 +156,22 @@ export default function RipplePage() {
 
         {/* ── Create campaign form ───────────────────────────────────────── */}
         {showForm && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-            <h3 className="text-white font-bold text-sm">Créer une campagne Ripple</h3>
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h3 className="text-gray-900 font-bold text-sm">Créer une campagne Ripple</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
-                <label className="text-white/50 text-xs font-semibold uppercase tracking-wide block mb-1">
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wide block mb-1">
                   Nom de la campagne
                 </label>
                 <input
                   value={form.campaignName}
                   onChange={(e) => setForm((f) => ({ ...f, campaignName: e.target.value }))}
                   placeholder="ex: Nescafé Gold — Ambassadeurs Printemps"
-                  className="w-full bg-white/10 border border-white/20 text-white rounded-lg px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none focus:border-[#10B981]"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#10B981]"
                 />
               </div>
               <div>
-                <label className="text-white/50 text-xs font-semibold uppercase tracking-wide block mb-1">
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wide block mb-1">
                   Budget total (€)
                 </label>
                 <input
@@ -179,19 +179,19 @@ export default function RipplePage() {
                   value={form.totalBudget}
                   onChange={(e) => setForm((f) => ({ ...f, totalBudget: e.target.value }))}
                   min="199"
-                  className="w-full bg-white/10 border border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#10B981]"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#10B981]"
                 />
               </div>
               <div>
-                <label className="text-white/50 text-xs font-semibold uppercase tracking-wide block mb-1">
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wide block mb-1">
                   Conversions estimées
                 </label>
-                <div className="bg-[#10B981]/10 border border-[#10B981]/20 rounded-lg px-3 py-2 text-[#10B981] font-bold text-sm">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-emerald-700 font-bold text-sm">
                   ~{estConversions} conversions
                 </div>
               </div>
               <div>
-                <label className="text-white/50 text-xs font-semibold uppercase tracking-wide block mb-1">
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wide block mb-1">
                   Voucher partageur (€)
                 </label>
                 <input
@@ -199,11 +199,11 @@ export default function RipplePage() {
                   value={form.sharerVoucher}
                   onChange={(e) => setForm((f) => ({ ...f, sharerVoucher: e.target.value }))}
                   min="1" max="10" step="0.5"
-                  className="w-full bg-white/10 border border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#10B981]"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#10B981]"
                 />
               </div>
               <div>
-                <label className="text-white/50 text-xs font-semibold uppercase tracking-wide block mb-1">
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wide block mb-1">
                   Voucher ami (€)
                 </label>
                 <input
@@ -211,7 +211,7 @@ export default function RipplePage() {
                   value={form.friendVoucher}
                   onChange={(e) => setForm((f) => ({ ...f, friendVoucher: e.target.value }))}
                   min="1" max="10" step="0.5"
-                  className="w-full bg-white/10 border border-white/20 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#10B981]"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#10B981]"
                 />
               </div>
             </div>
@@ -219,15 +219,15 @@ export default function RipplePage() {
               <button
                 onClick={handleCreate}
                 disabled={submitting || !form.campaignName}
-                className="flex items-center gap-2 bg-[#10B981] text-[#1B4332] font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-[#D1FAE5] transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 bg-[#1B4332] text-white font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-[#2d6a4f] transition-colors disabled:opacity-50"
               >
                 <Zap size={14} />
-                {submitting ? "Activation…" : `Activer pour €199 d'activation`}
+                {submitting ? "Activation…" : "Activer pour €199 d'activation"}
                 <ChevronRight size={14} />
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="text-white/40 hover:text-white text-sm transition-colors"
+                className="text-gray-400 hover:text-gray-700 text-sm transition-colors"
               >
                 Annuler
               </button>
@@ -237,36 +237,37 @@ export default function RipplePage() {
 
         {/* ── Active campaigns ───────────────────────────────────────────── */}
         <div>
-          <h2 className="text-white font-bold text-sm uppercase tracking-wide mb-3">
+          <h2 className="text-gray-900 font-bold text-sm uppercase tracking-wide mb-3">
             Campagnes actives
           </h2>
           {loading ? (
-            <div className="h-32 bg-white/5 rounded-2xl animate-pulse" />
+            <div className="h-32 bg-gray-100 rounded-2xl animate-pulse" />
           ) : (
             <div className="space-y-4">
               {campaigns.map((c) => {
-                const pct       = (Number(c.total_spent_eur) / Number(c.total_budget_eur)) * 100;
-                const convRate  = c.total_shares > 0 ? ((c.total_conversions / c.total_shares) * 100).toFixed(1) : "0.0";
-                const cpa       = c.total_conversions > 0
+                const pct      = (Number(c.total_spent_eur) / Number(c.total_budget_eur)) * 100;
+                const convRate = c.total_shares > 0 ? ((c.total_conversions / c.total_shares) * 100).toFixed(1) : "0.0";
+                const cpa      = c.total_conversions > 0
                   ? (Number(c.total_spent_eur) / c.total_conversions).toFixed(2)
                   : "—";
-                const roi       = Number(c.total_spent_eur) > 0
+                const roi      = Number(c.total_spent_eur) > 0
                   ? ((c.total_conversions * 12) / Number(c.total_spent_eur)).toFixed(1)
                   : "—";
 
                 return (
-                  <div key={c.id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                  <div key={c.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                    {/* Header row */}
                     <div className="flex items-start justify-between gap-3 mb-4">
                       <div>
-                        <p className="text-white font-bold text-base">{c.campaign_name}</p>
+                        <p className="text-gray-900 font-bold text-base">{c.campaign_name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <StatusBadge status={c.status} />
-                          <span className="text-white/40 text-xs">
+                          <span className="text-gray-500 text-xs">
                             Vouchers: €{Number(c.sharer_voucher_eur).toFixed(0)} partageur · €{Number(c.friend_voucher_eur).toFixed(0)} ami
                           </span>
                         </div>
                       </div>
-                      <button className="flex items-center gap-1.5 text-white/40 hover:text-white text-xs transition-colors border border-white/10 rounded-lg px-2.5 py-1.5">
+                      <button className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs transition-colors border border-gray-200 rounded-lg px-2.5 py-1.5">
                         {c.status === "active" ? <Pause size={12} /> : <Play size={12} />}
                         {c.status === "active" ? "Pauser" : "Relancer"}
                       </button>
@@ -274,11 +275,11 @@ export default function RipplePage() {
 
                     {/* Budget progress */}
                     <div className="mb-4">
-                      <div className="flex justify-between text-xs text-white/50 mb-1.5">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1.5">
                         <span>Budget consommé</span>
                         <span>€{Number(c.total_spent_eur).toFixed(2)} / €{Number(c.total_budget_eur).toFixed(0)}</span>
                       </div>
-                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#10B981] rounded-full transition-all"
                           style={{ width: `${Math.min(pct, 100)}%` }}
@@ -289,26 +290,27 @@ export default function RipplePage() {
                     {/* Stats grid */}
                     <div className="grid grid-cols-4 gap-3 mb-4">
                       {[
-                        { label: "Partages", value: c.total_shares },
+                        { label: "Partages",    value: c.total_shares },
                         { label: "Conversions", value: c.total_conversions },
-                        { label: "Taux conv.", value: `${convRate}%` },
-                        { label: "Dépensé", value: `€${Number(c.total_spent_eur).toFixed(2)}` },
+                        { label: "Taux conv.",  value: `${convRate}%` },
+                        { label: "Dépensé",     value: `€${Number(c.total_spent_eur).toFixed(2)}` },
                       ].map((stat) => (
-                        <div key={stat.label} className="text-center">
-                          <p className="text-white font-black text-lg">{stat.value}</p>
-                          <p className="text-white/40 text-[10px] uppercase tracking-wide">{stat.label}</p>
+                        <div key={stat.label} className="text-center bg-gray-50 rounded-xl py-3">
+                          <p className="text-gray-900 font-black text-lg">{stat.value}</p>
+                          <p className="text-gray-500 text-[10px] uppercase tracking-wide mt-0.5">{stat.label}</p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="flex items-center gap-4 pt-3 border-t border-white/10 text-xs text-white/50">
+                    {/* Footer row */}
+                    <div className="flex items-center gap-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                       <span>
-                        <span className="text-white font-semibold">CPA : €{cpa}</span>
+                        CPA : <span className="text-gray-900 font-semibold">€{cpa}</span>
                       </span>
                       <span>·</span>
                       <span>
-                        <span className="text-[#10B981] font-semibold">ROI estimé : {roi}× </span>
-                        pour chaque €1 investi
+                        ROI estimé : <span className="text-[#10B981] font-semibold">{roi}×</span>
+                        {" "}pour chaque €1 investi
                       </span>
                     </div>
                   </div>
@@ -319,24 +321,24 @@ export default function RipplePage() {
         </div>
 
         {/* ── Gamification ──────────────────────────────────────────────── */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-[#10B981]" />
-            <h3 className="text-white font-bold text-sm">Classement Ambassadeurs</h3>
+            <h3 className="text-gray-900 font-bold text-sm">Classement Ambassadeurs</h3>
           </div>
           <div className="space-y-3">
             {[
-              { tier: "🥉 Bronze", range: "1–5 conversions", reward: "Vouchers standards (€3 + €2)", color: "#CD7F32" },
-              { tier: "🥈 Silver", range: "6–15 conversions", reward: "Vouchers +€1 bonus", color: "#9CA3AF" },
-              { tier: "🥇 Gold",   range: "16+ conversions",  reward: "Early access flash sales + vouchers +€2 bonus", color: "#F59E0B" },
+              { tier: "🥉 Bronze", range: "1–5 conversions",  reward: "Vouchers standards (€3 + €2)" },
+              { tier: "🥈 Silver", range: "6–15 conversions", reward: "Vouchers +€1 bonus" },
+              { tier: "🥇 Gold",   range: "16+ conversions",  reward: "Early access flash sales + vouchers +€2 bonus" },
             ].map((tier) => (
-              <div key={tier.tier} className="flex items-center gap-4 p-3 bg-white/5 rounded-xl">
-                <span className="text-xl shrink-0">{tier.tier.split(" ")[0]}</span>
+              <div key={tier.tier} className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl">
+                <span className="text-2xl shrink-0">{tier.tier.split(" ")[0]}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-semibold text-sm">{tier.tier.split(" ").slice(1).join(" ")}</p>
-                  <p className="text-white/40 text-xs">{tier.range}</p>
+                  <p className="text-gray-900 font-semibold text-sm">{tier.tier.split(" ").slice(1).join(" ")}</p>
+                  <p className="text-gray-500 text-xs">{tier.range}</p>
                 </div>
-                <p className="text-white/70 text-xs text-right shrink-0 max-w-[160px]">{tier.reward}</p>
+                <p className="text-gray-600 text-xs text-right shrink-0 max-w-[180px]">{tier.reward}</p>
               </div>
             ))}
           </div>
