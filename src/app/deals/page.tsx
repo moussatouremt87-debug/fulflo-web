@@ -174,18 +174,18 @@ type SortKey  = "price_asc" | "discount_max" | "expiry_soon";
 
 // ─── Filter / sort config ─────────────────────────────────────────────────────
 
-const CATEGORIES: { key: Category; label: string; emoji: string }[] = [
-  { key: "all",            label: "Tout",           emoji: "🛒" },
-  { key: "alimentation",   label: "Alimentation",   emoji: "🥫" },
-  { key: "hygiene",        label: "Hygiène",        emoji: "🧴" },
-  { key: "entretien",      label: "Entretien",      emoji: "🧹" },
-  { key: "beaute",         label: "Beauté",         emoji: "💄" },
-  { key: "boissons",       label: "Boissons",       emoji: "💧" },
-  { key: "bebe",           label: "Bébé",           emoji: "👶" },
-  { key: "animaux",        label: "Animaux",        emoji: "🐾" },
-  { key: "sport",          label: "Sport",          emoji: "💪" },
-  { key: "pharmacie",      label: "Pharmacie",      emoji: "💊" },
-  { key: "electromenager", label: "Électroménager", emoji: "⚡" },
+const CATEGORIES: { key: Category; label: string; image: string }[] = [
+  { key: "all",            label: "Tout",           image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=120&q=80" },
+  { key: "alimentation",   label: "Alimentation",   image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80" },
+  { key: "hygiene",        label: "Hygiène",        image: "https://images.unsplash.com/photo-1585770536735-27993a080586?w=120&q=80" },
+  { key: "entretien",      label: "Entretien",      image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=120&q=80" },
+  { key: "beaute",         label: "Beauté",         image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=120&q=80" },
+  { key: "boissons",       label: "Boissons",       image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=120&q=80" },
+  { key: "bebe",           label: "Bébé",           image: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=120&q=80" },
+  { key: "animaux",        label: "Animaux",        image: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=120&q=80" },
+  { key: "sport",          label: "Sport",          image: "https://images.unsplash.com/photo-1461897104016-0b3b00cc81ee?w=120&q=80" },
+  { key: "pharmacie",      label: "Pharmacie",      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=120&q=80" },
+  { key: "electromenager", label: "Électroménager", image: "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=120&q=80" },
 ];
 
 const SORTS: { key: SortKey; label: string }[] = [
@@ -439,29 +439,43 @@ export default function DealsPage() {
 
         {/* ── FILTER + SORT BAR ─────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
-          {/* Category filters */}
-          <div className="overflow-x-auto pb-1 -mx-1 px-1">
-          <div className="flex items-center gap-2 flex-nowrap min-w-max sm:flex-wrap sm:min-w-0">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.key}
-                onClick={() => setCategory(c.key)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                  category === c.key
-                    ? "bg-forest text-white shadow-sm"
-                    : "bg-white text-text-dark border border-mint-light hover:border-mint hover:text-forest"
-                }`}
-              >
-                <span>{c.emoji}</span>
-                {c.label}
-                {category === c.key && c.key !== "all" && (
-                  <span className="bg-white/20 text-white text-xs px-1.5 py-0.5 rounded-full">
-                    {filtered.length}
+          {/* Category filters — Noon-style circular photo cards */}
+          <div className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+            <div className="flex items-start gap-3 flex-nowrap">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setCategory(c.key)}
+                  className="flex flex-col items-center gap-1.5 flex-shrink-0 group"
+                  style={{ width: 72 }}
+                >
+                  <div className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-all duration-200 ${
+                    category === c.key
+                      ? "border-[#10B981] shadow-md shadow-[#10B981]/20 scale-105"
+                      : "border-transparent hover:border-[#10B981]/50 hover:scale-105"
+                  }`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={c.image}
+                      alt={c.label}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className={`text-[11px] font-medium text-center leading-tight line-clamp-2 ${
+                    category === c.key
+                      ? "text-[#1B4332] font-semibold"
+                      : "text-gray-500 group-hover:text-gray-700"
+                  }`}>
+                    {c.label}
+                    {category === c.key && c.key !== "all" && (
+                      <span className="block text-[10px] text-[#10B981] font-bold">
+                        {filtered.length}
+                      </span>
+                    )}
                   </span>
-                )}
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Sort */}

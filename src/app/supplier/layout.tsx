@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function SupplierLayout({ children }: { children: ReactNode }) {
   return (
-    <I18nProvider defaultLocale="fr">
+    <I18nProvider>
       <SupplierShell>{children}</SupplierShell>
     </I18nProvider>
   );

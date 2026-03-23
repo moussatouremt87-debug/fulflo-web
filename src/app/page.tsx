@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import HeroEssentials from "@/components/HeroEssentials";
 import LangSwitcher from "@/components/LangSwitcher";
+import { useI18n } from "@/lib/i18n";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -374,6 +375,7 @@ function ProductCard({ product }: { product: Product }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const { t } = useI18n();
   const [cartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
@@ -411,9 +413,7 @@ export default function Home() {
         className="bg-[#1B4332] text-white text-center text-xs font-semibold py-2 px-4"
         style={{ minHeight: 36 }}
       >
-        <span className="opacity-80">🚚 Livraison offerte dès 49€ · </span>
-        <span className="text-[#10B981]">Surplus fabricant certifié</span>
-        <span className="opacity-80"> · Grandes marques à -70%</span>
+        <span className="opacity-80">🚚 {t("announce.text")}</span>
       </div>
 
       {/* ══ 2. SECONDARY NAV ══════════════════════════════════════════════════ */}
@@ -463,7 +463,7 @@ export default function Home() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher parmi 1 200+ produits surplus…"
+                placeholder={t("nav.search")}
                 className="w-full h-9 pl-4 pr-10 rounded-l text-sm text-gray-800 bg-white border-0 outline-none placeholder-gray-400"
               />
             </div>
@@ -477,10 +477,10 @@ export default function Home() {
           <div className="flex items-center gap-4 ml-2 shrink-0">
             <LangSwitcher />
             <Link href="/how-it-works" className="hidden md:block text-white/70 hover:text-white text-sm transition-colors whitespace-nowrap">
-              Comment ça marche
+              {t("nav.how")}
             </Link>
             <Link href="/membership" className="hidden lg:flex items-center gap-1.5 bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] text-sm font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-              ✦ FulFlo Pass
+              {t("nav.pass")}
             </Link>
             <Link href="/supplier/login" className="hidden sm:flex flex-col items-center text-white/80 hover:text-white transition-colors">
               <User size={18} />
@@ -629,16 +629,16 @@ export default function Home() {
             <Zap size={18} className="text-yellow-400 fill-yellow-400 shrink-0" />
             <div>
               <p className="text-yellow-400 text-xs font-black uppercase tracking-widest leading-none">
-                Vente Flash
+                {t("flash.label")}
               </p>
               <p className="text-white text-sm font-bold mt-0.5">
-                Jusqu&apos;à -70% · Stock limité
+                {t("flash.text")}
               </p>
             </div>
           </div>
           {/* Countdown */}
           <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-xs mr-1">Expire dans</span>
+            <span className="text-gray-400 text-xs mr-1">{t("flash.expire")}</span>
             {[
               { val: h, label: "H" },
               { val: m, label: "M" },
@@ -691,10 +691,10 @@ export default function Home() {
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
             <h2 className="font-black text-gray-900 text-sm uppercase tracking-wide">
-              Économies du Jour
+              {t("savings.title")}
             </h2>
             <Link href="/deals" className="text-[#1B4332] text-xs font-bold hover:underline">
-              Tout voir →
+              {t("savings.see")}
             </Link>
           </div>
           {/* 4 mini product cards — live Supabase data if available */}
