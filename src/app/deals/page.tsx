@@ -5,6 +5,7 @@ import ProductCard, { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
 import { useCart } from "@/lib/cart";
 import AuthNav from "@/components/AuthNav";
+import { useI18n } from "@/lib/i18n";
 
 // Brand → Unsplash image map for cart thumbnails
 const BRAND_IMG: Record<string, string> = {
@@ -46,6 +47,7 @@ function SponsoredCard({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const impressionFired = useRef(false);
+  const { t } = useI18n();
 
   // Fire impression once when card enters viewport
   useEffect(() => {
@@ -96,7 +98,7 @@ function SponsoredCard({
       {/* Sponsored badge */}
       <div className="absolute top-3 left-3 z-10">
         <span className="text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
-          Sponsorisé
+          {t("deals.sponsored")}
         </span>
       </div>
 
@@ -109,7 +111,7 @@ function SponsoredCard({
       {added && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#10B981]/10 rounded-2xl backdrop-blur-sm">
           <div className="bg-[#1B4332] text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
-            ✅ Ajouté
+            ✅ {t("deals.added")}
           </div>
         </div>
       )}
@@ -142,14 +144,14 @@ function SponsoredCard({
           onClick={handleClick}
           className="w-full bg-[#1B4332] text-white font-bold text-sm py-2 rounded-xl hover:bg-[#2d6a4f] transition-colors mb-2"
         >
-          Ajouter au panier
+          {t("deals.add")}
         </button>
 
         <a
           href="#"
           className="block text-center text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
         >
-          En savoir plus sur {product.brand} →
+          {t("deals.learn-more")} {product.brand} →
         </a>
       </div>
     </div>
@@ -188,10 +190,10 @@ const CATEGORIES: { key: Category; label: string; image: string }[] = [
   { key: "electromenager", label: "Électroménager", image: "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=120&q=80" },
 ];
 
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: "price_asc",    label: "Prix croissant" },
-  { key: "discount_max", label: "Réduction max" },
-  { key: "expiry_soon",  label: "Expire bientôt" },
+const SORT_KEYS: { key: SortKey; tKey: string }[] = [
+  { key: "price_asc",    tKey: "deals.sort.price" },
+  { key: "discount_max", tKey: "deals.sort.discount" },
+  { key: "expiry_soon",  tKey: "deals.sort.expiry" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -245,6 +247,7 @@ function getSession(): string {
 
 export default function DealsPage() {
   const cart = useCart();
+  const { t } = useI18n();
   const [products, setProducts]   = useState<ProductCardProps[]>([]);
   const [loading, setLoading]     = useState(true);
   const [category, setCategory]   = useState<Category>("all");
@@ -399,7 +402,7 @@ export default function DealsPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Chercher une marque ou un produit…"
+                placeholder={t("deals.search")}
                 className="w-full pl-8 pr-4 py-2 rounded-xl border border-mint-light bg-surface text-sm text-forest placeholder:text-text-mid/50 focus:outline-none focus:ring-2 focus:ring-mint"
               />
             </div>
@@ -416,7 +419,7 @@ export default function DealsPage() {
               </a>
             )}
             <AuthNav />
-            <a href="/" className="text-xs text-text-mid hover:text-forest transition-colors">← Accueil</a>
+            <a href="/" className="text-xs text-text-mid hover:text-forest transition-colors">{t("deals.home")}</a>
           </div>
         </div>
       </header>
@@ -425,9 +428,9 @@ export default function DealsPage() {
 
         {/* ── PAGE TITLE ────────────────────────────────────────────────── */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-forest mb-1">Toutes les offres surplus</h1>
+          <h1 className="text-3xl font-bold text-forest mb-1">{t("deals.title")}</h1>
           <p className="text-text-mid text-sm">
-            {loading ? "Chargement…" : (
+            {loading ? t("deals.loading") : (
               <>
                 <span className="font-semibold text-forest">{filtered.length} produits</span>
                 {" "}— économies potentielles jusqu&apos;à{" "}
@@ -480,14 +483,14 @@ export default function DealsPage() {
 
           {/* Sort */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-text-mid">Trier :</span>
+            <span className="text-xs text-text-mid">{t("deals.sort.by")}</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
               className="text-sm font-semibold text-forest bg-white border border-mint-light rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint cursor-pointer"
             >
-              {SORTS.map((s) => (
-                <option key={s.key} value={s.key}>{s.label}</option>
+              {SORT_KEYS.map((s) => (
+                <option key={s.key} value={s.key}>{t(s.tKey)}</option>
               ))}
             </select>
           </div>
@@ -504,19 +507,19 @@ export default function DealsPage() {
         ) : products.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">📦</p>
-            <p className="text-forest font-semibold text-lg mb-2">Aucun produit disponible</p>
-            <p className="text-text-mid text-sm">Le catalogue est en cours de mise à jour. Revenez bientôt.</p>
+            <p className="text-forest font-semibold text-lg mb-2">{t("deals.empty.no-products")}</p>
+            <p className="text-text-mid text-sm">{t("deals.empty.no-products-sub")}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">🔍</p>
-            <p className="text-forest font-semibold text-lg mb-2">Aucun produit trouvé</p>
-            <p className="text-text-mid text-sm mb-4">Essayez un autre filtre ou une autre recherche.</p>
+            <p className="text-forest font-semibold text-lg mb-2">{t("deals.empty.no-results")}</p>
+            <p className="text-text-mid text-sm mb-4">{t("deals.empty.no-results-sub")}</p>
             <button
               onClick={() => { setCategory("all"); setSearch(""); }}
               className="bg-forest text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-forest-mid transition-colors"
             >
-              Voir tous les produits
+              {t("deals.empty.reset")}
             </button>
           </div>
         ) : (
@@ -546,7 +549,7 @@ export default function DealsPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 border-t border-gray-100" />
                   <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Autres offres surplus
+                    {t("deals.sponsored-other")}
                   </span>
                   <div className="flex-1 border-t border-gray-100" />
                 </div>
@@ -560,7 +563,7 @@ export default function DealsPage() {
                   {addedIds.has(p.id) && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-mint/10 rounded-2xl backdrop-blur-sm">
                       <div className="bg-forest text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
-                        ✅ Ajouté au panier
+                        ✅ {t("deals.added")}
                       </div>
                     </div>
                   )}
@@ -590,15 +593,15 @@ export default function DealsPage() {
             <div className="bg-forest text-white rounded-2xl shadow-xl px-6 py-4 flex items-center gap-4">
               <div>
                 <p className="font-bold text-sm">
-                  {cart.itemCount} article{cart.itemCount > 1 ? "s" : ""} · {cart.subtotal.toFixed(2).replace(".", ",")} €
+                  {cart.itemCount} {cart.itemCount > 1 ? t("cart.articles") : t("cart.article")} · {cart.subtotal.toFixed(2).replace(".", ",")} €
                 </p>
-                <p className="text-white/60 text-xs">Économies: -{cart.totalSavings.toFixed(2).replace(".", ",")} €</p>
+                <p className="text-white/60 text-xs">{t("deals.savings")} -{cart.totalSavings.toFixed(2).replace(".", ",")} €</p>
               </div>
               <a
                 href="/cart"
                 className="bg-mint text-forest font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-mint-light transition-colors whitespace-nowrap"
               >
-                Voir le panier →
+                {t("deals.cart.see")}
               </a>
             </div>
           </div>
@@ -607,15 +610,15 @@ export default function DealsPage() {
         {/* ── REFERRAL NUDGE ────────────────────────────────────────────── */}
         <div className="mt-12 bg-forest rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <p className="text-mint font-bold text-sm uppercase tracking-wider mb-1">Invitez vos amis</p>
-            <p className="text-white font-semibold text-lg">Vous et votre ami recevez chacun <span className="text-mint">€5</span></p>
-            <p className="text-white/60 text-sm">Crédit activé à la première commande</p>
+            <p className="text-mint font-bold text-sm uppercase tracking-wider mb-1">{t("referral.title")}</p>
+            <p className="text-white font-semibold text-lg">{t("referral.sub")} <span className="text-mint">€5</span></p>
+            <p className="text-white/60 text-sm">{t("referral.note")}</p>
           </div>
           <a
             href="/invite"
             className="bg-mint text-forest font-bold px-6 py-3 rounded-xl text-sm hover:bg-mint-light transition-colors whitespace-nowrap shrink-0"
           >
-            🎁 Obtenir mon lien →
+            {t("referral.cta")}
           </a>
         </div>
 

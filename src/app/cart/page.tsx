@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n";
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight, Lock } from "lucide-react";
 
 export default function CartPage() {
+  const { t } = useI18n();
   const {
     items,
     removeItem,
@@ -51,12 +53,12 @@ export default function CartPage() {
         // Stripe redirects fail. Success page clears it after confirmed payment.
         window.location.href = data.url;
       } else {
-        setError(data.error ?? "Erreur lors de la création de la session.");
+        setError(data.error ?? "Error creating session.");
         setLoading(false);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Impossible de contacter le serveur.";
-      setError(msg + " Réessayez.");
+      const msg = err instanceof Error ? err.message : "Could not reach the server.";
+      setError(msg + " Please retry.");
       setLoading(false);
     }
   };
@@ -72,13 +74,13 @@ export default function CartPage() {
         </nav>
         <div className="flex flex-col items-center justify-center min-h-[70vh] gap-5 px-4">
           <ShoppingBag size={56} className="text-gray-200" />
-          <h2 className="text-2xl font-black text-gray-700">Votre panier est vide</h2>
-          <p className="text-gray-400 text-sm">Ajoutez des produits depuis le catalogue.</p>
+          <h2 className="text-2xl font-black text-gray-700">{t("cart.empty.title")}</h2>
+          <p className="text-gray-400 text-sm">{t("cart.empty.sub")}</p>
           <Link
             href="/deals"
             className="bg-[#1B4332] text-white font-bold px-8 py-3 rounded hover:bg-[#2d6a4f] transition-colors"
           >
-            Voir les offres surplus →
+            {t("cart.empty.cta")}
           </Link>
         </div>
       </div>
@@ -93,20 +95,20 @@ export default function CartPage() {
           fulflo<span className="text-[#10B981]">.</span>
         </Link>
         <span className="text-white/30">/</span>
-        <span className="text-white/70 text-sm">Mon panier</span>
+        <span className="text-white/70 text-sm">{t("cart.breadcrumb")}</span>
         <Link
           href="/deals"
           className="ml-auto text-white/60 hover:text-white text-sm transition-colors"
         >
-          ← Continuer les achats
+          {t("cart.continue")}
         </Link>
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-2xl font-black text-gray-900 mb-6">
-          Mon panier{" "}
+          {t("cart.title")}{" "}
           <span className="text-gray-400 font-normal text-lg">
-            ({items.reduce((s, i) => s + i.quantity, 0)} article{items.reduce((s, i) => s + i.quantity, 0) > 1 ? "s" : ""})
+            ({items.reduce((s, i) => s + i.quantity, 0)} {items.reduce((s, i) => s + i.quantity, 0) > 1 ? t("cart.articles") : t("cart.article")})
           </span>
         </h1>
 
@@ -174,7 +176,7 @@ export default function CartPage() {
                 <button
                   onClick={() => removeItem(item.productId)}
                   className="text-gray-300 hover:text-red-400 transition-colors self-start"
-                  aria-label="Supprimer"
+                  aria-label={t("cart.remove")}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -186,19 +188,19 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded p-5 sticky top-20">
               <h2 className="font-black text-gray-900 text-base mb-4 uppercase tracking-wide">
-                Récapitulatif
+                {t("cart.summary")}
               </h2>
 
               {/* Email */}
               <div className="mb-4">
                 <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 block">
-                  Email de confirmation
+                  {t("cart.email-label")}
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="votre@email.com"
+                  placeholder={t("cart.email-ph")}
                   className="w-full border border-gray-200 rounded px-3 py-2 text-sm outline-none focus:border-[#1B4332] transition-colors"
                 />
               </div>
@@ -206,28 +208,28 @@ export default function CartPage() {
               {/* Lines */}
               <div className="space-y-2.5 text-sm border-t border-gray-100 pt-4">
                 <div className="flex justify-between text-gray-600">
-                  <span>Sous-total</span>
+                  <span>{t("cart.subtotal")}</span>
                   <span className="font-semibold">{subtotal.toFixed(2).replace(".", ",")} €</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Frais de service (5%)</span>
+                  <span>{t("cart.service-fee")}</span>
                   <span className="font-semibold">{serviceFee.toFixed(2).replace(".", ",")} €</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Livraison</span>
+                  <span>{t("cart.shipping")}</span>
                   <span className={`font-semibold ${shipping === 0 ? "text-[#10B981]" : ""}`}>
-                    {shipping === 0 ? "Offerte ✓" : `${shipping.toFixed(2).replace(".", ",")} €`}
+                    {shipping === 0 ? t("cart.shipping-free") : `${shipping.toFixed(2).replace(".", ",")} €`}
                   </span>
                 </div>
                 {shipping > 0 && (
                   <p className="text-[11px] text-gray-400">
-                    Livraison offerte à partir de 40 €
+                    {t("cart.shipping-threshold")}
                   </p>
                 )}
 
                 {/* Total */}
                 <div className="border-t border-gray-200 pt-3 mt-1 flex justify-between items-baseline">
-                  <span className="font-black text-gray-900">Total</span>
+                  <span className="font-black text-gray-900">{t("cart.total")}</span>
                   <span className="font-black text-gray-900 text-xl">
                     {total.toFixed(2).replace(".", ",")} €
                   </span>
@@ -237,7 +239,7 @@ export default function CartPage() {
                 {totalSavings > 0 && (
                   <div className="bg-[#ecfdf5] rounded px-3 py-2 flex justify-between items-center">
                     <span className="text-[11px] text-[#1B4332] font-semibold">
-                      Économies vs grande distribution
+                      {t("cart.savings-label")}
                     </span>
                     <span className="text-[#10B981] font-black text-sm">
                       -{totalSavings.toFixed(2).replace(".", ",")} €
@@ -258,18 +260,18 @@ export default function CartPage() {
                 className="w-full mt-4 bg-[#1B4332] hover:bg-[#2d6a4f] disabled:opacity-60 text-white font-black py-3.5 rounded flex items-center justify-center gap-2 transition-colors"
               >
                 {loading ? (
-                  "Redirection vers Stripe…"
+                  t("cart.checkout-loading")
                 ) : (
                   <>
                     <Lock size={15} />
-                    Payer {total.toFixed(2).replace(".", ",")} €
+                    {t("cart.checkout")} {total.toFixed(2).replace(".", ",")} €
                     <ChevronRight size={16} />
                   </>
                 )}
               </button>
 
               <p className="text-center text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
-                <Lock size={10} /> Paiement sécurisé · Stripe · SSL 256-bit
+                <Lock size={10} /> {t("cart.secure")}
               </p>
             </div>
           </div>

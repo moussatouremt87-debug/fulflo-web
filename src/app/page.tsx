@@ -269,6 +269,7 @@ function useCountdown(targetSeconds: number) {
 
 function ProductCard({ product }: { product: Product }) {
   const [liked, setLiked] = useState(false);
+  const { t } = useI18n();
 
   return (
     <div className="bg-white border border-gray-200 flex flex-col h-full group hover:shadow-md transition-shadow">
@@ -289,7 +290,7 @@ function ProductCard({ product }: { product: Product }) {
             className="absolute top-2 right-2 z-10 text-white text-[11px] font-black px-2 py-0.5"
             style={{ background: "#1B4332" }}
           >
-            NOUVEAU
+            {t("product.new")}
           </span>
         )}
         <Image
@@ -343,7 +344,7 @@ function ProductCard({ product }: { product: Product }) {
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-0.5">
-            Prix normal{" "}
+            {t("product.normal-price")}{" "}
             <span className="line-through">{product.originalPrice.toFixed(2).replace(".", ",")} €</span>
             {" · "}
             <span className="text-[#1B4332] font-semibold">
@@ -356,7 +357,7 @@ function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center gap-1 mt-2 mb-3">
           <Truck size={12} className={product.freeShipping ? "text-[#10B981]" : "text-gray-400"} />
           <span className={`text-[11px] font-semibold ${product.freeShipping ? "text-[#10B981]" : "text-gray-400"}`}>
-            {product.freeShipping ? "Livraison offerte" : "Livraison 48h"}
+            {product.freeShipping ? t("product.free-shipping") : t("product.shipping-48h")}
           </span>
         </div>
 
@@ -365,7 +366,7 @@ function ProductCard({ product }: { product: Product }) {
           href="/deals"
           className="block bg-[#1B4332] hover:bg-[#2d6a4f] text-white text-sm font-bold text-center py-2.5 transition-colors"
         >
-          Ajouter au panier
+          {t("deals.add")}
         </Link>
       </div>
     </div>
@@ -375,7 +376,7 @@ function ProductCard({ product }: { product: Product }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const [cartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
@@ -420,17 +421,17 @@ export default function Home() {
       <div className="bg-[#F9FAFB] border-b border-gray-200 text-xs">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-end gap-6">
           {[
-            { label: "Aide & Contact", href: "#" },
-            { label: "Suivi commande", href: "#" },
-            { label: "Mon compte", href: "/supplier/login" },
-            { label: "Fournisseurs", href: "/supplier/login" },
+            { key: "topnav.help",      href: "#" },
+            { key: "topnav.tracking",  href: "#" },
+            { key: "topnav.account",   href: "/supplier/login" },
+            { key: "topnav.suppliers", href: "/supplier/login" },
           ].map((l) => (
             <Link
-              key={l.label}
+              key={l.key}
               href={l.href}
               className="text-gray-500 hover:text-[#1B4332] transition-colors"
             >
-              {l.label}
+              {t(l.key)}
             </Link>
           ))}
         </div>
@@ -453,7 +454,7 @@ export default function Home() {
           {/* Categories dropdown button */}
           <button className="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-3 py-1.5 rounded transition-colors shrink-0">
             <Menu size={16} />
-            Catégories
+            {t("nav.categories")}
           </button>
 
           {/* Search bar */}
@@ -469,7 +470,7 @@ export default function Home() {
             </div>
             <button className="h-9 px-4 bg-[#10B981] hover:bg-[#059669] text-[#1B4332] font-bold rounded-r flex items-center gap-1.5 transition-colors shrink-0">
               <Search size={16} />
-              <span className="hidden sm:inline text-sm">Chercher</span>
+              <span className="hidden sm:inline text-sm">{t("nav.search-btn")}</span>
             </button>
           </div>
 
@@ -484,11 +485,11 @@ export default function Home() {
             </Link>
             <Link href="/supplier/login" className="hidden sm:flex flex-col items-center text-white/80 hover:text-white transition-colors">
               <User size={18} />
-              <span className="text-[10px] mt-0.5">Connexion</span>
+              <span className="text-[10px] mt-0.5">{t("nav.login")}</span>
             </Link>
             <button className="relative flex flex-col items-center text-white/80 hover:text-white transition-colors">
               <ShoppingCart size={18} />
-              <span className="text-[10px] mt-0.5">Panier</span>
+              <span className="text-[10px] mt-0.5">{t("nav.cart")}</span>
               {cartCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-[#10B981] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
                   {cartCount}
@@ -505,18 +506,18 @@ export default function Home() {
           <div className="flex items-center gap-5 text-xs text-gray-600">
             <button className="flex items-center gap-1.5 hover:text-[#1B4332] transition-colors">
               <MapPin size={13} className="text-[#1B4332]" />
-              <span>Livraison vers <strong className="text-gray-900">75001 Paris</strong></span>
+              <span>{t("loc.delivery")} <strong className="text-gray-900">75001 Paris</strong></span>
             </button>
             <span className="hidden sm:inline text-gray-300">|</span>
             <span className="hidden sm:flex items-center gap-1.5">
               <Truck size={13} className="text-[#10B981]" />
-              <span className="text-[#1B4332] font-semibold">Livraison 48h garantie</span>
+              <span className="text-[#1B4332] font-semibold">{t("loc.delivery48")}</span>
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-xs text-gray-500">
-            {["Tout", "Alimentation", "Hygiène", "Entretien", "Beauté", "Boissons"].map((c) => (
-              <button key={c} className="hover:text-[#1B4332] font-medium transition-colors">
-                {c}
+            {(["cat.all","cat.food","cat.hygiene","cat.home","cat.beauty","cat.drinks"] as const).map((k) => (
+              <button key={k} className="hover:text-[#1B4332] font-medium transition-colors">
+                {t(k)}
               </button>
             ))}
           </div>
@@ -552,19 +553,19 @@ export default function Home() {
             </div>
             <div className="relative z-10">
               <span className="inline-block bg-[#10B981] text-[#1B4332] text-[10px] font-black uppercase px-2 py-0.5 mb-3">
-                Surplus Direct Fabricant
+                {t("hero.badge")}
               </span>
               <h2 className="text-white font-black text-2xl leading-tight uppercase mb-2">
-                ESSENTIELS<br />QUOTIDIEN
+                {t("hero.title1")}
               </h2>
               <p className="text-white/60 text-sm mb-4">
-                -40% à -70% · Grandes marques
+                {t("hero.sub1")}
               </p>
               <Link
                 href="/deals"
                 className="inline-flex items-center gap-1 bg-white text-[#1B4332] font-bold text-sm px-4 py-2 rounded hover:bg-[#D1FAE5] transition-colors"
               >
-                Voir les offres →
+                {t("hero.cta")}
               </Link>
             </div>
           </div>
@@ -584,11 +585,11 @@ export default function Home() {
               />
             </div>
             <div className="relative z-10">
-              <p className="text-[#10B981] text-[10px] font-bold uppercase tracking-widest mb-1">Boissons</p>
-              <h3 className="text-white font-black text-xl leading-tight mb-1">CAFÉ & INFUSIONS</h3>
-              <p className="text-white/60 text-xs mb-3">Nescafé, Carte Noire, Lipton</p>
+              <p className="text-[#10B981] text-[10px] font-bold uppercase tracking-widest mb-1">{t("hero.col2.cat")}</p>
+              <h3 className="text-white font-black text-xl leading-tight mb-1">{t("hero.col2.title")}</h3>
+              <p className="text-white/60 text-xs mb-3">{t("hero.col2.brands")}</p>
               <Link href="/deals" className="text-white text-xs font-bold underline underline-offset-2 hover:text-[#10B981] transition-colors">
-                Découvrir →
+                {t("hero.discover")}
               </Link>
             </div>
           </div>
@@ -608,11 +609,11 @@ export default function Home() {
               />
             </div>
             <div className="relative z-10">
-              <p className="text-[#10B981] text-[10px] font-bold uppercase tracking-widest mb-1">Céréales</p>
-              <h3 className="text-white font-black text-xl leading-tight mb-1">PETIT-DÉJEUNER</h3>
-              <p className="text-white/60 text-xs mb-3">Kellogg's, Nestlé, Quaker</p>
+              <p className="text-[#10B981] text-[10px] font-bold uppercase tracking-widest mb-1">{t("hero.col3.cat")}</p>
+              <h3 className="text-white font-black text-xl leading-tight mb-1">{t("hero.col3.title")}</h3>
+              <p className="text-white/60 text-xs mb-3">{t("hero.col3.brands")}</p>
               <Link href="/deals" className="text-white text-xs font-bold underline underline-offset-2 hover:text-[#10B981] transition-colors">
-                Découvrir →
+                {t("hero.discover")}
               </Link>
             </div>
           </div>
@@ -656,7 +657,7 @@ export default function Home() {
             href="/deals"
             className="hidden sm:inline-block bg-yellow-400 text-gray-900 font-black text-sm px-4 py-2 rounded hover:bg-yellow-300 transition-colors"
           >
-            Voir les offres
+            {t("flash.cta")}
           </Link>
         </div>
       </div>
@@ -670,8 +671,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Tag size={18} className="text-[#1B4332] shrink-0" />
             <p className="text-[#1B4332] font-black text-sm">
-              Première commande : <span className="underline">-10€</span> avec le code{" "}
-              <span className="bg-[#1B4332] text-white px-2 py-0.5 rounded font-mono tracking-widest text-xs ml-1">
+              {t("promo.text")} <span className="bg-[#1B4332] text-white px-2 py-0.5 rounded font-mono tracking-widest text-xs ml-1">
                 SURPLUS10
               </span>
             </p>
@@ -680,7 +680,7 @@ export default function Home() {
             href="/invite"
             className="bg-[#1B4332] text-white font-bold text-sm px-5 py-1.5 rounded hover:bg-[#065f46] transition-colors whitespace-nowrap shrink-0"
           >
-            J&apos;en profite →
+            {t("promo.cta")}
           </Link>
         </div>
       </div>
@@ -723,7 +723,7 @@ export default function Home() {
                     {p.price.toFixed(2).replace(".", ",")} €
                   </span>
                   <p className="text-[10px] text-[#10B981] font-bold">
-                    Économisez {p.savings.toFixed(2).replace(".", ",")} €
+                    {t("savings.save")} {p.savings.toFixed(2).replace(".", ",")} €
                   </p>
                 </div>
               </Link>
@@ -737,19 +737,19 @@ export default function Home() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
-              Meilleures Offres Surplus
+              {t("products.best")}
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              {(dbProducts.length || PRODUCTS.length)} produits · Mis à jour aujourd&apos;hui
+              {(dbProducts.length || PRODUCTS.length)} {t("products.updated")}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 hidden sm:inline">Trier par :</span>
+            <span className="text-xs text-gray-500 hidden sm:inline">{t("products.sort.by")}</span>
             <select className="text-xs border border-gray-200 rounded px-2 py-1 text-gray-700 bg-white outline-none">
-              <option>Économies</option>
-              <option>Prix croissant</option>
-              <option>Mieux notés</option>
-              <option>Nouveautés</option>
+              <option>{t("products.sort.savings")}</option>
+              <option>{t("products.sort.price")}</option>
+              <option>{t("products.sort.rated")}</option>
+              <option>{t("products.sort.new")}</option>
             </select>
           </div>
         </div>
@@ -766,7 +766,7 @@ export default function Home() {
             href="/deals"
             className="bg-[#1B4332] text-white font-bold text-sm px-8 py-3 rounded hover:bg-[#2d6a4f] transition-colors"
           >
-            Voir tous les produits →
+            {t("products.see-all")}
           </Link>
         </div>
       </div>
@@ -774,7 +774,7 @@ export default function Home() {
       {/* ══ 10. CATEGORY TILES ═════════════════════════════════════════════════ */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-8">
         <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-3">
-          Explorer par Catégorie
+          {t("cat.explore")}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {CATEGORIES.map((cat) => (
@@ -798,7 +798,7 @@ export default function Home() {
                 <h3 className="text-white font-black text-lg leading-tight">{cat.label}</h3>
                 <p className="text-white/60 text-xs mt-0.5 mb-3">{cat.desc}</p>
                 <span className="inline-block text-[#10B981] text-xs font-bold group-hover:underline">
-                  Voir les offres →
+                  {t("cat.see-offers")}
                 </span>
               </div>
             </Link>
@@ -811,20 +811,20 @@ export default function Home() {
         <div className="bg-[#1B4332] rounded p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-[#10B981] text-xs font-bold uppercase tracking-widest mb-1">
-              Pour les Marques
+              {t("supplier.for-brands")}
             </p>
             <p className="text-white font-black text-xl">
-              Votre surplus mérite mieux que la destruction.
+              {t("supplier.tagline")}
             </p>
             <p className="text-white/60 text-sm mt-0.5">
-              Commission 15–20% · Brand-safe · Go-live en 48h
+              {t("supplier.sub")}
             </p>
           </div>
           <Link
             href="/supplier/login"
             className="bg-[#10B981] text-[#1B4332] font-black text-sm px-6 py-2.5 rounded hover:bg-[#D1FAE5] transition-colors whitespace-nowrap shrink-0"
           >
-            Devenir Fournisseur →
+            {t("supplier.cta")}
           </Link>
         </div>
       </div>
@@ -839,12 +839,12 @@ export default function Home() {
                 fulflo<span className="text-[#10B981]">.</span>
               </p>
               <p className="text-white/40 text-xs leading-relaxed">
-                Europe&apos;s surplus economy platform. Direct fabricant. Certifié.
+                {t("footer.brand")}
               </p>
             </div>
             {([
               {
-                title: "Acheter",
+                titleKey: "footer.col.buy",
                 links: [
                   { label: "Catalogue", href: "/deals" },
                   { label: "Flash Sales", href: "/deals" },
@@ -853,7 +853,7 @@ export default function Home() {
                 ],
               },
               {
-                title: "Aide",
+                titleKey: "footer.col.help",
                 links: [
                   { label: "Livraison & retours", href: "/faq" },
                   { label: "FAQ", href: "/faq" },
@@ -862,7 +862,7 @@ export default function Home() {
                 ],
               },
               {
-                title: "Entreprise",
+                titleKey: "footer.col.company",
                 links: [
                   { label: "Fournisseurs", href: "/supplier/login" },
                   { label: "Devenir partenaire", href: "/supplier/login" },
@@ -870,10 +870,10 @@ export default function Home() {
                   { label: "À propos", href: "/how-it-works" },
                 ],
               },
-            ] as { title: string; links: { label: string; href: string }[] }[]).map((col) => (
-              <div key={col.title}>
+            ] as { titleKey: string; links: { label: string; href: string }[] }[]).map((col) => (
+              <div key={col.titleKey}>
                 <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">
-                  {col.title}
+                  {t(col.titleKey)}
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {col.links.map((l) => (
@@ -890,9 +890,9 @@ export default function Home() {
           <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="text-white/30 text-xs">© 2026 Fulflo SAS · France</p>
             <div className="flex items-center gap-4">
-              {["Mentions légales", "CGV", "Confidentialité"].map((l) => (
-                <a key={l} href="#" className="text-white/30 text-xs hover:text-white/60 transition-colors">
-                  {l}
+              {(["footer.legal","footer.terms","footer.privacy"] as const).map((k) => (
+                <a key={k} href="#" className="text-white/30 text-xs hover:text-white/60 transition-colors">
+                  {t(k)}
                 </a>
               ))}
             </div>
