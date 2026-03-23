@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/lib/cart";
-import { CheckCircle, Package, Share2, Clock } from "lucide-react";
+import { CheckCircle, Package, Share2, Clock, Copy, Check } from "lucide-react";
 
 // Replenishment prediction by category
 const DURATION_DAYS: Record<string, number> = {
@@ -48,6 +48,11 @@ function SuccessContent() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState("");
   const [copied, setCopied]       = useState(false);
+  const [rippleShare, setRippleShare] = useState<{
+    shareUrl: string; whatsappUrl: string; shareMessage: string;
+    sharerVoucher: number; friendVoucher: number; brandName: string;
+  } | null>(null);
+  const [rippleCopied, setRippleCopied] = useState(false);
 
   const fetchOrder = useCallback(async () => {
     if (!sessionId) { setError("Session introuvable."); setLoading(false); return; }
@@ -57,6 +62,21 @@ function SuccessContent() {
       if (data.error) { setError("Commande introuvable."); setLoading(false); return; }
       setOrderData(data);
       clearCart(); // Clear cart after confirmed payment
+      // Fetch Ripple share link for the first purchased product
+      const firstItem = data.cartItems?.[0];
+      if (firstItem) {
+        fetch("/api/ripple/share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerId: data.customerEmail || data.sessionId || "anon",
+            productId: firstItem.productId,
+            channel: "copy",
+          }),
+        }).then((r) => r.json()).then((rd) => {
+          if (!rd.error) setRippleShare(rd);
+        }).catch(() => {});
+      }
     } catch {
       setError("Impossible de charger la commande.");
     } finally {
@@ -198,6 +218,49 @@ function SuccessContent() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* ── Ripple share widget ─────────────────────────────────────────── */}
+        {rippleShare && (
+          <div className="bg-[#F0FDF4] border border-[#10B981] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Share2 size={16} className="text-[#10B981]" />
+              <h3 className="font-bold text-[#1B4332] text-base">
+                Partagez et gagnez €{rippleShare.sharerVoucher.toFixed(0)}
+              </h3>
+            </div>
+            <p className="text-sm text-[#1B4332]/80 mb-1">
+              Vous venez d&apos;acheter un produit de qualité à prix surplus.
+              Partagez à vos proches : si l&apos;un d&apos;eux achète, vous recevez{" "}
+              <strong>€{rippleShare.sharerVoucher.toFixed(0)} de crédit</strong>.
+            </p>
+            <p className="text-sm text-[#1B4332]/80 mb-4">
+              Ils reçoivent <strong>€{rippleShare.friendVoucher.toFixed(0)} de bienvenue</strong> sur leur première commande.
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              <a
+                href={rippleShare.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-[#25D366] text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#1ebe5c] transition-colors"
+              >
+                <span>📲</span> WhatsApp
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(rippleShare.shareUrl).then(() => {
+                    setRippleCopied(true);
+                    setTimeout(() => setRippleCopied(false), 2500);
+                  }).catch(() => {});
+                }}
+                className="flex items-center gap-2 bg-[#1B4332] text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-[#2d6a4f] transition-colors"
+              >
+                {rippleCopied ? <Check size={14} /> : <Copy size={14} />}
+                {rippleCopied ? "Lien copié ✓" : "Copier le lien"}
+              </button>
+            </div>
+            <p className="text-xs text-[#1B4332]/40 mt-3">Sponsorisé par {rippleShare.brandName}</p>
           </div>
         )}
 

@@ -3,14 +3,17 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase";
+import { Share2, Package } from "lucide-react";
 
 const NAV = [
-  { key: "dashboard",    icon: "📊", href: "/supplier/dashboard" },
-  { key: "products",     icon: "📦", href: "/supplier/products" },
-  { key: "campaigns",    icon: "📢", href: "/supplier/campaigns" },
-  { key: "flash-sales",  icon: "⚡", href: "/supplier/flash-sales" },
-  { key: "analytics",   icon: "📈", href: "/supplier/analytics" },
-  { key: "impact",      icon: "🌱", href: "/supplier/impact" },
+  { key: "dashboard",   icon: "📊",  href: "/supplier/dashboard",  lucide: null },
+  { key: "products",    icon: "📦",  href: "/supplier/products",   lucide: null },
+  { key: "campaigns",   icon: "📢",  href: "/supplier/campaigns",  lucide: null },
+  { key: "flash-sales", icon: "⚡",  href: "/supplier/flash-sales", lucide: null },
+  { key: "analytics",  icon: "📈",  href: "/supplier/analytics",  lucide: null },
+  { key: "impact",     icon: "🌱",  href: "/supplier/impact",     lucide: null },
+  { key: "ripple",     icon: null,  href: "/supplier/ripple",     lucide: "share2" },
+  { key: "bundles",    icon: null,  href: "/supplier/bundles",    lucide: "package" },
 ] as const;
 
 export default function Sidebar() {
@@ -48,7 +51,7 @@ export default function Sidebar() {
                   : "text-white/70 hover:text-white hover:bg-white/10"
               }`}
             >
-              <span>{item.icon}</span>
+              {item.lucide === "share2" ? <Share2 size={16} /> : item.lucide === "package" ? <Package size={16} /> : <span>{item.icon}</span>}
               {t(`nav.${item.key}`)}
             </a>
           );

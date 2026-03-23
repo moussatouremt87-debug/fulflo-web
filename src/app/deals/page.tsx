@@ -20,6 +20,15 @@ const BRAND_IMG: Record<string, string> = {
   "Maggi":     "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
 };
 
+// ─── Bundle types ─────────────────────────────────────────────────────────────
+
+interface BundleDeal {
+  id: string;
+  name: string;
+  bundle_price_eur: number;
+  bundle_discount_percent: number;
+}
+
 // ─── Sponsored slot types ─────────────────────────────────────────────────────
 
 interface SponsoredSlot {
@@ -256,6 +265,7 @@ export default function DealsPage() {
   const [addedIds, setAddedIds]   = useState<Set<string>>(new Set());
   const [toast, setToast]         = useState<string | null>(null);
   const [sponsored, setSponsored] = useState<SponsoredSlot[]>([]);
+  const [bundles, setBundles]     = useState<BundleDeal[]>([]);
   const userSession = useRef(typeof window !== "undefined" ? getSession() : "ssr");
 
   useEffect(() => {
@@ -313,6 +323,21 @@ export default function DealsPage() {
             supplierName: c.supplier_id as string,
           }));
           if (slots.length) setSponsored(slots);
+        }).catch(() => {});
+      });
+    }
+
+    // Fetch active bundle deals
+    if (sbUrl && sbKey && sbKey !== "placeholder") {
+      import("@supabase/supabase-js").then(({ createClient }) => {
+        const sb = createClient(sbUrl, sbKey);
+        Promise.resolve(
+          sb.from("bundle_campaigns")
+            .select("id, name, bundle_price_eur, bundle_discount_percent")
+            .eq("status", "active")
+            .limit(2)
+        ).then(({ data }) => {
+          if (data?.length) setBundles(data as BundleDeal[]);
         }).catch(() => {});
       });
     }
@@ -554,6 +579,58 @@ export default function DealsPage() {
                   <div className="flex-1 border-t border-gray-100" />
                 </div>
               </>
+            )}
+
+            {/* ── BUNDLE DEALS ────────────────────────────────────────── */}
+            {bundles.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 border-t border-gray-100" />
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Bundles du Moment
+                  </span>
+                  <div className="flex-1 border-t border-gray-100" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {bundles.map((b) => {
+                    const originalPrice = (Number(b.bundle_price_eur) / (1 - Number(b.bundle_discount_percent) / 100));
+                    return (
+                      <div key={b.id} className="bg-white rounded-2xl border border-[#7C3AED]/20 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-[#7C3AED] px-4 py-2 flex items-center gap-2">
+                          <span className="text-white text-[10px] font-black uppercase tracking-wider">BUNDLE</span>
+                          <span className="text-white/80 text-[10px]">·</span>
+                          <span className="text-white text-[10px] font-bold">-{b.bundle_discount_percent}%</span>
+                        </div>
+                        <div className="p-4">
+                          {/* Product images placeholder */}
+                          <div className="flex gap-1.5 mb-3">
+                            {["☕", "🥣"].map((emoji, i) => (
+                              <div key={i} className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xl">
+                                {emoji}
+                              </div>
+                            ))}
+                            <div className="w-10 h-10 flex items-center justify-center text-gray-400 font-bold text-xs">
+                              +1
+                            </div>
+                          </div>
+                          <p className="font-bold text-gray-900 text-sm mb-2 leading-snug">{b.name}</p>
+                          <div className="flex items-baseline gap-2 mb-3">
+                            <span className="text-2xl font-black text-gray-900">
+                              €{Number(b.bundle_price_eur).toFixed(2)}
+                            </span>
+                            <span className="text-xs text-gray-400 line-through">
+                              au lieu de €{originalPrice.toFixed(2)}
+                            </span>
+                          </div>
+                          <button className="w-full bg-[#7C3AED] text-white font-bold text-sm py-2.5 rounded-xl hover:bg-[#6D28D9] transition-colors">
+                            Ajouter le bundle →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
 
             {/* ── ORGANIC PRODUCTS ───────────────────────────────────── */}
