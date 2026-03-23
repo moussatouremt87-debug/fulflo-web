@@ -137,31 +137,33 @@ export default function MembershipPage() {
           </div>
           <p className="text-center text-2xl font-black text-[#1B4332] mb-6">€{spend}/mois</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-400 mb-1">Sans FulFlo</p>
-              <p className="text-2xl font-black text-gray-400">€{spend}/mois</p>
+          {/* 3-row comparison table */}
+          <div className="w-full mb-4 rounded-xl overflow-hidden border border-gray-100">
+            <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-100">
+              <div className="px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-wider"></div>
+              <div className="px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Par mois</div>
+              <div className="px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Par an</div>
             </div>
-            <div className="bg-[#D1FAE5] rounded-xl p-4 text-center">
-              <p className="text-xs text-[#065F46] font-semibold mb-1">Avec FulFlo Pass</p>
-              <p className="text-2xl font-black text-[#1B4332]">€{withFulflo}/mois</p>
+            <div className="grid grid-cols-3 border-b border-gray-100">
+              <div className="px-4 py-3 text-sm font-semibold text-gray-500">Sans FulFlo</div>
+              <div className="px-4 py-3 text-sm font-black text-gray-400 text-center">€{spend}</div>
+              <div className="px-4 py-3 text-sm font-black text-gray-400 text-center">€{(spend * 12).toLocaleString("fr-FR")}</div>
+            </div>
+            <div className="grid grid-cols-3 border-b border-gray-100 bg-[#f0fdf4]">
+              <div className="px-4 py-3 text-sm font-semibold text-[#065F46]">Avec FulFlo Pass</div>
+              <div className="px-4 py-3 text-sm font-black text-[#1B4332] text-center">€{withFulflo}</div>
+              <div className="px-4 py-3 text-sm font-black text-[#1B4332] text-center">€{(withFulflo * 12).toLocaleString("fr-FR")}</div>
+            </div>
+            <div className="grid grid-cols-3 bg-[#1B4332]">
+              <div className="px-4 py-3 text-sm font-bold text-[#10B981]">Économies</div>
+              <div className="px-4 py-3 text-sm font-black text-[#10B981] text-center">€{savings}</div>
+              <div className="px-4 py-3 text-sm font-black text-[#10B981] text-center">€{annualSavings.toLocaleString("fr-FR")}</div>
             </div>
           </div>
 
-          <div className="bg-[#1B4332] rounded-xl p-4 text-center mb-3">
-            <p className="text-[#10B981] text-xs font-bold uppercase tracking-wide mb-1">Économies annuelles</p>
-            <p className="text-3xl font-black text-white">€{annualSavings.toLocaleString("fr-FR")}/an</p>
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">ROI du Pass</span>
-            <span className="font-bold text-[#1B4332]">
-              Rentabilisé en {ordersToROI <= 1 ? "1 commande" : `${ordersToROI} commandes`}
-            </span>
-          </div>
-          <div className="mt-3 bg-[#D1FAE5] rounded-lg px-4 py-2.5 text-center">
+          <div className="bg-[#D1FAE5] rounded-lg px-4 py-2.5 text-center">
             <span className="text-[#065F46] text-sm font-bold">
-              ✅ Rentabilisé dès la 1ère commande de €10
+              ✅ Pass rentabilisé en {ordersToROI <= 1 ? "1 commande" : `${ordersToROI} commandes`} de €10
             </span>
           </div>
         </div>

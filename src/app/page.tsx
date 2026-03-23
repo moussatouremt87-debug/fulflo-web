@@ -479,6 +479,9 @@ export default function Home() {
             <Link href="/how-it-works" className="hidden md:block text-white/70 hover:text-white text-sm transition-colors whitespace-nowrap">
               Comment ça marche
             </Link>
+            <Link href="/membership" className="hidden lg:flex items-center gap-1.5 bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] text-sm font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+              ✦ FulFlo Pass
+            </Link>
             <Link href="/supplier/login" className="hidden sm:flex flex-col items-center text-white/80 hover:text-white transition-colors">
               <User size={18} />
               <span className="text-[10px] mt-0.5">Connexion</span>

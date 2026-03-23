@@ -55,7 +55,7 @@ const SUPPLIER_STEPS = [
   {
     icon: "📊",
     title: "Exploitez les données",
-    desc: "Consumer insights, Brand Performance Dashboard, rapport RSE mensuel automatique.",
+    desc: "Consumer insights, iROAS, Brand Lift, rapport RSE mensuel automatique.",
   },
 ];
 
