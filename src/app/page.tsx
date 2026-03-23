@@ -476,6 +476,9 @@ export default function Home() {
           {/* Right icons */}
           <div className="flex items-center gap-4 ml-2 shrink-0">
             <LangSwitcher />
+            <Link href="/how-it-works" className="hidden md:block text-white/70 hover:text-white text-sm transition-colors whitespace-nowrap">
+              Comment ça marche
+            </Link>
             <Link href="/supplier/login" className="hidden sm:flex flex-col items-center text-white/80 hover:text-white transition-colors">
               <User size={18} />
               <span className="text-[10px] mt-0.5">Connexion</span>
@@ -836,29 +839,44 @@ export default function Home() {
                 Europe&apos;s surplus economy platform. Direct fabricant. Certifié.
               </p>
             </div>
-            {[
+            {([
               {
                 title: "Acheter",
-                links: ["Catalogue", "Flash Sales", "Nouveautés", "Marques"],
+                links: [
+                  { label: "Catalogue", href: "/deals" },
+                  { label: "Flash Sales", href: "/deals" },
+                  { label: "FulFlo Pass", href: "/membership" },
+                  { label: "Marques", href: "/deals" },
+                ],
               },
               {
                 title: "Aide",
-                links: ["Livraison & retours", "FAQ", "Contact", "Suivi commande"],
+                links: [
+                  { label: "Livraison & retours", href: "/faq" },
+                  { label: "FAQ", href: "/faq" },
+                  { label: "Comment ça marche", href: "/how-it-works" },
+                  { label: "Contact", href: "mailto:nous@fulflo.app" },
+                ],
               },
               {
                 title: "Entreprise",
-                links: ["Fournisseurs", "Devenir partenaire", "Presse", "À propos"],
+                links: [
+                  { label: "Fournisseurs", href: "/supplier/login" },
+                  { label: "Devenir partenaire", href: "/supplier/login" },
+                  { label: "Presse", href: "mailto:nous@fulflo.app" },
+                  { label: "À propos", href: "/how-it-works" },
+                ],
               },
-            ].map((col) => (
+            ] as { title: string; links: { label: string; href: string }[] }[]).map((col) => (
               <div key={col.title}>
                 <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">
                   {col.title}
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {col.links.map((l) => (
-                    <a key={l} href="#" className="text-white/40 text-xs hover:text-white/80 transition-colors">
-                      {l}
-                    </a>
+                    <Link key={l.label} href={l.href} className="text-white/40 text-xs hover:text-white/80 transition-colors">
+                      {l.label}
+                    </Link>
                   ))}
                 </div>
               </div>
