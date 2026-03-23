@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useI18n, LOCALES } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase";
 
 const NAV = [
@@ -14,7 +14,7 @@ const NAV = [
 ] as const;
 
 export default function Sidebar() {
-  const { t, locale, setLocale } = useI18n();
+  const { t, lang, setLang } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -59,18 +59,23 @@ export default function Sidebar() {
       <div className="px-4 pb-4">
         <p className="text-xs text-white/30 uppercase tracking-wider mb-2 px-1">Langue</p>
         <div className="grid grid-cols-2 gap-1">
-          {LOCALES.map((l) => (
+          {([
+            { code: "fr" as const, flag: "🇫🇷", label: "FR" },
+            { code: "en" as const, flag: "🇬🇧", label: "EN" },
+            { code: "de" as const, flag: "🇩🇪", label: "DE" },
+            { code: "ar" as const, flag: "🇸🇦", label: "AR" },
+          ]).map(({ code, flag, label }) => (
             <button
-              key={l.key}
-              onClick={() => setLocale(l.key)}
+              key={code}
+              onClick={() => setLang(code)}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                locale === l.key
+                lang === code
                   ? "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
                   : "text-white/50 hover:text-white/80 hover:bg-white/5"
               }`}
             >
-              <span>{l.flag}</span>
-              {l.key.toUpperCase()}
+              <span>{flag}</span>
+              {label}
             </button>
           ))}
         </div>

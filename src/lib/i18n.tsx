@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -247,18 +247,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
   };
 
-  const t = (key: string): string =>
-    translations[lang][key] ?? translations.fr[key] ?? key;
-
-  const ctx: I18nContextType = {
+  // Memoize so context consumers only re-render when lang actually changes
+  const ctx = useMemo<I18nContextType>(() => ({
     lang,
     setLang,
-    t,
-    // Backward compat
+    t: (key: string) => translations[lang][key] ?? translations.fr[key] ?? key,
+    // Backward compat aliases
     locale: lang,
     setLocale: setLang,
     dir: lang === "ar" ? "rtl" : "ltr",
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [lang]);
 
   return (
     <I18nContext.Provider value={ctx}>
