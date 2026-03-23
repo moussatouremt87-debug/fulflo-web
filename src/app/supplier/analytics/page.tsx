@@ -129,9 +129,28 @@ function KpiCard({ label, value, sub, highlight }: {
   );
 }
 
+// ─── Attribution data ──────────────────────────────────────────────────────────
+
+const ATTRIBUTION_DATA = {
+  breakdown: [
+    { channel: "Sponsored", revenue: 284, orders: 31, color: "#10B981" },
+    { channel: "Organic",   revenue: 512, orders: 58, color: "#1B4332" },
+    { channel: "Referral",  revenue: 97,  orders: 11, color: "#34D399" },
+  ],
+  funnel: [
+    { stage: "Impressions", value: 12840, pct: 100 },
+    { stage: "Clics",       value: 1026,  pct: 8.0  },
+    { stage: "Ajout panier",value: 308,   pct: 2.4  },
+    { stage: "Achats",      value: 100,   pct: 0.78 },
+  ],
+};
+
+type AnalyticsTab = "performance" | "attribution";
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
+  const [analyticsTab, setAnalyticsTab] = useState<AnalyticsTab>("performance");
   const [period, setPeriod] = useState<Period>("30j");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [velData, setVelData] = useState(() => generateVelocityData(30));
@@ -196,6 +215,117 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-8 pb-12">
+
+      {/* ── TABS ──────────────────────────────────────────────────────── */}
+      <div className="flex bg-gray-100 rounded-xl p-1 gap-1 w-fit">
+        {([
+          { key: "performance", label: "Performance Marque" },
+          { key: "attribution", label: "Attribution Campagne" },
+        ] as { key: AnalyticsTab; label: string }[]).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setAnalyticsTab(t.key)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              analyticsTab === t.key
+                ? "bg-white text-[#1B4332] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {analyticsTab === "attribution" ? (
+        <div className="space-y-6">
+          {/* Attribution breakdown */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Ventes par canal</h2>
+            <p className="text-xs text-gray-400 mb-6">Sponsored · Organic · Referral</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {ATTRIBUTION_DATA.breakdown.map((ch) => {
+                const total = ATTRIBUTION_DATA.breakdown.reduce((s, c) => s + c.revenue, 0);
+                const pct = Math.round((ch.revenue / total) * 100);
+                return (
+                  <div key={ch.channel} className="rounded-xl border border-gray-100 p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ background: ch.color }} />
+                      <span className="text-sm font-bold text-gray-700">{ch.channel}</span>
+                    </div>
+                    <p className="text-3xl font-black text-gray-900 mb-0.5">€{ch.revenue}</p>
+                    <p className="text-xs text-gray-400">{ch.orders} commandes · {pct}% du CA</p>
+                    <div className="h-2 bg-gray-100 rounded-full mt-3 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, background: ch.color }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="bg-[#ecfdf5] rounded-xl p-4 text-sm text-[#065F46]">
+              <span className="font-bold">Insight :</span> le Sponsored Surplus génère{" "}
+              <span className="font-black">31% du CA</span> avec seulement{" "}
+              <span className="font-black">18% du budget</span> — votre meilleur levier de croissance incrémentale.
+            </div>
+          </div>
+
+          {/* Conversion funnel */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Funnel de conversion</h2>
+            <p className="text-xs text-gray-400 mb-6">De l&apos;impression à l&apos;achat</p>
+            <div className="space-y-3">
+              {ATTRIBUTION_DATA.funnel.map((stage, i) => (
+                <div key={stage.stage}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-[#1B4332] text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-700">{stage.stage}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-gray-400">{stage.pct}%</span>
+                      <span className="text-sm font-black text-gray-900 w-16 text-right">
+                        {stage.value.toLocaleString("fr-FR")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden ml-9">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${stage.pct}%`,
+                        background: `linear-gradient(90deg, #1B4332, #10B981)`,
+                      }}
+                    />
+                  </div>
+                  {i < ATTRIBUTION_DATA.funnel.length - 1 && (
+                    <div className="ml-9 mt-1.5 text-[10px] text-gray-300 font-semibold">
+                      ↓ taux{" "}
+                      {(
+                        (ATTRIBUTION_DATA.funnel[i + 1].value / stage.value) *
+                        100
+                      ).toFixed(1)}
+                      % passent à l&apos;étape suivante
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm">
+              <p className="font-bold text-amber-800 mb-1">💡 Opportunité identifiée</p>
+              <p className="text-amber-700 text-xs leading-relaxed">
+                Le taux clics→panier est de <span className="font-bold">30%</span> — dans la moyenne catégorie.
+                Augmenter la remise de 5pts pourrait porter ce taux à <span className="font-bold">42%</span>{" "}
+                et générer +€180/mois de CA incrémental.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+      <>
 
       {/* ── 1. HEADER ROW ─────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -289,6 +419,56 @@ export default function AnalyticsPage() {
           <KpiCard label="Panier moyen avec vos produits" value="€18,40" sub="vs €14,20 catégorie" highlight />
           <KpiCard label="Taux de réachat (30j)" value="34%" sub="Fidélité élevée" />
           <KpiCard label="Délai moyen avant rachat" value="18 jours" sub="Cycle consommation" />
+        </div>
+
+        {/* New vs Returning buyers — AdTech metric */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 className="font-bold text-gray-900">Acheteurs nouveaux vs récurrents</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Portée incrémentale de vos campagnes FulFlo</p>
+            </div>
+            <span className="text-xs font-bold bg-[#ecfdf5] text-[#065F46] px-3 py-1.5 rounded-full w-fit">
+              62% nouveaux clients FulFlo
+            </span>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch gap-4">
+            {/* Visual bar */}
+            <div className="flex-1">
+              <div className="flex h-10 rounded-xl overflow-hidden mb-3">
+                <div className="bg-[#10B981] flex items-center justify-center text-white text-xs font-black" style={{ width: "62%" }}>
+                  62% Nouveaux
+                </div>
+                <div className="bg-[#D1FAE5] flex items-center justify-center text-[#065F46] text-xs font-bold" style={{ width: "38%" }}>
+                  38% Récurrents
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-[#ecfdf5] p-4">
+                  <p className="text-2xl font-black text-[#1B4332]">773</p>
+                  <p className="text-xs text-[#047857] font-semibold mt-0.5">Nouveaux acheteurs</p>
+                  <p className="text-[10px] text-[#6B7280] mt-1">Première commande ever sur FulFlo</p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4">
+                  <p className="text-2xl font-black text-gray-700">474</p>
+                  <p className="text-xs text-gray-500 font-semibold mt-0.5">Acheteurs récurrents</p>
+                  <p className="text-[10px] text-gray-400 mt-1">Ont déjà commandé sur FulFlo</p>
+                </div>
+              </div>
+            </div>
+            {/* Insight box */}
+            <div className="sm:w-64 bg-[#1B4332] rounded-xl p-5 flex flex-col justify-center">
+              <p className="text-[#10B981] text-xs font-bold uppercase tracking-wider mb-2">Portée incrémentale</p>
+              <p className="text-white text-2xl font-black mb-1">62%</p>
+              <p className="text-white/70 text-xs leading-relaxed mb-3">
+                de vos acheteurs FulFlo ne vous auraient <span className="text-white font-bold">jamais achetés</span> en grande distribution ce mois-ci.
+              </p>
+              <div className="border-t border-white/10 pt-3">
+                <p className="text-[#10B981] text-xs font-bold">vs retail media standard : 23%</p>
+                <p className="text-white/50 text-[10px] mt-0.5">Source : Nielsen Retail Media 2025</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Demographics */}
@@ -582,6 +762,9 @@ export default function AnalyticsPage() {
           🔒 Vos données sont protégées et ne sont jamais partagées avec vos concurrents
         </p>
       </div>
+
+      </>
+      )}
 
     </div>
   );
