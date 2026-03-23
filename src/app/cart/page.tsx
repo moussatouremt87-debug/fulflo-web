@@ -117,7 +117,7 @@ export default function CartPage() {
             {items.map((item) => (
               <div
                 key={item.productId}
-                className="bg-white border border-gray-200 rounded flex gap-4 p-4"
+                className="bg-white border border-gray-200 rounded flex flex-col sm:flex-row gap-4 p-4"
               >
                 {/* Image */}
                 <div className="w-20 h-20 relative shrink-0 bg-gray-50 rounded overflow-hidden">

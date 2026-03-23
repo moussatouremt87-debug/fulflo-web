@@ -5,11 +5,12 @@ import { useI18n, LOCALES } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase";
 
 const NAV = [
-  { key: "dashboard",  icon: "📊", href: "/supplier/dashboard" },
-  { key: "products",   icon: "📦", href: "/supplier/products" },
-  { key: "campaigns",  icon: "📢", href: "/supplier/campaigns" },
-  { key: "analytics",  icon: "📈", href: "/supplier/analytics" },
-  { key: "impact",     icon: "🌱", href: "/supplier/impact" },
+  { key: "dashboard",    icon: "📊", href: "/supplier/dashboard" },
+  { key: "products",     icon: "📦", href: "/supplier/products" },
+  { key: "campaigns",    icon: "📢", href: "/supplier/campaigns" },
+  { key: "flash-sales",  icon: "⚡", href: "/supplier/flash-sales" },
+  { key: "analytics",   icon: "📈", href: "/supplier/analytics" },
+  { key: "impact",      icon: "🌱", href: "/supplier/impact" },
 ] as const;
 
 export default function Sidebar() {

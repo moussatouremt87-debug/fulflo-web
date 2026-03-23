@@ -440,7 +440,8 @@ export default function DealsPage() {
         {/* ── FILTER + SORT BAR ─────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
           {/* Category filters */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex items-center gap-2 flex-nowrap min-w-max sm:flex-wrap sm:min-w-0">
             {CATEGORIES.map((c) => (
               <button
                 key={c.key}
@@ -461,6 +462,7 @@ export default function DealsPage() {
               </button>
             ))}
           </div>
+          </div>
 
           {/* Sort */}
           <div className="flex items-center gap-2 shrink-0">
@@ -480,7 +482,7 @@ export default function DealsPage() {
         {/* ── PRODUCT GRID ──────────────────────────────────────────────── */}
         {loading ? (
           // Skeleton
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
             ))}
@@ -538,7 +540,7 @@ export default function DealsPage() {
             )}
 
             {/* ── ORGANIC PRODUCTS ───────────────────────────────────── */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((p) => (
                 <div key={p.id} className="relative">
                   {addedIds.has(p.id) && (

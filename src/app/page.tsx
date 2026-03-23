@@ -524,7 +524,7 @@ export default function Home() {
       </div>
 
       {/* ══ HERO ESSENTIALS BANNER ═════════════════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
+      <div className="hidden md:block max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
         <HeroEssentials />
       </div>
 
@@ -622,7 +622,7 @@ export default function Home() {
       {/* ══ 6. FLASH SALE BAR WITH COUNTDOWN ═══════════════════════════════════ */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
         <div
-          className="flex items-center justify-between px-5 py-3 rounded"
+          className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded"
           style={{ background: "#111827" }}
         >
           <div className="flex items-center gap-3">
@@ -776,7 +776,7 @@ export default function Home() {
         <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-3">
           Explorer par Catégorie
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.label}
