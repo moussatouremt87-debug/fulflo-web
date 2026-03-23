@@ -41,7 +41,7 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
     .join("");
 
   await getTransporter().sendMail({
-    from: '"FulFlo" <orders@fulflo.app>',
+    from: '"FulFlo" <james@fulflo.app>',
     to: data.customerEmail,
     subject: `✅ Commande confirmée — FulFlo #${data.orderId.substring(0, 8).toUpperCase()}`,
     html: `
@@ -108,7 +108,7 @@ export async function sendLowStockAlert(
   if (!process.env.ZOHO_EMAIL || !process.env.ZOHO_PASSWORD) return;
 
   await getTransporter().sendMail({
-    from: '"FulFlo Alerts" <alerts@fulflo.app>',
+    from: '"FulFlo" <james@fulflo.app>',
     to: supplierEmail,
     subject: `⚠️ Stock bas — ${productName}`,
     html: `
@@ -135,7 +135,7 @@ export async function sendNewOrderToSupplier(
   }
 
   await getTransporter().sendMail({
-    from: '"FulFlo Orders" <orders@fulflo.app>',
+    from: '"FulFlo" <james@fulflo.app>',
     to: supplierEmail,
     subject: `📦 Nouvelle commande à préparer — #${data.orderId.substring(0, 8).toUpperCase()}`,
     html: `
