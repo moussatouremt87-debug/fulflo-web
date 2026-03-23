@@ -3,73 +3,44 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n, LOCALES } from "@/lib/i18n";
-
-const DEMO_EMAIL    = "demo@nestle.com";
-const DEMO_PASSWORD = "Fulflo2026!";
-const DEMO_COMPANY  = "Nestlé Suisse SA";
+import { supabaseBrowser } from "@/lib/supabase";
 
 export default function SupplierLogin() {
   const { t, locale, setLocale, dir } = useI18n();
   const router = useRouter();
-  const [email, setEmail]       = useState("");
+  const [email, setEmail]     = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
-
-  const handleDemoLogin = () => {
-    localStorage.setItem("fulflo_demo_supplier", JSON.stringify({
-      id: "demo-nestle",
-      company_name: "Nestlé Suisse SA",
-      contact_name: "Demo User",
-      email: "demo@nestle.com",
-      isDemo: true,
-    }));
-    sessionStorage.setItem(
-      "supplier_session",
-      JSON.stringify({ email: DEMO_EMAIL, company: DEMO_COMPANY, role: "supplier" })
-    );
-    window.location.href = "/supplier/dashboard";
-  };
+  const [error, setError]     = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 800)); // simulate auth
+    const sb = supabaseBrowser();
+    const { data, error: authErr } = await sb.auth.signInWithPassword({ email, password });
 
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      handleDemoLogin();
-      return;
-    } else {
-      // Try Supabase auth
-      try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (url && key && key !== "placeholder") {
-          const { createClient } = await import("@supabase/supabase-js");
-          const sb = createClient(url, key);
-          const { data, error: authErr } = await sb.auth.signInWithPassword({ email, password });
-          if (!authErr && data.user) {
-            const { data: supplier } = await sb
-              .from("suppliers")
-              .select("company_name, email")
-              .eq("user_id", data.user.id)
-              .single();
-            sessionStorage.setItem(
-              "supplier_session",
-              JSON.stringify({ email, company: supplier?.company_name ?? email, role: "supplier" })
-            );
-            router.push("/supplier/dashboard");
-            return;
-          }
-        }
-      } catch { /* fall through */ }
+    if (authErr || !data.session) {
       setError(t("login.error"));
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  };
 
+    // Store minimal session info for UI display
+    const meta = data.user?.user_metadata ?? {};
+    sessionStorage.setItem(
+      "supplier_session",
+      JSON.stringify({
+        email:      data.user?.email,
+        company:    meta.company ?? email,
+        role:       "supplier",
+        supplier_id: meta.supplier_id ?? "unknown",
+      })
+    );
+
+    router.push("/supplier/dashboard");
+  };
 
   return (
     <div dir={dir} className="min-h-screen bg-[#F0FDF4] flex flex-col">
@@ -99,7 +70,6 @@ export default function SupplierLogin() {
       {/* Center card */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          {/* Logo & heading */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-[#1B4332] rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
               📦
@@ -109,22 +79,6 @@ export default function SupplierLogin() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-            {/* Demo banner */}
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full mb-5 py-2.5 rounded-xl border-2 border-dashed border-[#10B981] text-[#065F46] text-sm font-semibold hover:bg-[#ecfdf5] transition-colors flex items-center justify-center gap-2"
-            >
-              🎯 {t("login.demo")}
-            </button>
-
-            <div className="relative mb-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">ou</div>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">
@@ -135,6 +89,7 @@ export default function SupplierLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition"
                   placeholder="vous@entreprise.com"
                 />
@@ -148,14 +103,10 @@ export default function SupplierLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition"
                   placeholder="••••••••"
                 />
-                <div className="flex justify-end mt-1.5">
-                  <a href="#" className="text-xs text-[#10B981] hover:underline">
-                    {t("login.forgotPassword")}
-                  </a>
-                </div>
               </div>
 
               {error && (
@@ -172,6 +123,13 @@ export default function SupplierLogin() {
                 {loading ? t("common.loading") : t("login.submit")}
               </button>
             </form>
+
+            <p className="text-center text-xs text-gray-400 mt-6">
+              Première connexion ? Contactez{" "}
+              <a href="mailto:ops@fulflo.app" className="text-[#10B981] hover:underline">
+                ops@fulflo.app
+              </a>
+            </p>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">

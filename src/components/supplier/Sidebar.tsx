@@ -2,12 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n, LOCALES } from "@/lib/i18n";
+import { supabaseBrowser } from "@/lib/supabase";
 
 const NAV = [
   { key: "dashboard",  icon: "📊", href: "/supplier/dashboard" },
   { key: "products",   icon: "📦", href: "/supplier/products" },
   { key: "campaigns",  icon: "📢", href: "/supplier/campaigns" },
   { key: "analytics",  icon: "📈", href: "/supplier/analytics" },
+  { key: "impact",     icon: "🌱", href: "/supplier/impact" },
 ] as const;
 
 export default function Sidebar() {
@@ -15,7 +17,8 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabaseBrowser().auth.signOut();
     sessionStorage.removeItem("supplier_session");
     router.push("/supplier/login");
   };

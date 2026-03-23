@@ -4,6 +4,7 @@ import { useEffect, useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import { useI18n } from "@/lib/i18n";
+import { supabaseBrowser } from "@/lib/supabase";
 
 interface SupplierShellProps {
   children: ReactNode;
@@ -21,12 +22,20 @@ export default function SupplierShell({ children }: SupplierShellProps) {
       setReady(true);
       return;
     }
-    const session = sessionStorage.getItem("supplier_session");
-    if (!session) {
-      router.replace("/supplier/login");
-    } else {
-      setReady(true);
-    }
+    // Check Supabase auth session first, fall back to legacy sessionStorage
+    supabaseBrowser().auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setReady(true);
+      } else {
+        // Legacy sessionStorage check (for existing demo sessions)
+        const legacy = sessionStorage.getItem("supplier_session");
+        if (legacy) {
+          setReady(true);
+        } else {
+          router.replace("/supplier/login");
+        }
+      }
+    });
   }, [pathname, router]);
 
   if (!ready) {

@@ -5,7 +5,8 @@
     "analytics": "Analytics",
     "settings": "Paramètres",
     "logout": "Déconnexion",
-    "campaigns": "Campagnes"
+    "campaigns": "Campagnes",
+    "impact": "Impact RSE"
   },
   "login": {
     "title": "Portail Fournisseur",
