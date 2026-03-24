@@ -96,37 +96,37 @@ const CAT_PILLS = [
   { key: "electromenager",label: "Électro",     emoji: "🔌", bg: "#1E3A5F" },
 ];
 
-// ─── Explicit EAN maps — keyed by the EXACT slug used in CAT_PILLS / card.ean ─
+// ─── Curated Unsplash URLs — guaranteed correct, instant load, no OFF needed ──
+// OFF is only for individual product cards where we have a real DB product EAN.
 
-// Category pill EANs: key must match CAT_PILLS[].key exactly
 const CATEGORY_IMAGE_MAP: Record<string, string> = {
-  hygiene:        "3029330003533", // Colgate Total Whitening — Hygiène ✅
-  alimentation:   "3017620422003", // Nutella — Alimentation ✅
-  boissons:       "3168930010265", // Evian 1.5L — Boissons ✅
-  entretien:      "0037000013488", // Ariel Pods — Entretien ✅
-  bebe:           "8001841956954", // Pampers Baby-Dry — Bébé ✅
-  snacks:         "7622300441937", // Oreo — Snacks ✅
-  beaute:         "3600542396035", // L'Oréal Elvive — Beauté ✅
-  sport:          "3175681851093",
-  pharmacie:      "3400935100018",
-  electromenager: "8710103895435",
-  animaux:        "4008429044694",
+  hygiene:        "https://images.unsplash.com/photo-1556228578-626d5d5a2c55?w=120&q=80",
+  alimentation:   "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=120&q=80",
+  boissons:       "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=120&q=80",
+  entretien:      "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=120&q=80",
+  bebe:           "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=120&q=80",
+  snacks:         "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=120&q=80",
+  beaute:         "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=120&q=80",
+  sport:          "https://images.unsplash.com/photo-1461897104016-0b3b00cc81ee?w=120&q=80",
+  pharmacie:      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=120&q=80",
+  electromenager: "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=120&q=80",
+  animaux:        "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=120&q=80",
 };
 
-// Shopping mode tabs — each has its own EAN, keyed by label for lookup
+// Shopping mode tabs — OFF EANs kept here because these are specific products
 const DELIVERY_TABS = [
-  { label: "Planifié",   sub: "Livraison 24h",  ean: "3029330003533" }, // Colgate
-  { label: "Maintenant", sub: "Express 3h",      ean: "3017620422003" }, // Nutella
-  { label: "Boutiques",  sub: "En magasin",      ean: "3168930010265" }, // Evian
-  { label: "Beauté",     sub: "Soin & Beauté",   ean: "3600542396035" }, // L'Oréal
+  { label: "Planifié",   sub: "Livraison 24h",  ean: "3029330003533" },
+  { label: "Maintenant", sub: "Express 3h",      ean: "3017620422003" },
+  { label: "Boutiques",  sub: "En magasin",      ean: "3168930010265" },
+  { label: "Beauté",     sub: "Soin & Beauté",   ean: "3600542396035" },
 ];
 
-// Promo cards — keyed by card.ean, never by label or position
+// Promo cards — direct Unsplash imageUrl per card, no fetch needed
 const PROMO_CARDS = [
-  { label: "Hygiène & Beauté", emoji: "🧴", pct: 58, ean: "3029330003533", gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
-  { label: "Alimentation",     emoji: "🍝", pct: 45, ean: "3017620422003", gradient: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)" },
-  { label: "Entretien Maison", emoji: "🧹", pct: 62, ean: "0037000013488", gradient: "linear-gradient(135deg, #0284C7 0%, #075985 100%)" },
-  { label: "Bébé & Enfants",   emoji: "👶", pct: 50, ean: "8001841956954", gradient: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)" },
+  { label: "Hygiène & Beauté", pct: 58, imageUrl: "https://images.unsplash.com/photo-1556228578-626d5d5a2c55?w=200&q=80", gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
+  { label: "Alimentation",     pct: 45, imageUrl: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=200&q=80", gradient: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)" },
+  { label: "Entretien Maison", pct: 62, imageUrl: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=200&q=80", gradient: "linear-gradient(135deg, #0284C7 0%, #075985 100%)" },
+  { label: "Bébé & Enfants",   pct: 50, imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=200&q=80", gradient: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -195,8 +195,6 @@ export default function Home() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-  const [catImages, setCatImages] = useState<Record<string, string>>({});
-  const [promoImages, setPromoImages] = useState<Record<string, string>>({});
   const [tabImages, setTabImages] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState(0);
   const { h, m, s } = useCountdown(4 * 3600 + 22 * 60 + 15);
@@ -224,42 +222,6 @@ export default function Home() {
     });
   }, []);
 
-  // Category pill images — explicit cat slug → EAN, never positional
-  useEffect(() => {
-    Promise.allSettled(
-      Object.entries(CATEGORY_IMAGE_MAP).map(([cat, ean]) =>
-        fetch(`/api/product-image?ean=${encodeURIComponent(ean)}`)
-          .then((r) => r.json())
-          .then((d) => ({ cat, url: d.url as string | null }))
-          .catch(() => ({ cat, url: null }))
-      )
-    ).then((results) => {
-      const map: Record<string, string> = {};
-      for (const r of results) {
-        // cat slug is carried through the closure — no positional lookup
-        if (r.status === "fulfilled" && r.value.url) map[r.value.cat] = r.value.url;
-      }
-      setCatImages(map);
-    });
-  }, []);
-
-  // Promo card images — keyed by card.ean, never by label
-  useEffect(() => {
-    Promise.allSettled(
-      PROMO_CARDS.map((c) =>
-        fetch(`/api/product-image?ean=${encodeURIComponent(c.ean)}`)
-          .then((r) => r.json())
-          .then((d) => ({ ean: c.ean, url: d.url as string | null }))
-          .catch(() => ({ ean: c.ean, url: null }))
-      )
-    ).then((results) => {
-      const map: Record<string, string> = {};
-      for (const r of results) {
-        if (r.status === "fulfilled" && r.value.url) map[r.value.ean] = r.value.url;
-      }
-      setPromoImages(map);
-    });
-  }, []);
 
   // Fetch delivery tab images (Fix 5)
   useEffect(() => {
@@ -454,16 +416,15 @@ export default function Home() {
                     border: activeCategory === c.key ? `2px solid ${c.bg}` : "2px solid transparent",
                   }}
                 >
-                  {catImages[c.key] ? (
+                  {CATEGORY_IMAGE_MAP[c.key] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={catImages[c.key]}
+                      src={CATEGORY_IMAGE_MAP[c.key]}
                       alt={c.label}
                       className="w-full h-full object-contain p-2"
                       style={{ mixBlendMode: "multiply" }}
+                      loading="lazy"
                     />
-                  ) : catImages[c.key] === undefined ? (
-                    <div className="w-full h-full shimmer-bg" />
                   ) : (
                     <span className="w-full h-full flex items-center justify-center text-2xl">{c.emoji}</span>
                   )}
@@ -483,21 +444,16 @@ export default function Home() {
             {PROMO_CARDS.map((p) => (
               <Link href="/deals" key={p.label}>
                 <div className="rounded-[20px] p-4 relative overflow-hidden h-[110px]" style={{ background: p.gradient }}>
-                  {/* Category product image — keyed by card.ean, never by label */}
+                  {/* Curated Unsplash image — guaranteed correct category */}
                   <div className="absolute top-3 right-3 w-[60px] h-[60px] rounded-[12px] overflow-hidden bg-[#F4FAF6]">
-                    {promoImages[p.ean] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={promoImages[p.ean]}
-                        alt={p.label}
-                        className="w-full h-full object-contain p-1"
-                        style={{ mixBlendMode: "multiply", filter: "drop-shadow(0 3px 8px rgba(0,0,0,.3))" }}
-                      />
-                    ) : promoImages[p.ean] === undefined ? (
-                      <div className="w-full h-full shimmer-bg" />
-                    ) : (
-                      <span className="w-full h-full flex items-center justify-center text-2xl">{p.emoji}</span>
-                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.imageUrl}
+                      alt={p.label}
+                      className="w-full h-full object-contain p-1"
+                      style={{ mixBlendMode: "multiply", filter: "drop-shadow(0 3px 8px rgba(0,0,0,.3))" }}
+                      loading="lazy"
+                    />
                   </div>
                   <p className="text-white/70 text-xs font-medium mb-1">{p.label}</p>
                   <p className="font-display font-black text-white leading-none" style={{ fontSize: 36 }}>-{p.pct}%</p>
