@@ -610,8 +610,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
 
   useEffect(() => {
-    const saved = (localStorage.getItem("fulflo_lang") || localStorage.getItem("fulflo_locale")) as Lang | null;
-    if (saved && (saved in translations)) setLangState(saved);
+    const saved = localStorage.getItem("fulflo_lang") as Lang;
+    if (saved && ["fr", "en", "de", "ar"].includes(saved)) {
+      setLangState(saved);
+      document.documentElement.dir = saved === "ar" ? "rtl" : "ltr";
+    } else {
+      setLangState("fr");
+      localStorage.setItem("fulflo_lang", "fr");
+      document.documentElement.dir = "ltr";
+    }
   }, []);
 
   const setLang = (l: Lang) => {
