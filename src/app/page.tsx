@@ -9,6 +9,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { useCart } from "@/lib/cart";
 import ProductImage from "@/components/ui/ProductImage";
+import { CATEGORY_REPRESENTATIVE_EANS } from "@/lib/openFoodFacts";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -94,10 +95,10 @@ const CAT_PILLS = [
 ];
 
 const PROMO_CARDS = [
-  { label: "Alimentation", emoji: "🍝", pct: 70, gradient: "linear-gradient(135deg, #1D4D35 0%, #3DB87A 100%)" },
-  { label: "Hygiène",      emoji: "🧴", pct: 65, gradient: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)" },
-  { label: "Entretien",    emoji: "🧹", pct: 60, gradient: "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)" },
-  { label: "Bébé",         emoji: "👶", pct: 55, gradient: "linear-gradient(135deg, #9F1239 0%, #DC2626 100%)" },
+  { label: "Hygiène & Beauté", emoji: "🧴", pct: 58, ean: CATEGORY_REPRESENTATIVE_EANS.hygiene,       gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
+  { label: "Alimentation",     emoji: "🍝", pct: 45, ean: CATEGORY_REPRESENTATIVE_EANS.alimentaire,   gradient: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)" },
+  { label: "Entretien Maison", emoji: "🧹", pct: 62, ean: CATEGORY_REPRESENTATIVE_EANS.entretien,     gradient: "linear-gradient(135deg, #0284C7 0%, #075985 100%)" },
+  { label: "Bébé & Enfants",   emoji: "👶", pct: 50, ean: CATEGORY_REPRESENTATIVE_EANS.bebe,          gradient: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -165,6 +166,8 @@ export default function Home() {
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState("all");
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [catImages, setCatImages] = useState<Record<string, string>>({});
+  const [promoImages, setPromoImages] = useState<Record<string, string>>({});
   const { h, m, s } = useCountdown(4 * 3600 + 22 * 60 + 15);
 
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -188,10 +191,50 @@ export default function Home() {
     });
   }, []);
 
+  // Fetch category representative images (Fix 3)
+  useEffect(() => {
+    const entries = Object.entries(CATEGORY_REPRESENTATIVE_EANS);
+    Promise.allSettled(
+      entries.map(([cat, ean]) =>
+        fetch(`/api/product-image?ean=${encodeURIComponent(ean)}`)
+          .then((r) => r.json())
+          .then((d) => ({ cat, url: d.url as string | null }))
+          .catch(() => ({ cat, url: null }))
+      )
+    ).then((results) => {
+      const map: Record<string, string> = {};
+      for (const r of results) {
+        if (r.status === "fulfilled" && r.value.url) map[r.value.cat] = r.value.url;
+      }
+      setCatImages(map);
+    });
+  }, []);
+
+  // Fetch promo card images (Fix 4)
+  useEffect(() => {
+    Promise.allSettled(
+      PROMO_CARDS.map((c) =>
+        fetch(`/api/product-image?ean=${encodeURIComponent(c.ean)}`)
+          .then((r) => r.json())
+          .then((d) => ({ label: c.label, url: d.url as string | null }))
+          .catch(() => ({ label: c.label, url: null }))
+      )
+    ).then((results) => {
+      const map: Record<string, string> = {};
+      for (const r of results) {
+        if (r.status === "fulfilled" && r.value.url) map[r.value.label] = r.value.url;
+      }
+      setPromoImages(map);
+    });
+  }, []);
+
   const displayProducts = dbProducts.length ? dbProducts : PRODUCTS;
   const filteredProducts = activeCategory === "all"
     ? displayProducts
     : displayProducts.filter((p) => p.category === activeCategory);
+
+  // Fix 5: hero = best deal (highest savings %)
+  const heroProduct = [...displayProducts].sort((a, b) => b.savingsPct - a.savingsPct)[0];
 
   const handleAdd = (product: Product) => {
     addItem({ productId: product.id, name: product.name, brand: product.brand, size: "", price: product.price, originalPrice: product.originalPrice, image: product.img, category: product.category ?? "general" });
@@ -250,8 +293,14 @@ export default function Home() {
         <div className="px-4 pt-4 pb-2">
           <div className="rounded-[28px] overflow-hidden" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #246040 100%)" }}>
             <div className="relative p-6 pb-7">
-              {/* Floating emoji */}
-              <div className="absolute top-4 right-5 text-5xl animate-float select-none">🛒</div>
+              {/* Hero product image — best deal */}
+              <div className="absolute top-3 right-3 w-[88px] h-[88px] animate-float select-none">
+                {heroProduct ? (
+                  <ProductImage ean={heroProduct.ean} category={heroProduct.category} brand={heroProduct.brand} className="w-full h-full rounded-[16px] bg-white/10" size={88} />
+                ) : (
+                  <span className="text-5xl flex items-center justify-center w-full h-full">🛒</span>
+                )}
+              </div>
 
               {/* Flash sale pill */}
               <div className="inline-flex items-center gap-1.5 bg-discount-red text-white text-[10px] font-black px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
@@ -304,14 +353,19 @@ export default function Home() {
                 className="flex flex-col items-center gap-1.5 shrink-0"
               >
                 <div
-                  className="w-[62px] h-[62px] rounded-[14px] flex items-center justify-center text-2xl transition-all"
+                  className="w-[62px] h-[62px] rounded-[14px] overflow-hidden transition-all relative"
                   style={{
                     background: c.bg,
                     boxShadow: activeCategory === c.key ? `0 4px 16px ${c.bg}55` : "none",
                     transform: activeCategory === c.key ? "scale(1.08)" : "scale(1)",
                   }}
                 >
-                  {c.emoji}
+                  {catImages[c.key] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={catImages[c.key]} alt={c.label} className="w-full h-full object-contain p-2" />
+                  ) : (
+                    <span className="w-full h-full flex items-center justify-center text-2xl">{c.emoji}</span>
+                  )}
                 </div>
                 <span className={`text-[11px] font-display font-medium whitespace-nowrap ${activeCategory === c.key ? "text-green-700 font-bold" : "text-ink-500"}`}>
                   {c.label}
@@ -328,7 +382,15 @@ export default function Home() {
             {PROMO_CARDS.map((p) => (
               <Link href="/deals" key={p.label}>
                 <div className="rounded-[20px] p-4 relative overflow-hidden h-[110px]" style={{ background: p.gradient }}>
-                  <div className="absolute top-3 right-3 text-3xl select-none">{p.emoji}</div>
+                  {/* Real product image for this category */}
+                  <div className="absolute top-2 right-2 w-[54px] h-[54px] rounded-[10px] overflow-hidden bg-white/15">
+                    {promoImages[p.label] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={promoImages[p.label]} alt={p.label} className="w-full h-full object-contain p-1.5" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-2xl">{p.emoji}</span>
+                    )}
+                  </div>
                   <p className="text-white/70 text-xs font-medium mb-1">{p.label}</p>
                   <p className="font-display font-black text-white leading-none" style={{ fontSize: 36 }}>-{p.pct}%</p>
                 </div>

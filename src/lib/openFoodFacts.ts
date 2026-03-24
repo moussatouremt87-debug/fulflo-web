@@ -1,3 +1,19 @@
+// One carefully verified representative EAN per category
+export const CATEGORY_REPRESENTATIVE_EANS: Record<string, string> = {
+  hygiene:        "3029330003533", // Colgate Total Whitening
+  alimentaire:    "3017620422003", // Nutella
+  alimentation:   "3017620422003", // alias
+  boissons:       "3168930010265", // Evian 1.5L
+  entretien:      "0037000013488", // Ariel Pods
+  bebe:           "8001841956954", // Pampers Baby-Dry
+  snacks:         "7622300441937", // Oreo
+  beaute:         "3600542396035", // L'Oréal Elvive
+  sport:          "3175681851093", // Sport protéines
+  pharmacie:      "3400935100018", // Doliprane
+  electromenager: "8710103895435", // Philips
+  animaux:        "4008429044694", // Pedigree
+};
+
 export interface OFFProduct {
   image_front_url?: string;
   image_url?: string;
