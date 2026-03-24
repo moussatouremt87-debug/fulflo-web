@@ -1,10 +1,41 @@
 'use client'
 import { useConversation } from '@11labs/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+const AGENT_MAP: Record<string, string> = {
+  fr: 'agent_6801kmf7yq7pf3wvk4skvbentw12',  // Alex FR — Anthony parisien
+  en: 'agent_4001kmfb0zgde0g8basp6fs75wts',  // Alex EN — George British
+  de: 'agent_2101kmfb1zc5ep193y2zjjj4vrcj',  // Alex DE — Daniel Hochdeutsch
+  ar: 'agent_8201kmfb20v6f1ztmnt0d14a4kx8',  // Alex AR — Audia (Arabic)
+}
+
+const VOICE_LABELS: Record<string, string> = {
+  fr: 'Voix Anthony · Parisien',
+  en: 'Voice George · London',
+  de: 'Stimme Daniel · Hochdeutsch',
+  ar: 'صوت أوديا · المغرب',
+}
 
 export default function AlexAgent() {
   const [isOpen, setIsOpen] = useState(false)
-  const AGENT_ID = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID!
+  const [agentId, setAgentId] = useState(AGENT_MAP['fr'])
+  const [voiceLabel, setVoiceLabel] = useState(VOICE_LABELS['fr'])
+
+  useEffect(() => {
+    const lang = localStorage.getItem('fulflo_lang') || 'fr'
+    setAgentId(AGENT_MAP[lang] || AGENT_MAP['fr'])
+    setVoiceLabel(VOICE_LABELS[lang] || VOICE_LABELS['fr'])
+  }, [])
+
+  useEffect(() => {
+    const handleStorage = () => {
+      const lang = localStorage.getItem('fulflo_lang') || 'fr'
+      setAgentId(AGENT_MAP[lang] || AGENT_MAP['fr'])
+      setVoiceLabel(VOICE_LABELS[lang] || VOICE_LABELS['fr'])
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [])
 
   const conversation = useConversation({
     onConnect: () => console.log('Alex connected'),
@@ -15,7 +46,16 @@ export default function AlexAgent() {
   const startCall = async () => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true })
-      await conversation.startSession({ agentId: AGENT_ID, connectionType: 'webrtc' })
+      await conversation.startSession({
+        agentId,
+        connectionType: 'webrtc',
+        overrides: {
+          tts: {
+            stability: 0.85,
+            similarityBoost: 0.90,
+          },
+        },
+      })
     } catch (e) {
       console.error('Mic permission denied or error:', e)
     }
@@ -50,7 +90,7 @@ export default function AlexAgent() {
               </div>
               <div>
                 <p className="text-white font-semibold text-sm">Alex</p>
-                <p className="text-[#A7F3D0] text-xs">Assistant FulFlo · Voix Anthony</p>
+                <p className="text-[#A7F3D0] text-xs">{voiceLabel}</p>
               </div>
             </div>
             <button
