@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart";
 import { I18nProvider } from "@/lib/i18n";
+import AlexAgent from "@/components/AlexAgent";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="fr" className={`${geist.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
         <I18nProvider><CartProvider>{children}</CartProvider></I18nProvider>
+        <AlexAgent />
       </body>
     </html>
   );
