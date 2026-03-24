@@ -150,7 +150,20 @@ function DealsCard({ product, onAdd, added }: { product: ProductCardProps; onAdd
       <div className="p-3">
         <p className="text-[9px] font-black text-ink-400 uppercase tracking-widest mb-0.5">{product.brand}</p>
         <p className="font-semibold text-ink-900 text-[13px] leading-tight line-clamp-2 mb-1.5">{product.name}</p>
-        <p className="text-green-500 text-[11px] font-bold mb-2">Économisez €{(product.original_price - product.current_price).toFixed(2)}</p>
+        <p className="text-green-600 text-[11px] font-bold mb-1.5">Écon. €{(product.original_price - product.current_price).toFixed(2)}</p>
+        {product.expiry_date && (
+          <p className="text-amber-600 text-[10px] font-medium mb-1.5">
+            DLC {new Date(product.expiry_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+          </p>
+        )}
+        {product.stock_units <= 20 && (
+          <div className="flex items-center gap-1 mb-1.5">
+            <div className="h-1 flex-1 bg-ink-100 rounded-full overflow-hidden">
+              <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.min(100, (product.stock_units / 20) * 100)}%` }} />
+            </div>
+            <span className="text-[9px] text-red-500 font-bold shrink-0">{product.stock_units} restants</span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <p className="font-black text-ink-900 text-base leading-none">€{product.current_price.toFixed(2)}</p>
@@ -337,7 +350,7 @@ export default function DealsPage() {
               <ChevronLeft size={18} className="text-white" />
             </Link>
             <span className="text-white font-display font-bold text-base flex-1">
-              {loading ? "Chargement…" : `${filtered.length} offres surplus`}
+              {t("deals.pageTitle")}
             </span>
             <button
               onClick={() => setShowSearch((v) => !v)}
@@ -345,8 +358,13 @@ export default function DealsPage() {
             >
               <Search size={15} className="text-white" />
             </button>
-            <button className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+            <button className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center relative">
               <SlidersHorizontal size={15} className="text-white" />
+              {(category !== "all" || search.trim()) && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full text-[9px] font-black text-green-900 flex items-center justify-center">
+                  {(category !== "all" ? 1 : 0) + (search.trim() ? 1 : 0)}
+                </span>
+              )}
             </button>
           </div>
 
@@ -450,20 +468,20 @@ export default function DealsPage() {
                     {bundles.map((b) => {
                       const originalPrice = Number(b.bundle_price_eur) / (1 - Number(b.bundle_discount_percent) / 100);
                       return (
-                        <div key={b.id} className="bg-white rounded-[20px] border border-[#7C3AED]/20 overflow-hidden shadow-xs">
-                          <div className="bg-[#7C3AED] px-4 py-2 flex items-center gap-2">
-                            <span className="text-white text-[10px] font-black uppercase tracking-wider">BUNDLE</span>
-                            <span className="text-white text-[10px] font-bold">-{b.bundle_discount_percent}%</span>
+                        <div key={b.id} className="rounded-[20px] overflow-hidden shadow-sm" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" }}>
+                          <div className="px-4 py-2 flex items-center gap-2 bg-black/10">
+                            <span className="text-white text-[10px] font-black uppercase tracking-wider">⚡ BUNDLE</span>
+                            <span className="text-green-300 text-[10px] font-bold">-{b.bundle_discount_percent}%</span>
                           </div>
                           <div className="p-4 flex items-center justify-between">
                             <div>
-                              <p className="font-bold text-ink-900 text-sm mb-1 leading-snug">{b.name}</p>
+                              <p className="font-bold text-white text-sm mb-1 leading-snug">{b.name}</p>
                               <div className="flex items-baseline gap-2">
-                                <span className="font-black text-ink-900 text-lg">€{Number(b.bundle_price_eur).toFixed(2)}</span>
-                                <span className="text-ink-300 text-xs line-through">€{originalPrice.toFixed(2)}</span>
+                                <span className="font-black text-white text-lg">€{Number(b.bundle_price_eur).toFixed(2)}</span>
+                                <span className="text-white/50 text-xs line-through">€{originalPrice.toFixed(2)}</span>
                               </div>
                             </div>
-                            <button className="bg-[#7C3AED] text-white font-bold text-xs px-4 py-2.5 rounded-full hover:bg-[#6D28D9] transition-colors whitespace-nowrap">
+                            <button className="bg-green-400 text-green-900 font-bold text-xs px-4 py-2.5 rounded-full hover:bg-green-300 transition-colors whitespace-nowrap">
                               Ajouter →
                             </button>
                           </div>
@@ -500,14 +518,11 @@ export default function DealsPage() {
 
         {/* ── STICKY CART BAR ───────────────────────────────────────────── */}
         {cart.itemCount > 0 && !toast && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-            <Link href="/cart" className="flex items-center gap-3 bg-green-800 text-white rounded-2xl shadow-xl px-5 py-3.5">
-              <ShoppingCart size={16} />
-              <div>
-                <p className="font-bold text-sm">{cart.itemCount} {cart.itemCount > 1 ? t("cart.articles") : t("cart.article")} · €{cart.subtotal.toFixed(2)}</p>
-                <p className="text-white/60 text-[10px]">Économies -{cart.totalSavings.toFixed(2)} €</p>
-              </div>
-              <ChevronLeft size={16} className="rotate-180 ml-1 text-green-400" />
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+            <Link href="/cart" className="flex items-center gap-2 bg-green-800 text-white rounded-full shadow-lg px-4 py-2.5">
+              <ShoppingCart size={14} />
+              <span className="font-bold text-sm">{cart.itemCount} art. · €{cart.subtotal.toFixed(2)}</span>
+              <ChevronLeft size={14} className="rotate-180 text-green-400" />
             </Link>
           </div>
         )}

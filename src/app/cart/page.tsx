@@ -8,17 +8,23 @@ import { ChevronLeft, Minus, Plus, Trash2, Lock, ChevronRight, Tag } from "lucid
 
 type Delivery = "standard" | "express" | "pickup";
 
-const DELIVERY_OPTIONS: { key: Delivery; label: string; sub: string; price: number; emoji: string }[] = [
-  { key: "standard", label: "Standard", sub: "24h · Gratuit",    price: 0,    emoji: "🚚" },
-  { key: "express",  label: "Express",  sub: "3h · €3,99",       price: 3.99, emoji: "⚡" },
-  { key: "pickup",   label: "Retrait",  sub: "Gratuit · En magasin", price: 0, emoji: "🏪" },
+type DeliveryOption = { key: Delivery; label: string; sub: string; date: string; price: number; emoji: string; badge?: string };
+
+function getDeliveryDate(days: number) {
+  const d = new Date(); d.setDate(d.getDate() + days);
+  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short" });
+}
+
+const DELIVERY_OPTIONS: DeliveryOption[] = [
+  { key: "standard", label: "Standard", sub: "Livraison gratuite",   date: getDeliveryDate(1), price: 0,    emoji: "🚚" },
+  { key: "express",  label: "Express",  sub: "Livraison en 3h · €3,99", date: "Aujourd'hui avant 21h", price: 3.99, emoji: "⚡", badge: "POPULAIRE" },
 ];
 
 export default function CartPage() {
   const { t } = useI18n();
   const { items, removeItem, updateQuantity, subtotal, serviceFee, shipping, total, totalSavings, clearCart } = useCart();
 
-  const [email, setEmail]       = useState("");
+  const [email]                  = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [delivery, setDelivery] = useState<Delivery>("standard");
@@ -105,17 +111,25 @@ export default function CartPage() {
               <button
                 key={opt.key}
                 onClick={() => setDelivery(opt.key)}
-                className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-[14px] border-2 transition-all text-center ${
+                className={`flex-1 flex flex-col items-start gap-1 p-3 rounded-[14px] border-2 transition-all relative ${
                   delivery === opt.key
                     ? "bg-green-50 border-green-500"
                     : "bg-white border-ink-100"
                 }`}
               >
+                {opt.badge && (
+                  <span className="absolute top-2 right-2 bg-green-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                    {opt.badge}
+                  </span>
+                )}
                 <span className="text-xl">{opt.emoji}</span>
                 <p className={`text-[11px] font-bold leading-tight ${delivery === opt.key ? "text-green-700" : "text-ink-700"}`}>
                   {opt.label}
                 </p>
                 <p className={`text-[10px] ${delivery === opt.key ? "text-green-500" : "text-ink-300"}`}>{opt.sub}</p>
+                <p className={`text-[10px] font-medium ${delivery === opt.key ? "text-green-700" : "text-ink-400"}`}>
+                  📅 {opt.date}
+                </p>
               </button>
             ))}
           </div>
@@ -174,6 +188,21 @@ export default function CartPage() {
           ))}
         </div>
 
+        {/* ── CROSS-SELL ────────────────────────────────────────────────── */}
+        <div className="px-4 pt-5">
+          <p className="text-[11px] font-bold text-ink-400 uppercase tracking-widest mb-3">Vous aimerez aussi</p>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            {[{ emoji: "🧴", name: "Gel douche Dove 250ml", price: 1.29, original: 3.49 }, { emoji: "🍝", name: "Pâtes Barilla 500g ×3", price: 2.19, original: 4.99 }, { emoji: "☕", name: "Nescafé Gold 100g", price: 3.99, original: 8.90 }].map((p) => (
+              <div key={p.name} className="shrink-0 w-[120px] bg-white border border-ink-100 rounded-[14px] p-3 shadow-xs">
+                <span className="text-2xl">{p.emoji}</span>
+                <p className="text-[11px] font-semibold text-ink-900 leading-tight mt-1 line-clamp-2">{p.name}</p>
+                <p className="font-black text-ink-900 text-sm mt-1">€{p.price.toFixed(2)}</p>
+                <p className="text-ink-300 text-[10px] line-through">€{p.original.toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ── PROMO CODE ────────────────────────────────────────────────── */}
         <div className="px-4 pt-4">
           <div className="flex gap-2">
@@ -203,20 +232,6 @@ export default function CartPage() {
           <div className="bg-white border border-ink-100 rounded-[20px] p-5 shadow-xs">
             <h2 className="font-display font-bold text-ink-900 text-sm mb-4">Récapitulatif</h2>
 
-            {/* Email input */}
-            <div className="mb-4">
-              <label className="text-[10px] font-bold text-ink-400 uppercase tracking-widest mb-1.5 block">
-                {t("cart.email-label")}
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("cart.email-ph")}
-                className="w-full bg-ink-100 border-0 rounded-[12px] px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
-            </div>
-
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-ink-500">
                 <span>{t("cart.subtotal")}</span>
@@ -236,6 +251,14 @@ export default function CartPage() {
                 <p className="text-[11px] text-ink-300">{t("cart.shipping-threshold")}</p>
               )}
 
+              {/* Savings in green before total */}
+              {totalSavings > 0 && (
+                <div className="bg-green-50 rounded-[12px] px-4 py-2.5 flex justify-between items-center">
+                  <span className="text-green-700 text-xs font-semibold">✓ {t("cart.savings-label")}</span>
+                  <span className="text-green-600 font-black text-sm">-€{totalSavings.toFixed(2)}</span>
+                </div>
+              )}
+
               {/* Total */}
               <div className="border-t border-ink-100 pt-3 flex justify-between items-baseline">
                 <span className="font-display font-black text-ink-900 text-base">Total</span>
@@ -243,14 +266,6 @@ export default function CartPage() {
                   €{finalTotal.toFixed(2)}
                 </span>
               </div>
-
-              {/* Savings */}
-              {totalSavings > 0 && (
-                <div className="bg-green-50 rounded-[12px] px-4 py-2.5 flex justify-between items-center">
-                  <span className="text-green-700 text-xs font-semibold">{t("cart.savings-label")}</span>
-                  <span className="text-green-500 font-black text-sm">-€{totalSavings.toFixed(2)}</span>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -276,7 +291,7 @@ export default function CartPage() {
           >
             <Lock size={16} />
             <span className="text-base">
-              {loading ? t("cart.checkout-loading") : `Passer commande · €${finalTotal.toFixed(2)}`}
+              {loading ? t("cart.checkout-loading") : `Commander maintenant · €${finalTotal.toFixed(2)}`}
             </span>
             <ChevronRight size={18} />
           </button>

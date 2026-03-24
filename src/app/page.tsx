@@ -113,14 +113,6 @@ const CATEGORY_IMAGE_MAP: Record<string, string> = {
   animaux:        "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=120&q=80",
 };
 
-// Shopping mode tabs — OFF EANs kept here because these are specific products
-const DELIVERY_TABS = [
-  { label: "Planifié",   sub: "Livraison 24h",  ean: "3029330003533" },
-  { label: "Maintenant", sub: "Express 3h",      ean: "3017620422003" },
-  { label: "Boutiques",  sub: "En magasin",      ean: "3168930010265" },
-  { label: "Beauté",     sub: "Soin & Beauté",   ean: "3600542396035" },
-];
-
 // Promo cards — direct Unsplash imageUrl per card, no fetch needed
 const PROMO_CARDS = [
   { label: "Hygiène & Beauté", pct: 58, imageUrl: "https://images.unsplash.com/photo-1556228578-626d5d5a2c55?w=200&q=80", gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
@@ -195,8 +187,6 @@ export default function Home() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-  const [tabImages, setTabImages] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState(0);
   const { h, m, s } = useCountdown(4 * 3600 + 22 * 60 + 15);
 
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -222,24 +212,6 @@ export default function Home() {
     });
   }, []);
 
-
-  // Fetch delivery tab images (Fix 5)
-  useEffect(() => {
-    Promise.allSettled(
-      DELIVERY_TABS.map((t) =>
-        fetch(`/api/product-image?ean=${encodeURIComponent(t.ean)}`)
-          .then((r) => r.json())
-          .then((d) => ({ label: t.label, url: d.url as string | null }))
-          .catch(() => ({ label: t.label, url: null }))
-      )
-    ).then((results) => {
-      const map: Record<string, string> = {};
-      for (const r of results) {
-        if (r.status === "fulfilled" && r.value.url) map[r.value.label] = r.value.url;
-      }
-      setTabImages(map);
-    });
-  }, []);
 
   const displayProducts = dbProducts.length ? dbProducts : PRODUCTS;
   const filteredProducts = activeCategory === "all"
@@ -302,41 +274,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── DELIVERY / MODE TABS (Fix 5) ──────────────────────────────── */}
-        <div className="px-4 pt-3 pb-1">
-          <div className="flex gap-2">
-            {DELIVERY_TABS.map((tab, i) => (
-              <button
-                key={tab.label}
-                onClick={() => setActiveTab(i)}
-                className={`flex-1 flex flex-col items-center gap-1.5 p-2 rounded-[14px] transition-all ${
-                  activeTab === i
-                    ? "bg-green-50 border-2 border-green-500"
-                    : "bg-white border-2 border-ink-100"
-                }`}
-              >
-                {/* 34×34 product image */}
-                <div className="w-[34px] h-[34px] rounded-[10px] bg-[#F4FAF6] overflow-hidden flex items-center justify-center">
-                  {tabImages[tab.label] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={tabImages[tab.label]}
-                      alt={tab.label}
-                      className="w-full h-full object-contain p-1"
-                      style={{ mixBlendMode: "multiply" }}
-                    />
-                  ) : (
-                    <div className="w-full h-full shimmer-bg rounded-[10px]" />
-                  )}
-                </div>
-                <p className={`text-[10px] font-bold leading-tight text-center ${activeTab === i ? "text-green-700" : "text-ink-500"}`}>
-                  {tab.label}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* ── HERO CARD ──────────────────────────────────────────────────── */}
         <div className="px-4 pt-3 pb-2">
           <div className="rounded-[28px] overflow-hidden" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #246040 100%)" }}>
@@ -374,7 +311,6 @@ export default function Home() {
               <p className="text-white/60 text-sm mb-0.5">Jusqu&apos;à</p>
               <h1 className="font-display font-black leading-none mb-1" style={{ fontSize: 42 }}>
                 <span className="text-green-400">-70%</span>
-                <span className="text-white"> Off</span>
               </h1>
               <p className="text-white/50 text-sm mt-1 mb-5">Surplus direct fabricant certifié</p>
 

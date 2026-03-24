@@ -7,6 +7,7 @@ import KPICard from "@/components/supplier/KPICard";
 import AIInsightCard from "@/components/supplier/AIInsightCard";
 import ClearanceChart from "@/components/supplier/ClearanceChart";
 import { generateInsights, type AIInsight } from "@/lib/ai-insights";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 
 // ─── Demo data ────────────────────────────────────────────────────────────────
 
@@ -63,16 +64,25 @@ export default function SupplierDashboard() {
         }
       />
 
+      {/* ── DLC Alert Banner ────────────────────────────────────────────── */}
+      {DEMO_PRODUCTS.filter(p => {
+        const daysLeft = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
+        return daysLeft <= 14;
+      }).length > 0 && (
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-4">
+          <span className="text-2xl">⚠️</span>
+          <div className="flex-1">
+            <p className="font-bold text-amber-800 text-sm">{t("dashboard.dlcAlert")}</p>
+            <p className="text-amber-600 text-xs mt-0.5">
+              {DEMO_PRODUCTS.filter(p => Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000) <= 14).map(p => p.name).join(", ")}
+            </p>
+          </div>
+          <a href="/supplier/products" className="text-xs font-bold text-amber-700 hover:underline whitespace-nowrap">Gérer →</a>
+        </div>
+      )}
+
       {/* ── KPI row ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KPICard
-          title={t("dashboard.kpi.totalProducts")}
-          value="5"
-          subtext="2 expirent dans 14j"
-          trend={0}
-          icon="📦"
-          accent="green"
-        />
         <KPICard
           title={t("dashboard.kpi.totalRevenue")}
           value="€4 820"
@@ -82,49 +92,93 @@ export default function SupplierDashboard() {
           accent="blue"
         />
         <KPICard
-          title={t("dashboard.kpi.avgDiscount")}
-          value="52%"
-          subtext="Remise moyenne catalogue"
-          trend={-3}
-          icon="🏷️"
+          title={t("dashboard.kpi.orders")}
+          value="127"
+          subtext="Ce mois · +8 aujourd'hui"
+          trend={8}
+          icon="🛒"
+          accent="green"
+        />
+        <KPICard
+          title={t("dashboard.kpi.iroas")}
+          value="4.2×"
+          subtext="Retour sur investissement pub"
+          trend={5}
+          icon="📈"
           accent="amber"
         />
         <KPICard
-          title={t("dashboard.kpi.stockValue")}
-          value="€18 240"
-          subtext="Valeur catalogue restante"
-          icon="🏭"
+          title={t("dashboard.kpi.totalProducts")}
+          value="5"
+          subtext="2 expirent dans 14j"
+          trend={0}
+          icon="📦"
           accent="green"
         />
       </div>
 
-      {/* ── Main grid ───────────────────────────────────────────────────── */}
+      {/* ── Charts row ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Chart — 2 cols */}
-        <div className="lg:col-span-2">
-          <ClearanceChart />
+        {/* Top products bar chart */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 className="font-bold text-gray-900 text-sm mb-4">{t("dashboard.chart.topProducts")}</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={DEMO_PRODUCTS.map(p => ({ name: p.name.slice(0, 18), ventes: Math.round(p.stock_units * 0.6 + Math.random() * 40), fill: "#10B981" }))} layout="vertical" margin={{ left: 8 }}>
+              <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} tickLine={false} axisLine={false} />
+              <Tooltip formatter={(v) => [`${v} ventes`, ""]} contentStyle={{ fontSize: 12, borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,.1)" }} />
+              <Bar dataKey="ventes" fill="#10B981" radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* AI Insights — 1 col */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="font-bold text-gray-900 text-sm">{t("dashboard.insights.title")}</h3>
-            <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
-              {insights.filter(i => i.severity === "critical").length} critique{insights.filter(i => i.severity === "critical").length > 1 ? "s" : ""}
-            </span>
-          </div>
-          {insights.length === 0 ? (
-            <div className="bg-[#ecfdf5] rounded-2xl p-4 text-center">
-              <p className="text-2xl mb-2">✅</p>
-              <p className="text-sm font-semibold text-[#065F46]">Tout est optimal</p>
-              <p className="text-xs text-gray-500 mt-1">L&apos;IA surveille vos produits en continu</p>
+        {/* FulFlo Score radial + AI Insights */}
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <h3 className="font-bold text-gray-900 text-sm mb-2">{t("dashboard.chart.score")}</h3>
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width={80} height={80}>
+                <RadialBarChart innerRadius={28} outerRadius={38} data={[{ name: "Score", value: 78, fill: "#10B981" }]} startAngle={90} endAngle={-270}>
+                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                  <RadialBar dataKey="value" cornerRadius={6} />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div>
+                <p className="font-black text-gray-900 text-3xl leading-none">78</p>
+                <p className="text-gray-400 text-xs mt-1">sur 100</p>
+                <p className="text-green-500 text-xs font-semibold mt-1">↑ +4 ce mois</p>
+              </div>
             </div>
-          ) : (
-            insights.map((ins) => (
-              <AIInsightCard key={ins.id} insight={ins} />
-            ))
-          )}
+          </div>
+
+          {/* AI Insights */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-sm">{t("dashboard.insights.title")}</h3>
+              {insights.filter(i => i.severity === "critical").length > 0 && (
+                <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                  {insights.filter(i => i.severity === "critical").length} critique{insights.filter(i => i.severity === "critical").length > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            {insights.length === 0 ? (
+              <div className="bg-[#ecfdf5] rounded-2xl p-4 text-center">
+                <p className="text-2xl mb-2">✅</p>
+                <p className="text-sm font-semibold text-[#065F46]">Tout est optimal</p>
+                <p className="text-xs text-gray-500 mt-1">L&apos;IA surveille vos produits en continu</p>
+              </div>
+            ) : (
+              insights.slice(0, 2).map((ins) => (
+                <AIInsightCard key={ins.id} insight={ins} />
+              ))
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* ── Clearance chart ─────────────────────────────────────────────── */}
+      <div className="mb-8">
+        <ClearanceChart />
       </div>
 
       {/* ── Activity table ──────────────────────────────────────────────── */}

@@ -22,6 +22,8 @@ const MENU_SECTIONS = [
     items: [
       { icon: "💳", color: "#1E40AF", label: "Paiements",      href: "#" },
       { icon: "📍", color: "#7C3AED", label: "Adresses",        href: "#" },
+      { icon: "🎁", color: "#059669", label: "Mon code parrainage", href: "#" },
+      { icon: "🌐", color: "#0284C7", label: "Langue",          href: "#" },
       { icon: "🔔", color: "#F4A623", label: "Notifications",   href: "#" },
     ],
   },
@@ -82,6 +84,15 @@ export default function AccountPage() {
   const ecoKg = Math.round(totalSpent * 0.4);
   const loyaltyPoints = Math.round(totalSpent * 10);
   const loyaltyProgress = Math.min(100, (loyaltyPoints % 1000) / 10);
+  const memberSince = customer?.created_at
+    ? new Date(customer.created_at).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+    : null;
+  const tierLabel = loyaltyPoints >= 5000 ? "Platinum" : loyaltyPoints >= 1000 ? "Or" : "Argent";
+  const TIER_PERKS: Record<string, string[]> = {
+    Argent: ["Livraison offerte dès 40€", "Accès aux offres flash", "Support email 48h"],
+    Or: ["Livraison offerte dès 25€", "Accès prioritaire aux flash sales", "Support prioritaire 24h", "+5% de réductions supplémentaires"],
+    Platinum: ["Livraison offerte sans seuil", "Accès exclusif avant ouverture", "Support dédié 24/7", "+10% de réductions", "FulFlo Pass inclus"],
+  };
 
   return (
     <div className="min-h-screen bg-green-50">
@@ -111,7 +122,7 @@ export default function AccountPage() {
             <div>
               <p className="text-white font-display font-black text-xl leading-tight">Bonjour, {displayName} 👋</p>
               <p className="text-white/50 text-xs mt-0.5">{email}</p>
-              <p className="text-white/40 text-[10px] mt-0.5">Membre FulFlo · Tier Or</p>
+              <p className="text-white/40 text-[10px] mt-0.5">Membre FulFlo · Tier {tierLabel}{memberSince ? ` · depuis ${memberSince}` : ""}</p>
             </div>
           </div>
 
@@ -123,9 +134,10 @@ export default function AccountPage() {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <p className="text-white/50 text-[10px] uppercase tracking-widest mb-1">Points fidélité</p>
-                <p className="font-display font-black text-white leading-none" style={{ fontSize: 36 }}>
+                <p className="font-display font-black text-white leading-none" style={{ fontSize: 44 }}>
                   {loyaltyPoints.toLocaleString("fr-FR")}
                 </p>
+                <p className="text-white/40 text-[10px] mt-1">points</p>
               </div>
               <div className="flex items-center gap-1.5 bg-gold/20 border border-gold/30 px-3 py-1.5 rounded-full">
                 <Star size={11} className="text-gold fill-gold" />
@@ -159,6 +171,36 @@ export default function AccountPage() {
                 <p className="text-ink-400 text-[10px] mt-0.5">{card.label}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ── TIER ADVANTAGES ───────────────────────────────────────────── */}
+        <div className="px-4 pt-4">
+          <div className="bg-white border border-ink-100 rounded-[20px] p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display font-bold text-ink-900 text-sm">Avantages Tier {tierLabel}</h3>
+              <Star size={14} className="text-gold fill-gold" />
+            </div>
+            <div className="space-y-2">
+              {(TIER_PERKS[tierLabel] ?? []).map((perk) => (
+                <div key={perk} className="flex items-center gap-2">
+                  <span className="text-green-500 text-xs font-bold">✓</span>
+                  <span className="text-ink-600 text-xs">{perk}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── FULFLO PASS PREMIUM ───────────────────────────────────────── */}
+        <div className="px-4 pt-4">
+          <div className="rounded-[20px] p-5 text-center" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #246040 100%)" }}>
+            <p className="text-white/70 text-xs mb-1">✦ FulFlo Pass</p>
+            <p className="font-display font-black text-white text-lg mb-1">Passez en Premium</p>
+            <p className="text-white/60 text-xs mb-4">Livraison offerte · -10% sur tout · Accès exclusif</p>
+            <Link href="/membership" className="inline-block bg-white text-green-800 font-bold text-sm px-8 py-2.5 rounded-full hover:bg-green-50 transition-colors">
+              Découvrir FulFlo Pass →
+            </Link>
           </div>
         </div>
 

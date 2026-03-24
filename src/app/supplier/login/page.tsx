@@ -133,7 +133,7 @@ export default function SupplierLogin() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            fulflo. · Portail Fournisseur Certifié · {new Date().getFullYear()}
+            fulflo. · {t("supplier.portal")} · {new Date().getFullYear()}
           </p>
         </div>
       </div>
