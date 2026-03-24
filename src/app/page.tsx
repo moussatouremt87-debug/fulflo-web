@@ -9,6 +9,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { useCart } from "@/lib/cart";
 import ProductImage from "@/components/ui/ProductImage";
+import { ProductCardSkeleton } from "@/components/ui/Skeletons";
 import { CATEGORY_REPRESENTATIVE_EANS } from "@/lib/openFoodFacts";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ interface Product {
   freeShipping?: boolean;
   category?: string;
   ean?: string;
+  image_url?: string;
 }
 
 // ─── Static Data ────────────────────────────────────────────────────────────────
@@ -75,6 +77,7 @@ function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
     freeShipping: curr < 15,
     category: String(row.category ?? ""),
     ean: row.ean ? String(row.ean) : undefined,
+    image_url: row.image_url ? String(row.image_url) : undefined,
   };
 }
 
@@ -133,7 +136,7 @@ function MiniCard({ product, onAdd, added }: { product: Product; onAdd: (p: Prod
         >
           <Heart size={11} className={liked ? "fill-red-500 text-red-500" : "text-gray-300"} />
         </button>
-        <ProductImage ean={product.ean} category={product.category} brand={product.brand} className="w-full h-full" size={118} />
+        <ProductImage imageUrl={product.image_url} ean={product.ean} name={product.name} className="w-full h-full" />
       </div>
       {/* Body */}
       <div className="p-3">
@@ -164,6 +167,7 @@ export default function Home() {
   const { t } = useI18n();
   const { addItem, items } = useCart();
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [catImages, setCatImages] = useState<Record<string, string>>({});
@@ -176,7 +180,7 @@ export default function Home() {
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) return;
+    if (!url || !key) { setLoadingProducts(false); return; }
     import("@supabase/supabase-js").then(({ createClient }) => {
       const sb = createClient(url, key);
       Promise.resolve(
@@ -185,9 +189,11 @@ export default function Home() {
           .eq("is_active", true).gt("stock_units", 0)
           .order("discount_percent", { ascending: false }).limit(8)
       ).then(({ data }) => {
-        if (!data?.length) return;
-        setDbProducts((data as Record<string, unknown>[]).map((r, i) => dbRowToProduct(r, i)).sort((a, b) => b.savingsPct - a.savingsPct));
-      }).catch(() => {});
+        if (data?.length) {
+          setDbProducts((data as Record<string, unknown>[]).map((r, i) => dbRowToProduct(r, i)).sort((a, b) => b.savingsPct - a.savingsPct));
+        }
+        setLoadingProducts(false);
+      }).catch(() => { setLoadingProducts(false); });
     });
   }, []);
 
@@ -296,7 +302,7 @@ export default function Home() {
               {/* Hero product image — best deal */}
               <div className="absolute top-3 right-3 w-[88px] h-[88px] animate-float select-none">
                 {heroProduct ? (
-                  <ProductImage ean={heroProduct.ean} category={heroProduct.category} brand={heroProduct.brand} className="w-full h-full rounded-[16px] bg-white/10" size={88} />
+                  <ProductImage imageUrl={heroProduct.image_url} ean={heroProduct.ean} name={heroProduct.name} className="w-full h-full rounded-[16px] bg-white/10" />
                 ) : (
                   <span className="text-5xl flex items-center justify-center w-full h-full">🛒</span>
                 )}
@@ -409,9 +415,12 @@ export default function Home() {
             <Link href="/deals" className="text-green-600 text-xs font-semibold">Tout voir →</Link>
           </div>
           <div className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-2 scrollbar-hide">
-            {(filteredProducts.length ? filteredProducts : displayProducts).map((p) => (
-              <MiniCard key={p.id} product={p} onAdd={handleAdd} added={addedIds.has(p.id)} />
-            ))}
+            {loadingProducts
+              ? Array.from({ length: 3 }).map((_, i) => <ProductCardSkeleton key={i} />)
+              : (filteredProducts.length ? filteredProducts : displayProducts).map((p) => (
+                  <MiniCard key={p.id} product={p} onAdd={handleAdd} added={addedIds.has(p.id)} />
+                ))
+            }
           </div>
         </div>
 

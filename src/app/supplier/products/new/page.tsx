@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import Header from "@/components/supplier/Header";
@@ -22,12 +22,13 @@ interface FormData {
   moq: string;
   use_ai_price: boolean;
   override_price: string;
+  image_url: string;
 }
 
 const EMPTY: FormData = {
   brand: "Nestlé", name: "", category: "alimentation", size: "", ean: "",
   description: "", stock_units: "", retail_price: "", expiry_date: "",
-  warehouse: "Paris CDG", moq: "1", use_ai_price: true, override_price: "",
+  warehouse: "Paris CDG", moq: "1", use_ai_price: true, override_price: "", image_url: "",
 };
 
 const CATEGORIES = ["alimentation", "hygiene", "entretien", "boissons", "baby"];
@@ -42,9 +43,36 @@ export default function NewProduct() {
   const [generatingDesc, setGeneratingDesc] = useState(false);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const set = (key: keyof FormData, val: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: val }));
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Local preview immediately
+    const preview = URL.createObjectURL(file);
+    setImagePreview(preview);
+    setImageUploading(true);
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const sb = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `products/new-${Date.now()}.${ext}`;
+      const { error } = await sb.storage.from("product-images").upload(path, file, { upsert: true });
+      if (!error) {
+        const { data: { publicUrl } } = sb.storage.from("product-images").getPublicUrl(path);
+        set("image_url", publicUrl);
+      }
+    } catch { /* keep local preview, image_url stays empty */ }
+    setImageUploading(false);
+  };
 
   // Recompute AI price whenever relevant fields change
   useEffect(() => {
@@ -176,6 +204,45 @@ export default function NewProduct() {
                   placeholder="3800059908943" />
               </div>
             </div>
+            {/* Image upload */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                Photo produit
+                <span className="text-xs text-gray-400 font-normal ml-2">JPG/PNG · 500×500px recommandé</span>
+              </label>
+              <div className="flex items-center gap-4">
+                {/* Preview */}
+                <div className="w-20 h-20 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
+                  {imagePreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={imagePreview} alt="preview" className="w-full h-full object-contain p-1" />
+                  ) : (
+                    <span className="text-2xl">📷</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageFile}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={imageUploading}
+                    className="w-full border border-dashed border-gray-300 rounded-xl py-2.5 text-sm text-gray-500 hover:border-[#10B981] hover:text-[#10B981] transition-colors disabled:opacity-50"
+                  >
+                    {imageUploading ? "⏳ Upload en cours…" : "Choisir une photo"}
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    Sans photo → Fulflo utilise automatiquement la photo fabricant via Open Food Facts
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-semibold text-gray-600">{t("newProduct.fields.description")}</label>

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import ProductImage from "@/components/ui/ProductImage";
-import { ProductGridSkeleton } from "@/components/ui/Shimmer";
+import { ProductGridSkeleton } from "@/components/ui/Skeletons";
 
 // Brand → Unsplash fallback images
 const BRAND_IMG: Record<string, string> = {
@@ -98,7 +98,7 @@ function SponsoredCard({
         {discount > 0 && (
           <span className="absolute top-2 right-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
         )}
-        <ProductImage ean={product.ean} category={product.category} brand={product.brand} className="w-full h-full" size={120} />
+        <ProductImage imageUrl={product.image_url} ean={product.ean} name={product.name} className="w-full h-full" />
       </div>
 
       <div className="p-3">
@@ -144,7 +144,7 @@ function DealsCard({ product, onAdd, added }: { product: ProductCardProps; onAdd
         <button onClick={() => setLiked((l) => !l)} className="absolute top-2 right-2 z-10 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-xs">
           <Heart size={11} className={liked ? "fill-red-500 text-red-500" : "text-ink-300"} />
         </button>
-        <ProductImage ean={product.ean} category={product.category} brand={product.brand} className="w-full h-full" size={120} />
+        <ProductImage imageUrl={product.image_url} ean={product.ean} name={product.name} className="w-full h-full" />
       </div>
 
       <div className="p-3">
@@ -203,7 +203,7 @@ async function fetchProducts(): Promise<ProductCardProps[]> {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(url, key);
     const { data, error } = await sb.from("products")
-      .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, expiry_date, is_active, category, image_url, typical_duration_days, description, is_sponsored, ean")
+      .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, expiry_date, is_active, category, image_url, ean, typical_duration_days, description, is_sponsored")
       .eq("is_active", true).gt("stock_units", 0).order("discount_percent", { ascending: false });
     if (error || !data?.length) return [];
     return (data as Record<string, unknown>[]).map((row) => ({
@@ -212,7 +212,8 @@ async function fetchProducts(): Promise<ProductCardProps[]> {
       stock_units: Number(row.stock_units ?? 0),
       expiry_date: String(row.expiry_date ?? new Date().toISOString().slice(0, 10)),
       flash_sale_end_time: null, ai_pricing_enabled: false,
-      category: String(row.category ?? ""), image_url: String(row.image_url ?? ""),
+      category: String(row.category ?? ""),
+      image_url: row.image_url ? String(row.image_url) : undefined,
       ean: row.ean ? String(row.ean) : undefined,
     })) as ProductCardProps[];
   } catch { return []; }
