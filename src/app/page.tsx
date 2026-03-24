@@ -97,6 +97,14 @@ const CAT_PILLS = [
   { key: "electromenager",label: "Électro",     emoji: "🔌", bg: "#1E3A5F" },
 ];
 
+// Shopping mode tabs — EAN-to-tab explicit mapping, never positional
+const DELIVERY_TABS = [
+  { label: "Planifié",   sub: "Livraison 24h",  ean: "3029330003533" }, // Colgate
+  { label: "Maintenant", sub: "Express 3h",      ean: "3017620422003" }, // Nutella
+  { label: "Boutiques",  sub: "En magasin",      ean: "3168930010265" }, // Evian
+  { label: "Beauté",     sub: "Soin & Beauté",   ean: "3600542396035" }, // L'Oréal
+];
+
 const PROMO_CARDS = [
   { label: "Hygiène & Beauté", emoji: "🧴", pct: 58, ean: CATEGORY_REPRESENTATIVE_EANS.hygiene,       gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
   { label: "Alimentation",     emoji: "🍝", pct: 45, ean: CATEGORY_REPRESENTATIVE_EANS.alimentaire,   gradient: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)" },
@@ -124,7 +132,7 @@ function MiniCard({ product, onAdd, added }: { product: Product; onAdd: (p: Prod
   return (
     <div className="shrink-0 w-[150px] bg-white rounded-[20px] shadow-sm overflow-hidden">
       {/* Image area */}
-      <div className="h-[118px] relative">
+      <div className="h-[118px] relative bg-[#F4FAF6]">
         {product.savingsPct >= 10 && (
           <span className="absolute top-2 left-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">
             -{product.savingsPct}%
@@ -172,6 +180,8 @@ export default function Home() {
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [catImages, setCatImages] = useState<Record<string, string>>({});
   const [promoImages, setPromoImages] = useState<Record<string, string>>({});
+  const [tabImages, setTabImages] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState(0);
   const { h, m, s } = useCountdown(4 * 3600 + 22 * 60 + 15);
 
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -231,6 +241,24 @@ export default function Home() {
         if (r.status === "fulfilled" && r.value.url) map[r.value.label] = r.value.url;
       }
       setPromoImages(map);
+    });
+  }, []);
+
+  // Fetch delivery tab images (Fix 5)
+  useEffect(() => {
+    Promise.allSettled(
+      DELIVERY_TABS.map((t) =>
+        fetch(`/api/product-image?ean=${encodeURIComponent(t.ean)}`)
+          .then((r) => r.json())
+          .then((d) => ({ label: t.label, url: d.url as string | null }))
+          .catch(() => ({ label: t.label, url: null }))
+      )
+    ).then((results) => {
+      const map: Record<string, string> = {};
+      for (const r of results) {
+        if (r.status === "fulfilled" && r.value.url) map[r.value.label] = r.value.url;
+      }
+      setTabImages(map);
     });
   }, []);
 
@@ -295,16 +323,57 @@ export default function Home() {
           </div>
         </div>
 
+        {/* ── DELIVERY / MODE TABS (Fix 5) ──────────────────────────────── */}
+        <div className="px-4 pt-3 pb-1">
+          <div className="flex gap-2">
+            {DELIVERY_TABS.map((tab, i) => (
+              <button
+                key={tab.label}
+                onClick={() => setActiveTab(i)}
+                className={`flex-1 flex flex-col items-center gap-1.5 p-2 rounded-[14px] transition-all ${
+                  activeTab === i
+                    ? "bg-green-50 border-2 border-green-500"
+                    : "bg-white border-2 border-ink-100"
+                }`}
+              >
+                {/* 34×34 product image */}
+                <div className="w-[34px] h-[34px] rounded-[10px] bg-[#F4FAF6] overflow-hidden flex items-center justify-center">
+                  {tabImages[tab.label] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={tabImages[tab.label]}
+                      alt={tab.label}
+                      className="w-full h-full object-contain p-1"
+                      style={{ mixBlendMode: "multiply" }}
+                    />
+                  ) : (
+                    <div className="w-full h-full shimmer-bg rounded-[10px]" />
+                  )}
+                </div>
+                <p className={`text-[10px] font-bold leading-tight text-center ${activeTab === i ? "text-green-700" : "text-ink-500"}`}>
+                  {tab.label}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ── HERO CARD ──────────────────────────────────────────────────── */}
-        <div className="px-4 pt-4 pb-2">
+        <div className="px-4 pt-3 pb-2">
           <div className="rounded-[28px] overflow-hidden" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #246040 100%)" }}>
             <div className="relative p-6 pb-7">
-              {/* Hero product image — best deal */}
-              <div className="absolute top-3 right-3 w-[88px] h-[88px] animate-float select-none">
+              {/* Hero product image — best deal (Fix 2) */}
+              <div className="absolute top-2 right-2 w-[130px] h-[165px] animate-hero-float select-none flex items-center justify-center">
                 {heroProduct ? (
-                  <ProductImage imageUrl={heroProduct.image_url} ean={heroProduct.ean} name={heroProduct.name} className="w-full h-full rounded-[16px] bg-white/10" />
+                  <ProductImage
+                    imageUrl={heroProduct.image_url}
+                    ean={heroProduct.ean}
+                    name={heroProduct.name}
+                    className="max-h-[165px] max-w-full rounded-[16px]"
+                    style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,.35))" }}
+                  />
                 ) : (
-                  <span className="text-5xl flex items-center justify-center w-full h-full">🛒</span>
+                  <span className="text-6xl">🛒</span>
                 )}
               </div>
 
@@ -359,16 +428,25 @@ export default function Home() {
                 className="flex flex-col items-center gap-1.5 shrink-0"
               >
                 <div
-                  className="w-[62px] h-[62px] rounded-[14px] overflow-hidden transition-all relative"
+                  className="w-[62px] h-[62px] rounded-[14px] overflow-hidden transition-all relative bg-white"
                   style={{
-                    background: c.bg,
-                    boxShadow: activeCategory === c.key ? `0 4px 16px ${c.bg}55` : "none",
+                    boxShadow: activeCategory === c.key
+                      ? `0 4px 16px ${c.bg}55`
+                      : "0 1px 3px rgba(15,45,30,.06)",
                     transform: activeCategory === c.key ? "scale(1.08)" : "scale(1)",
+                    border: activeCategory === c.key ? `2px solid ${c.bg}` : "2px solid transparent",
                   }}
                 >
                   {catImages[c.key] ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={catImages[c.key]} alt={c.label} className="w-full h-full object-contain p-2" />
+                    <img
+                      src={catImages[c.key]}
+                      alt={c.label}
+                      className="w-full h-full object-contain p-2"
+                      style={{ mixBlendMode: "multiply" }}
+                    />
+                  ) : catImages[c.key] === undefined ? (
+                    <div className="w-full h-full shimmer-bg" />
                   ) : (
                     <span className="w-full h-full flex items-center justify-center text-2xl">{c.emoji}</span>
                   )}
@@ -388,11 +466,18 @@ export default function Home() {
             {PROMO_CARDS.map((p) => (
               <Link href="/deals" key={p.label}>
                 <div className="rounded-[20px] p-4 relative overflow-hidden h-[110px]" style={{ background: p.gradient }}>
-                  {/* Real product image for this category */}
-                  <div className="absolute top-2 right-2 w-[54px] h-[54px] rounded-[10px] overflow-hidden bg-white/15">
+                  {/* Category product image — strict EAN mapping (Fix 4) */}
+                  <div className="absolute top-3 right-3 w-[60px] h-[60px] rounded-[12px] overflow-hidden bg-[#F4FAF6]">
                     {promoImages[p.label] ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={promoImages[p.label]} alt={p.label} className="w-full h-full object-contain p-1.5" />
+                      <img
+                        src={promoImages[p.label]}
+                        alt={p.label}
+                        className="w-full h-full object-contain p-1"
+                        style={{ mixBlendMode: "multiply", filter: "drop-shadow(0 3px 8px rgba(0,0,0,.3))" }}
+                      />
+                    ) : promoImages[p.label] === undefined ? (
+                      <div className="w-full h-full shimmer-bg" />
                     ) : (
                       <span className="w-full h-full flex items-center justify-center text-2xl">{p.emoji}</span>
                     )}

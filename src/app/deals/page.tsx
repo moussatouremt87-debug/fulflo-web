@@ -94,7 +94,7 @@ function SponsoredCard({
         </div>
       )}
 
-      <div className="h-[120px] relative">
+      <div className="h-[120px] relative bg-[#F4FAF6]">
         {discount > 0 && (
           <span className="absolute top-2 right-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
         )}
@@ -137,7 +137,7 @@ function DealsCard({ product, onAdd, added }: { product: ProductCardProps; onAdd
       )}
 
       {/* Image area */}
-      <div className="h-[120px] relative">
+      <div className="h-[120px] relative bg-[#F4FAF6]">
         {discount >= 10 && (
           <span className="absolute top-2 left-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
         )}

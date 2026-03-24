@@ -7,17 +7,16 @@ interface Props {
   ean?: string | null;      // Priority 2: Open Food Facts lookup
   name: string;             // Priority 3: initial letter fallback
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export default function ProductImage({ imageUrl, ean, name, className = "" }: Props) {
+export default function ProductImage({ imageUrl, ean, name, className = "", style }: Props) {
   const [src, setSrc] = useState<string | null>(imageUrl || null);
   const [loading, setLoading] = useState(!imageUrl && !!ean);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    // Priority 1: brand already uploaded
     if (imageUrl) { setSrc(imageUrl); setLoading(false); setFailed(false); return; }
-    // Priority 2: fetch from OFF via EAN
     if (ean) {
       setLoading(true);
       setFailed(false);
@@ -32,28 +31,27 @@ export default function ProductImage({ imageUrl, ean, name, className = "" }: Pr
     }
   }, [imageUrl, ean]);
 
-  // Shimmer skeleton while fetching
   if (loading) {
-    return <div className={`bg-[#E8F5EE] animate-pulse ${className}`} />;
+    return <div className={`bg-[#F4FAF6] shimmer-bg ${className}`} style={style} />;
   }
 
-  // Real image (brand or OFF)
   if (src && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={name}
-        className={`object-contain ${className}`}
+        className={`object-contain bg-[#F4FAF6] ${className}`}
+        style={{ mixBlendMode: "multiply", ...style }}
         onError={() => setFailed(true)}
         loading="lazy"
       />
     );
   }
 
-  // Fallback: brand initial on green bg
+  // Fallback: initial letter
   return (
-    <div className={`bg-[#E8F5EE] flex items-center justify-center ${className}`}>
+    <div className={`bg-[#F4FAF6] flex items-center justify-center ${className}`} style={style}>
       <span className="text-[#1D4D35] font-bold text-3xl opacity-25 font-display select-none">
         {(name || "?").charAt(0).toUpperCase()}
       </span>
