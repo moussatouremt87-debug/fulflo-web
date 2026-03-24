@@ -10,7 +10,6 @@ import { useI18n } from "@/lib/i18n";
 import { useCart } from "@/lib/cart";
 import ProductImage from "@/components/ui/ProductImage";
 import { ProductCardSkeleton } from "@/components/ui/Skeletons";
-import { CATEGORY_REPRESENTATIVE_EANS } from "@/lib/openFoodFacts";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -97,7 +96,24 @@ const CAT_PILLS = [
   { key: "electromenager",label: "Électro",     emoji: "🔌", bg: "#1E3A5F" },
 ];
 
-// Shopping mode tabs — EAN-to-tab explicit mapping, never positional
+// ─── Explicit EAN maps — keyed by the EXACT slug used in CAT_PILLS / card.ean ─
+
+// Category pill EANs: key must match CAT_PILLS[].key exactly
+const CATEGORY_IMAGE_MAP: Record<string, string> = {
+  hygiene:        "3029330003533", // Colgate Total Whitening — Hygiène ✅
+  alimentation:   "3017620422003", // Nutella — Alimentation ✅
+  boissons:       "3168930010265", // Evian 1.5L — Boissons ✅
+  entretien:      "0037000013488", // Ariel Pods — Entretien ✅
+  bebe:           "8001841956954", // Pampers Baby-Dry — Bébé ✅
+  snacks:         "7622300441937", // Oreo — Snacks ✅
+  beaute:         "3600542396035", // L'Oréal Elvive — Beauté ✅
+  sport:          "3175681851093",
+  pharmacie:      "3400935100018",
+  electromenager: "8710103895435",
+  animaux:        "4008429044694",
+};
+
+// Shopping mode tabs — each has its own EAN, keyed by label for lookup
 const DELIVERY_TABS = [
   { label: "Planifié",   sub: "Livraison 24h",  ean: "3029330003533" }, // Colgate
   { label: "Maintenant", sub: "Express 3h",      ean: "3017620422003" }, // Nutella
@@ -105,11 +121,12 @@ const DELIVERY_TABS = [
   { label: "Beauté",     sub: "Soin & Beauté",   ean: "3600542396035" }, // L'Oréal
 ];
 
+// Promo cards — keyed by card.ean, never by label or position
 const PROMO_CARDS = [
-  { label: "Hygiène & Beauté", emoji: "🧴", pct: 58, ean: CATEGORY_REPRESENTATIVE_EANS.hygiene,       gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
-  { label: "Alimentation",     emoji: "🍝", pct: 45, ean: CATEGORY_REPRESENTATIVE_EANS.alimentaire,   gradient: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)" },
-  { label: "Entretien Maison", emoji: "🧹", pct: 62, ean: CATEGORY_REPRESENTATIVE_EANS.entretien,     gradient: "linear-gradient(135deg, #0284C7 0%, #075985 100%)" },
-  { label: "Bébé & Enfants",   emoji: "👶", pct: 50, ean: CATEGORY_REPRESENTATIVE_EANS.bebe,          gradient: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)" },
+  { label: "Hygiène & Beauté", emoji: "🧴", pct: 58, ean: "3029330003533", gradient: "linear-gradient(135deg, #1D4D35 0%, #2E7A50 100%)" },
+  { label: "Alimentation",     emoji: "🍝", pct: 45, ean: "3017620422003", gradient: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)" },
+  { label: "Entretien Maison", emoji: "🧹", pct: 62, ean: "0037000013488", gradient: "linear-gradient(135deg, #0284C7 0%, #075985 100%)" },
+  { label: "Bébé & Enfants",   emoji: "👶", pct: 50, ean: "8001841956954", gradient: "linear-gradient(135deg, #DC2626 0%, #991B1B 100%)" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -207,11 +224,10 @@ export default function Home() {
     });
   }, []);
 
-  // Fetch category representative images (Fix 3)
+  // Category pill images — explicit cat slug → EAN, never positional
   useEffect(() => {
-    const entries = Object.entries(CATEGORY_REPRESENTATIVE_EANS);
     Promise.allSettled(
-      entries.map(([cat, ean]) =>
+      Object.entries(CATEGORY_IMAGE_MAP).map(([cat, ean]) =>
         fetch(`/api/product-image?ean=${encodeURIComponent(ean)}`)
           .then((r) => r.json())
           .then((d) => ({ cat, url: d.url as string | null }))
@@ -220,25 +236,26 @@ export default function Home() {
     ).then((results) => {
       const map: Record<string, string> = {};
       for (const r of results) {
+        // cat slug is carried through the closure — no positional lookup
         if (r.status === "fulfilled" && r.value.url) map[r.value.cat] = r.value.url;
       }
       setCatImages(map);
     });
   }, []);
 
-  // Fetch promo card images (Fix 4)
+  // Promo card images — keyed by card.ean, never by label
   useEffect(() => {
     Promise.allSettled(
       PROMO_CARDS.map((c) =>
         fetch(`/api/product-image?ean=${encodeURIComponent(c.ean)}`)
           .then((r) => r.json())
-          .then((d) => ({ label: c.label, url: d.url as string | null }))
-          .catch(() => ({ label: c.label, url: null }))
+          .then((d) => ({ ean: c.ean, url: d.url as string | null }))
+          .catch(() => ({ ean: c.ean, url: null }))
       )
     ).then((results) => {
       const map: Record<string, string> = {};
       for (const r of results) {
-        if (r.status === "fulfilled" && r.value.url) map[r.value.label] = r.value.url;
+        if (r.status === "fulfilled" && r.value.url) map[r.value.ean] = r.value.url;
       }
       setPromoImages(map);
     });
@@ -466,17 +483,17 @@ export default function Home() {
             {PROMO_CARDS.map((p) => (
               <Link href="/deals" key={p.label}>
                 <div className="rounded-[20px] p-4 relative overflow-hidden h-[110px]" style={{ background: p.gradient }}>
-                  {/* Category product image — strict EAN mapping (Fix 4) */}
+                  {/* Category product image — keyed by card.ean, never by label */}
                   <div className="absolute top-3 right-3 w-[60px] h-[60px] rounded-[12px] overflow-hidden bg-[#F4FAF6]">
-                    {promoImages[p.label] ? (
+                    {promoImages[p.ean] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={promoImages[p.label]}
+                        src={promoImages[p.ean]}
                         alt={p.label}
                         className="w-full h-full object-contain p-1"
                         style={{ mixBlendMode: "multiply", filter: "drop-shadow(0 3px 8px rgba(0,0,0,.3))" }}
                       />
-                    ) : promoImages[p.label] === undefined ? (
+                    ) : promoImages[p.ean] === undefined ? (
                       <div className="w-full h-full shimmer-bg" />
                     ) : (
                       <span className="w-full h-full flex items-center justify-center text-2xl">{p.emoji}</span>
