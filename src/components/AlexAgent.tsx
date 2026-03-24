@@ -1,6 +1,7 @@
 'use client'
 import { useConversation } from '@11labs/react'
 import { useState, useEffect } from 'react'
+import { useI18n } from '@/lib/i18n'
 
 const AGENT_MAP: Record<string, string> = {
   fr: 'agent_6801kmf7yq7pf3wvk4skvbentw12',  // Alex FR — Anthony parisien
@@ -9,7 +10,7 @@ const AGENT_MAP: Record<string, string> = {
   ar: 'agent_8201kmfb20v6f1ztmnt0d14a4kx8',  // Alex AR — Audia (Arabic)
 }
 
-const VOICE_LABELS: Record<string, string> = {
+const voiceLabel: Record<string, string> = {
   fr: 'Voix Anthony · Parisien',
   en: 'Voice George · London',
   de: 'Stimme Daniel · Hochdeutsch',
@@ -19,23 +20,11 @@ const VOICE_LABELS: Record<string, string> = {
 export default function AlexAgent() {
   const [isOpen, setIsOpen] = useState(false)
   const [agentId, setAgentId] = useState(AGENT_MAP['fr'])
-  const [voiceLabel, setVoiceLabel] = useState(VOICE_LABELS['fr'])
+  const { lang } = useI18n()
 
   useEffect(() => {
-    const lang = localStorage.getItem('fulflo_lang') || 'fr'
     setAgentId(AGENT_MAP[lang] || AGENT_MAP['fr'])
-    setVoiceLabel(VOICE_LABELS[lang] || VOICE_LABELS['fr'])
-  }, [])
-
-  useEffect(() => {
-    const handleStorage = () => {
-      const lang = localStorage.getItem('fulflo_lang') || 'fr'
-      setAgentId(AGENT_MAP[lang] || AGENT_MAP['fr'])
-      setVoiceLabel(VOICE_LABELS[lang] || VOICE_LABELS['fr'])
-    }
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
-  }, [])
+  }, [lang])
 
   const conversation = useConversation({
     onConnect: () => console.log('Alex connected'),
@@ -90,7 +79,7 @@ export default function AlexAgent() {
               </div>
               <div>
                 <p className="text-white font-semibold text-sm">Alex</p>
-                <p className="text-[#A7F3D0] text-xs">{voiceLabel}</p>
+                <p className="text-[#A7F3D0] text-xs">{voiceLabel[lang] || voiceLabel['fr']}</p>
               </div>
             </div>
             <button
