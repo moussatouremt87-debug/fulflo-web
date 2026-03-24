@@ -19,6 +19,7 @@ export interface ProductCardProps {
   cardBg?: string;
   lang?: string;
   featured?: boolean;
+  ean?: string;
   onAddToCart?: (id: string) => void;
 }
 

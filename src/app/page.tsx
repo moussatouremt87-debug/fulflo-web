@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useCart } from "@/lib/cart";
+import ProductImage from "@/components/ui/ProductImage";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ interface Product {
   isNew?: boolean;
   freeShipping?: boolean;
   category?: string;
+  ean?: string;
 }
 
 // ─── Static Data ────────────────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
     badge: "Offre Surplus",
     freeShipping: curr < 15,
     category: String(row.category ?? ""),
+    ean: row.ean ? String(row.ean) : undefined,
   };
 }
 
@@ -97,11 +100,6 @@ const PROMO_CARDS = [
   { label: "Bébé",         emoji: "👶", pct: 55, gradient: "linear-gradient(135deg, #9F1239 0%, #DC2626 100%)" },
 ];
 
-function getCategoryEmoji(cat?: string): string {
-  const map: Record<string, string> = { hygiene: "🧴", alimentation: "🍝", entretien: "🧹", beaute: "💄", boissons: "💧", bebe: "👶", animaux: "🐾", sport: "⚽", pharmacie: "💊" };
-  return map[cat ?? ""] ?? "📦";
-}
-
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function useCountdown(targetSeconds: number) {
@@ -122,19 +120,19 @@ function MiniCard({ product, onAdd, added }: { product: Product; onAdd: (p: Prod
   return (
     <div className="shrink-0 w-[150px] bg-white rounded-[20px] shadow-sm overflow-hidden">
       {/* Image area */}
-      <div className="h-[118px] bg-green-50 flex items-center justify-center relative">
+      <div className="h-[118px] relative">
         {product.savingsPct >= 10 && (
-          <span className="absolute top-2 left-2 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">
+          <span className="absolute top-2 left-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">
             -{product.savingsPct}%
           </span>
         )}
         <button
           onClick={() => setLiked((l) => !l)}
-          className="absolute top-2 right-2 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-sm"
+          className="absolute top-2 right-2 z-10 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-sm"
         >
           <Heart size={11} className={liked ? "fill-red-500 text-red-500" : "text-gray-300"} />
         </button>
-        <span className="text-4xl">{getCategoryEmoji(product.category)}</span>
+        <ProductImage ean={product.ean} category={product.category} brand={product.brand} className="w-full h-full" size={118} />
       </div>
       {/* Body */}
       <div className="p-3">
@@ -180,7 +178,7 @@ export default function Home() {
       const sb = createClient(url, key);
       Promise.resolve(
         sb.from("products")
-          .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, image_url, category")
+          .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, image_url, category, ean")
           .eq("is_active", true).gt("stock_units", 0)
           .order("discount_percent", { ascending: false }).limit(8)
       ).then(({ data }) => {

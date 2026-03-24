@@ -9,6 +9,8 @@ import {
   ChevronLeft, SlidersHorizontal, Plus, Heart, Search, ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
+import ProductImage from "@/components/ui/ProductImage";
+import { ProductGridSkeleton } from "@/components/ui/Shimmer";
 
 // Brand → Unsplash fallback images
 const BRAND_IMG: Record<string, string> = {
@@ -78,7 +80,6 @@ function SponsoredCard({
   };
 
   const discount = Math.round(((product.original_price - product.current_price) / product.original_price) * 100);
-  const catEmoji = product.category === "hygiene" ? "🧴" : product.category === "alimentation" ? "🍝" : product.category === "entretien" ? "🧹" : product.category === "boissons" ? "💧" : "📦";
 
   return (
     <div ref={ref} className="bg-white rounded-[20px] shadow-sm overflow-hidden relative">
@@ -93,11 +94,11 @@ function SponsoredCard({
         </div>
       )}
 
-      <div className="h-[120px] bg-green-50 flex items-center justify-center relative">
+      <div className="h-[120px] relative">
         {discount > 0 && (
-          <span className="absolute top-2 right-2 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
+          <span className="absolute top-2 right-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
         )}
-        <span className="text-4xl">{catEmoji}</span>
+        <ProductImage ean={product.ean} category={product.category} brand={product.brand} className="w-full h-full" size={120} />
       </div>
 
       <div className="p-3">
@@ -126,7 +127,6 @@ function SponsoredCard({
 function DealsCard({ product, onAdd, added }: { product: ProductCardProps; onAdd: (id: string) => void; added: boolean }) {
   const [liked, setLiked] = useState(false);
   const discount = Math.round(((product.original_price - product.current_price) / product.original_price) * 100);
-  const catEmoji = product.category === "hygiene" ? "🧴" : product.category === "alimentation" ? "🍝" : product.category === "entretien" ? "🧹" : product.category === "boissons" ? "💧" : product.category === "beaute" ? "💄" : "📦";
 
   return (
     <div className="bg-white rounded-[20px] shadow-xs overflow-hidden relative">
@@ -137,14 +137,14 @@ function DealsCard({ product, onAdd, added }: { product: ProductCardProps; onAdd
       )}
 
       {/* Image area */}
-      <div className="h-[120px] bg-green-50 flex items-center justify-center relative">
+      <div className="h-[120px] relative">
         {discount >= 10 && (
-          <span className="absolute top-2 left-2 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
+          <span className="absolute top-2 left-2 z-10 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
         )}
-        <button onClick={() => setLiked((l) => !l)} className="absolute top-2 right-2 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-xs">
+        <button onClick={() => setLiked((l) => !l)} className="absolute top-2 right-2 z-10 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-xs">
           <Heart size={11} className={liked ? "fill-red-500 text-red-500" : "text-ink-300"} />
         </button>
-        <span className="text-4xl">{catEmoji}</span>
+        <ProductImage ean={product.ean} category={product.category} brand={product.brand} className="w-full h-full" size={120} />
       </div>
 
       <div className="p-3">
@@ -203,7 +203,7 @@ async function fetchProducts(): Promise<ProductCardProps[]> {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(url, key);
     const { data, error } = await sb.from("products")
-      .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, expiry_date, is_active, category, image_url, typical_duration_days, description, is_sponsored")
+      .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, expiry_date, is_active, category, image_url, typical_duration_days, description, is_sponsored, ean")
       .eq("is_active", true).gt("stock_units", 0).order("discount_percent", { ascending: false });
     if (error || !data?.length) return [];
     return (data as Record<string, unknown>[]).map((row) => ({
@@ -213,6 +213,7 @@ async function fetchProducts(): Promise<ProductCardProps[]> {
       expiry_date: String(row.expiry_date ?? new Date().toISOString().slice(0, 10)),
       flash_sale_end_time: null, ai_pricing_enabled: false,
       category: String(row.category ?? ""), image_url: String(row.image_url ?? ""),
+      ean: row.ean ? String(row.ean) : undefined,
     })) as ProductCardProps[];
   } catch { return []; }
 }
@@ -400,11 +401,7 @@ export default function DealsPage() {
         {/* ── PRODUCT GRID ──────────────────────────────────────────────── */}
         <div className="px-4">
           {loading ? (
-            <div className="grid grid-cols-2 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-ink-100 rounded-[20px] h-52 animate-pulse" />
-              ))}
-            </div>
+            <ProductGridSkeleton count={6} />
           ) : products.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl mb-4">📦</p>
