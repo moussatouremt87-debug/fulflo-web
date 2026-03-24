@@ -1,25 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
-  ShoppingCart,
-  Heart,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Truck,
-  Search,
-  MapPin,
-  User,
-  Menu,
-  Tag,
-  Zap,
+  ShoppingCart, Heart, Search, Bell, User, LayoutGrid,
+  ChevronDown, Plus, Home as HomeIcon, Grid, Bookmark, Star,
 } from "lucide-react";
-import HeroEssentials from "@/components/HeroEssentials";
-import LangSwitcher from "@/components/LangSwitcher";
 import { useI18n } from "@/lib/i18n";
+import { useCart } from "@/lib/cart";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,131 +25,22 @@ interface Product {
   badge?: string;
   isNew?: boolean;
   freeShipping?: boolean;
+  category?: string;
 }
 
-// ─── Data ──────────────────────────────────────────────────────────────────────
+// ─── Static Data ────────────────────────────────────────────────────────────────
 
 const PRODUCTS: Product[] = [
-  {
-    id: "1",
-    brand: "Ariel",
-    name: "Ariel Pods Color & Style, Lessive Capsules, 156 lavages",
-    price: 28.99,
-    originalPrice: 34.99,
-    savings: 6.00,
-    savingsPct: 17,
-    rating: 4.8,
-    reviews: 28,
-    img: "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
-    badge: "Économie Instantanée",
-    freeShipping: true,
-  },
-  {
-    id: "2",
-    brand: "Nestlé",
-    name: "Nescafé Gold Blend, Café Soluble Premium, 200g × 3",
-    price: 30.39,
-    originalPrice: 36.99,
-    savings: 6.60,
-    savingsPct: 18,
-    rating: 4.7,
-    reviews: 871,
-    img: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80",
-    badge: "Économie Instantanée",
-    isNew: true,
-    freeShipping: true,
-  },
-  {
-    id: "3",
-    brand: "Colgate",
-    name: "Colgate Max White Ultra, Dentifrice Blancheur, 150ml × 8",
-    price: 17.99,
-    originalPrice: 21.99,
-    savings: 4.00,
-    savingsPct: 18,
-    rating: 4.6,
-    reviews: 1196,
-    img: "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=400&q=80",
-    badge: "Stock Limité",
-    freeShipping: true,
-  },
-  {
-    id: "4",
-    brand: "Dove",
-    name: "Dove Gel Douche Sensitive, 250ml × 6, Formule Douce",
-    price: 14.49,
-    originalPrice: 19.99,
-    savings: 5.50,
-    savingsPct: 28,
-    rating: 4.5,
-    reviews: 412,
-    img: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400&q=80",
-    badge: "Économie Instantanée",
-    freeShipping: false,
-  },
-  {
-    id: "5",
-    brand: "Kellogg's",
-    name: "Kellogg's Corn Flakes, Format Familial, 1kg × 2",
-    price: 11.99,
-    originalPrice: 15.99,
-    savings: 4.00,
-    savingsPct: 25,
-    rating: 4.4,
-    reviews: 234,
-    img: "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400&q=80",
-    badge: "Promo Flash",
-    isNew: true,
-    freeShipping: true,
-  },
-  {
-    id: "6",
-    brand: "Nestlé",
-    name: "Nestlé Fitness Céréal Bars, 12 × 23.5g",
-    price: 8.99,
-    originalPrice: 12.99,
-    savings: 4.00,
-    savingsPct: 31,
-    rating: 4.3,
-    reviews: 178,
-    img: "https://images.unsplash.com/photo-1517093728584-720867594c6b?w=400&q=80",
-    badge: "Offre Surplus",
-    freeShipping: false,
-  },
-  {
-    id: "7",
-    brand: "Gillette",
-    name: "Gillette Fusion5 ProGlide, 12 Recharges",
-    price: 22.49,
-    originalPrice: 29.99,
-    savings: 7.50,
-    savingsPct: 25,
-    rating: 4.7,
-    reviews: 654,
-    img: "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?w=400&q=80",
-    badge: "Économie Instantanée",
-    freeShipping: true,
-  },
-  {
-    id: "8",
-    brand: "L'Oréal",
-    name: "L'Oréal Elvive Extraordinaire, Shampooing + Soin, 400ml × 4",
-    price: 16.99,
-    originalPrice: 23.99,
-    savings: 7.00,
-    savingsPct: 29,
-    rating: 4.6,
-    reviews: 389,
-    img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
-    badge: "Stock Limité",
-    isNew: true,
-    freeShipping: true,
-  },
+  { id: "1", brand: "Ariel", name: "Ariel Pods Color & Style, 156 lavages", price: 28.99, originalPrice: 34.99, savings: 6.00, savingsPct: 17, rating: 4.8, reviews: 28, img: "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80", badge: "Économie Instantanée", freeShipping: true, category: "entretien" },
+  { id: "2", brand: "Nestlé", name: "Nescafé Gold Blend, Café Soluble Premium, 200g × 3", price: 30.39, originalPrice: 36.99, savings: 6.60, savingsPct: 18, rating: 4.7, reviews: 871, img: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80", badge: "Économie Instantanée", isNew: true, freeShipping: true, category: "alimentation" },
+  { id: "3", brand: "Colgate", name: "Colgate Max White Ultra, Dentifrice, 150ml × 8", price: 17.99, originalPrice: 21.99, savings: 4.00, savingsPct: 18, rating: 4.6, reviews: 1196, img: "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=400&q=80", badge: "Stock Limité", freeShipping: true, category: "hygiene" },
+  { id: "4", brand: "Dove", name: "Dove Gel Douche Sensitive, 250ml × 6", price: 14.49, originalPrice: 19.99, savings: 5.50, savingsPct: 28, rating: 4.5, reviews: 412, img: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400&q=80", badge: "Économie Instantanée", freeShipping: false, category: "hygiene" },
+  { id: "5", brand: "Kellogg's", name: "Kellogg's Corn Flakes, Format Familial, 1kg × 2", price: 11.99, originalPrice: 15.99, savings: 4.00, savingsPct: 25, rating: 4.4, reviews: 234, img: "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400&q=80", badge: "Promo Flash", isNew: true, freeShipping: true, category: "alimentation" },
+  { id: "6", brand: "Nestlé", name: "Nestlé Fitness Céréal Bars, 12 × 23.5g", price: 8.99, originalPrice: 12.99, savings: 4.00, savingsPct: 31, rating: 4.3, reviews: 178, img: "https://images.unsplash.com/photo-1517093728584-720867594c6b?w=400&q=80", badge: "Offre Surplus", freeShipping: false, category: "alimentation" },
+  { id: "7", brand: "Gillette", name: "Gillette Fusion5 ProGlide, 12 Recharges", price: 22.49, originalPrice: 29.99, savings: 7.50, savingsPct: 25, rating: 4.7, reviews: 654, img: "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?w=400&q=80", badge: "Économie Instantanée", freeShipping: true, category: "hygiene" },
+  { id: "8", brand: "L'Oréal", name: "L'Oréal Elvive, Shampooing + Soin, 400ml × 4", price: 16.99, originalPrice: 23.99, savings: 7.00, savingsPct: 29, rating: 4.6, reviews: 389, img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80", badge: "Stock Limité", isNew: true, freeShipping: true, category: "beaute" },
 ];
 
-const FEATURED_SAVINGS = PRODUCTS.slice(0, 4);
-
-// Brand → Unsplash image map (for DB products that have no image_url yet)
 const BRAND_IMG: Record<string, string> = {
   "Ariel":     "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
   "Nestlé":    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80",
@@ -175,8 +54,8 @@ const BRAND_IMG: Record<string, string> = {
 };
 
 function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
-  const orig = Number(row.price_retail_eur ?? 0);
-  const curr = Number(row.price_surplus_eur ?? 0);
+  const orig  = Number(row.price_retail_eur ?? 0);
+  const curr  = Number(row.price_surplus_eur ?? 0);
   const brand = String(row.brand ?? "");
   return {
     id: String(row.id ?? idx),
@@ -191,67 +70,39 @@ function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
     img: String(row.image_url || BRAND_IMG[brand] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80"),
     badge: "Offre Surplus",
     freeShipping: curr < 15,
+    category: String(row.category ?? ""),
   };
 }
 
-const CATEGORIES = [
-  {
-    label: "Hygiène & Beauté",
-    desc: "Colgate, Dove, Gillette, L'Oréal",
-    bg: "#1B4332",
-    img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
-  },
-  {
-    label: "Alimentation & Boissons",
-    desc: "Nestlé, Kellogg's, Mondelez",
-    bg: "#065f46",
-    img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
-  },
-  {
-    label: "Entretien Maison",
-    desc: "Ariel, Flash, Cillit Bang",
-    bg: "#047857",
-    img: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&q=80",
-  },
-  {
-    label: "Beauté",
-    desc: "L'Oréal, Maybelline, Nivea",
-    bg: "#065f46",
-    img: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=400&q=80",
-  },
-  {
-    label: "Bébé & Enfants",
-    desc: "Pampers, Aptamil, Huggies",
-    bg: "#047857",
-    img: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=400&q=80",
-  },
-  {
-    label: "Pharmacie & Santé",
-    desc: "Vitamines, soins, bien-être",
-    bg: "#1B4332",
-    img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
-  },
+// ─── Category pills with emoji ─────────────────────────────────────────────────
+
+const CAT_PILLS = [
+  { key: "all",           label: "Tout",        emoji: "⭐", bg: "#1D4D35" },
+  { key: "hygiene",       label: "Hygiène",     emoji: "🧴", bg: "#7C3AED" },
+  { key: "alimentation",  label: "Alim.",       emoji: "🍝", bg: "#2E7A50" },
+  { key: "entretien",     label: "Entretien",   emoji: "🧹", bg: "#1E40AF" },
+  { key: "beaute",        label: "Beauté",      emoji: "💄", bg: "#BE185D" },
+  { key: "boissons",      label: "Boissons",    emoji: "💧", bg: "#0369A1" },
+  { key: "bebe",          label: "Bébé",        emoji: "👶", bg: "#DC2626" },
+  { key: "animaux",       label: "Animaux",     emoji: "🐾", bg: "#92400E" },
+  { key: "sport",         label: "Sport",       emoji: "⚽", bg: "#065F46" },
+  { key: "pharmacie",     label: "Pharmacie",   emoji: "💊", bg: "#7E22CE" },
+  { key: "electromenager",label: "Électro",     emoji: "🔌", bg: "#1E3A5F" },
 ];
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+const PROMO_CARDS = [
+  { label: "Alimentation", emoji: "🍝", pct: 70, gradient: "linear-gradient(135deg, #1D4D35 0%, #3DB87A 100%)" },
+  { label: "Hygiène",      emoji: "🧴", pct: 65, gradient: "linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%)" },
+  { label: "Entretien",    emoji: "🧹", pct: 60, gradient: "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)" },
+  { label: "Bébé",         emoji: "👶", pct: 55, gradient: "linear-gradient(135deg, #9F1239 0%, #DC2626 100%)" },
+];
 
-function Stars({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          size={13}
-          className={
-            i <= Math.round(rating)
-              ? "text-yellow-400 fill-yellow-400"
-              : "text-gray-300 fill-gray-300"
-          }
-        />
-      ))}
-    </div>
-  );
+function getCategoryEmoji(cat?: string): string {
+  const map: Record<string, string> = { hygiene: "🧴", alimentation: "🍝", entretien: "🧹", beaute: "💄", boissons: "💧", bebe: "👶", animaux: "🐾", sport: "⚽", pharmacie: "💊" };
+  return map[cat ?? ""] ?? "📦";
 }
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function useCountdown(targetSeconds: number) {
   const [secs, setSecs] = useState(targetSeconds);
@@ -259,115 +110,50 @@ function useCountdown(targetSeconds: number) {
     const id = setInterval(() => setSecs((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(id);
   }, []);
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = secs % 60;
-  return { h, m, s };
+  return { h: Math.floor(secs / 3600), m: Math.floor((secs % 3600) / 60), s: secs % 60 };
 }
 
-// ─── ProductCard ───────────────────────────────────────────────────────────────
+function pad2(n: number) { return String(n).padStart(2, "0"); }
 
-function ProductCard({ product }: { product: Product }) {
+// ─── Mini product card for horizontal scroll ───────────────────────────────────
+
+function MiniCard({ product, onAdd, added }: { product: Product; onAdd: (p: Product) => void; added: boolean }) {
   const [liked, setLiked] = useState(false);
-  const { t } = useI18n();
-
   return (
-    <div className="bg-white border border-gray-200 flex flex-col h-full group hover:shadow-md transition-shadow">
-      {/* Image */}
-      <div className="relative bg-white p-4 flex items-center justify-center" style={{ height: 210 }}>
-        {/* Savings badge top-left */}
-        {product.savingsPct >= 20 && (
-          <span
-            className="absolute top-2 left-2 z-10 text-white text-[11px] font-black px-2 py-0.5"
-            style={{ background: "#dc2626" }}
-          >
+    <div className="shrink-0 w-[150px] bg-white rounded-[20px] shadow-sm overflow-hidden">
+      {/* Image area */}
+      <div className="h-[118px] bg-green-50 flex items-center justify-center relative">
+        {product.savingsPct >= 10 && (
+          <span className="absolute top-2 left-2 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">
             -{product.savingsPct}%
           </span>
         )}
-        {/* New badge top-right */}
-        {product.isNew && (
-          <span
-            className="absolute top-2 right-2 z-10 text-white text-[11px] font-black px-2 py-0.5"
-            style={{ background: "#1B4332" }}
-          >
-            {t("product.new")}
-          </span>
-        )}
-        <Image
-          src={product.img}
-          alt={product.name}
-          width={170}
-          height={170}
-          unoptimized
-          className="object-contain w-full h-full"
-        />
-        {/* Heart */}
         <button
           onClick={() => setLiked((l) => !l)}
-          className="absolute bottom-2 right-2 w-7 h-7 flex items-center justify-center bg-white border border-gray-200 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="Favoris"
+          className="absolute top-2 right-2 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-sm"
         >
-          <Heart size={14} className={liked ? "fill-red-500 text-red-500" : "text-gray-400"} />
+          <Heart size={11} className={liked ? "fill-red-500 text-red-500" : "text-gray-300"} />
         </button>
+        <span className="text-4xl">{getCategoryEmoji(product.category)}</span>
       </div>
-
       {/* Body */}
-      <div className="px-3 pb-4 flex flex-col flex-1 border-t border-gray-100">
-        {/* Brand + badge row */}
-        <div className="flex items-center justify-between pt-2 mb-1">
-          <span className="text-[11px] font-bold text-[#1B4332] uppercase tracking-wider">
-            {product.brand}
-          </span>
-          {product.badge && (
-            <span className="text-[10px] font-bold text-[#10B981] bg-[#ecfdf5] px-1.5 py-0.5 rounded">
-              {product.badge}
-            </span>
-          )}
-        </div>
-
-        {/* Name */}
-        <p className="text-sm text-gray-800 leading-snug mb-2 flex-1 line-clamp-3">{product.name}</p>
-
-        {/* Stars + reviews */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <Stars rating={product.rating} />
-          <span className="text-[11px] text-[#1B4332] font-semibold">
-            ({product.reviews.toLocaleString("fr-FR")})
-          </span>
-        </div>
-
-        {/* Price block */}
-        <div className="mb-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-gray-900">
-              {product.price.toFixed(2).replace(".", ",")} €
-            </span>
+      <div className="p-3">
+        <p className="text-[9px] font-black text-ink-400 uppercase tracking-wider mb-0.5 truncate">{product.brand}</p>
+        <p className="text-[13px] font-semibold text-ink-900 leading-tight line-clamp-2 mb-2 min-h-[2.5rem]">{product.name}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-green-800 font-black text-[15px] leading-none">€{product.price.toFixed(2)}</p>
+            <p className="text-ink-300 text-[10px] line-through">€{product.originalPrice.toFixed(2)}</p>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {t("product.normal-price")}{" "}
-            <span className="line-through">{product.originalPrice.toFixed(2).replace(".", ",")} €</span>
-            {" · "}
-            <span className="text-[#1B4332] font-semibold">
-              -{product.savings.toFixed(2).replace(".", ",")} €
-            </span>
-          </p>
+          <button
+            onClick={() => onAdd(product)}
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              added ? "bg-green-500 scale-95" : "bg-green-800 hover:bg-green-700"
+            }`}
+          >
+            {added ? <span className="text-white text-[10px] font-black">✓</span> : <Plus size={14} className="text-white" />}
+          </button>
         </div>
-
-        {/* Shipping */}
-        <div className="flex items-center gap-1 mt-2 mb-3">
-          <Truck size={12} className={product.freeShipping ? "text-[#10B981]" : "text-gray-400"} />
-          <span className={`text-[11px] font-semibold ${product.freeShipping ? "text-[#10B981]" : "text-gray-400"}`}>
-            {product.freeShipping ? t("product.free-shipping") : t("product.shipping-48h")}
-          </span>
-        </div>
-
-        {/* CTA */}
-        <Link
-          href="/deals"
-          className="block bg-[#1B4332] hover:bg-[#2d6a4f] text-white text-sm font-bold text-center py-2.5 transition-colors"
-        >
-          {t("deals.add")}
-        </Link>
       </div>
     </div>
   );
@@ -376,13 +162,16 @@ function ProductCard({ product }: { product: Product }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { t, dir } = useI18n();
-  const [cartCount] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { t } = useI18n();
+  const { addItem, items } = useCart();
   const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const { h, m, s } = useCountdown(4 * 3600 + 22 * 60 + 15);
 
-  // Fetch top products from Supabase (by discount %) — fallback to static PRODUCTS
+  const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
+
+  // Supabase fetch
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -392,513 +181,253 @@ export default function Home() {
       Promise.resolve(
         sb.from("products")
           .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, image_url, category")
-          .eq("is_active", true)
-          .gt("stock_units", 0)
-          .order("discount_percent", { ascending: false })
-          .limit(8)
+          .eq("is_active", true).gt("stock_units", 0)
+          .order("discount_percent", { ascending: false }).limit(8)
       ).then(({ data }) => {
         if (!data?.length) return;
-        const mapped = (data as Record<string, unknown>[])
-          .map((row, i) => dbRowToProduct(row, i))
-          .sort((a, b) => b.savingsPct - a.savingsPct);
-        setDbProducts(mapped);
+        setDbProducts((data as Record<string, unknown>[]).map((r, i) => dbRowToProduct(r, i)).sort((a, b) => b.savingsPct - a.savingsPct));
       }).catch(() => {});
     });
   }, []);
 
+  const displayProducts = dbProducts.length ? dbProducts : PRODUCTS;
+  const filteredProducts = activeCategory === "all"
+    ? displayProducts
+    : displayProducts.filter((p) => p.category === activeCategory);
+
+  const handleAdd = (product: Product) => {
+    addItem({ productId: product.id, name: product.name, brand: product.brand, size: "", price: product.price, originalPrice: product.originalPrice, image: product.img, category: product.category ?? "general" });
+    setAddedIds((prev) => new Set(prev).add(product.id));
+    setTimeout(() => setAddedIds((prev) => { const s = new Set(prev); s.delete(product.id); return s; }), 1500);
+  };
+
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen bg-green-50">
+      <div className="max-w-sm mx-auto bg-white min-h-screen relative pb-20 shadow-md">
 
-      {/* ══ 1. ANNOUNCEMENT STRIP ══════════════════════════════════════════════ */}
-      <div
-        className="bg-[#1B4332] text-white text-center text-xs font-semibold py-2 px-4"
-        style={{ minHeight: 36 }}
-      >
-        <span className="opacity-80">🚚 {t("announce.text")}</span>
-      </div>
-
-      {/* ══ 2. SECONDARY NAV ══════════════════════════════════════════════════ */}
-      <div className="bg-[#F9FAFB] border-b border-gray-200 text-xs">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-end gap-6">
-          {[
-            { key: "topnav.help",      href: "#" },
-            { key: "topnav.tracking",  href: "#" },
-            { key: "topnav.account",   href: "/supplier/login" },
-            { key: "topnav.suppliers", href: "/supplier/login" },
-          ].map((l) => (
-            <Link
-              key={l.key}
-              href={l.href}
-              className="text-gray-500 hover:text-[#1B4332] transition-colors"
-            >
-              {t(l.key)}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ══ 3. MAIN NAV ════════════════════════════════════════════════════════ */}
-      <nav className="bg-[#1B4332] sticky top-0 z-50 shadow-md">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
-
-          {/* Mobile menu */}
-          <button className="sm:hidden text-white/70 hover:text-white mr-1">
-            <Menu size={22} />
-          </button>
-
-          {/* Logo */}
-          <Link href="/" className="text-xl font-black text-white tracking-tight shrink-0">
-            fulflo<span className="text-[#10B981]">.</span>
-          </Link>
-
-          {/* Categories dropdown button */}
-          <button className="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-3 py-1.5 rounded transition-colors shrink-0">
-            <Menu size={16} />
-            {t("nav.categories")}
-          </button>
-
-          {/* Search bar */}
-          <div className="flex-1 flex items-center max-w-xl">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("nav.search")}
-                className="w-full h-9 pl-4 pr-10 rounded-l text-sm text-gray-800 bg-white border-0 outline-none placeholder-gray-400"
-              />
-            </div>
-            <button className="h-9 px-4 bg-[#10B981] hover:bg-[#059669] text-[#1B4332] font-bold rounded-r flex items-center gap-1.5 transition-colors shrink-0">
-              <Search size={16} />
-              <span className="hidden sm:inline text-sm">{t("nav.search-btn")}</span>
+        {/* ── TOPBAR ─────────────────────────────────────────────────────── */}
+        <div className="bg-green-800 px-4 pt-3 pb-3">
+          {/* Row 1 */}
+          <div className="flex items-center gap-2 mb-3">
+            <button className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 shrink-0">
+              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-white text-xs font-medium">75001 Paris</span>
+              <ChevronDown size={11} className="text-white/60" />
             </button>
-          </div>
-
-          {/* Right icons */}
-          <div className="flex items-center gap-4 ml-2 shrink-0">
-            <LangSwitcher />
-            <Link href="/how-it-works" className="hidden md:block text-white/70 hover:text-white text-sm transition-colors whitespace-nowrap">
-              {t("nav.how")}
-            </Link>
-            <Link href="/membership" className="hidden lg:flex items-center gap-1.5 bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] text-sm font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-              {t("nav.pass")}
-            </Link>
-            <Link href="/supplier/login" className="hidden sm:flex flex-col items-center text-white/80 hover:text-white transition-colors">
-              <User size={18} />
-              <span className="text-[10px] mt-0.5">{t("nav.login")}</span>
-            </Link>
-            <button className="relative flex flex-col items-center text-white/80 hover:text-white transition-colors">
-              <ShoppingCart size={18} />
-              <span className="text-[10px] mt-0.5">{t("nav.cart")}</span>
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#10B981] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ══ 4. LOCATION / UTILITY BAR ══════════════════════════════════════════ */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between">
-          <div className="flex items-center gap-5 text-xs text-gray-600">
-            <button className="flex items-center gap-1.5 hover:text-[#1B4332] transition-colors">
-              <MapPin size={13} className="text-[#1B4332]" />
-              <span>{t("loc.delivery")} <strong className="text-gray-900">75001 Paris</strong></span>
-            </button>
-            <span className="hidden sm:inline text-gray-300">|</span>
-            <span className="hidden sm:flex items-center gap-1.5">
-              <Truck size={13} className="text-[#10B981]" />
-              <span className="text-[#1B4332] font-semibold">{t("loc.delivery48")}</span>
+            <span className="text-white/50 text-xs flex-1 text-center font-display font-bold tracking-tight">
+              fulflo<span className="text-green-400">.</span>
             </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <button className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+                <Bell size={15} className="text-white" />
+              </button>
+              <Link href="/account" className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+                <User size={15} className="text-white" />
+              </Link>
+            </div>
           </div>
-          <div className="hidden sm:flex items-center gap-4 text-xs text-gray-500">
-            {(["cat.all","cat.food","cat.hygiene","cat.home","cat.beauty","cat.drinks"] as const).map((k) => (
-              <button key={k} className="hover:text-[#1B4332] font-medium transition-colors">
-                {t(k)}
+          {/* Row 2: search */}
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              className="w-full bg-white rounded-[14px] pl-9 pr-10 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none shadow-md"
+              placeholder="Chercher des produits surplus..."
+            />
+            <button className="absolute right-3 top-1/2 -translate-y-1/2">
+              <LayoutGrid size={15} className="text-gray-400" />
+            </button>
+          </div>
+        </div>
+
+        {/* ── TICKER ─────────────────────────────────────────────────────── */}
+        <div className="bg-green-900 py-2 overflow-hidden">
+          <div className="ticker-track whitespace-nowrap text-[11px] text-white/60 font-medium inline-flex gap-8">
+            {[...Array(4)].map((_, i) => (
+              <span key={i}>🚚 Livraison offerte dès 49€ · Surplus fabricant certifié · Grandes marques à -70% · </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── HERO CARD ──────────────────────────────────────────────────── */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="rounded-[28px] overflow-hidden" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #246040 100%)" }}>
+            <div className="relative p-6 pb-7">
+              {/* Floating emoji */}
+              <div className="absolute top-4 right-5 text-5xl animate-float select-none">🛒</div>
+
+              {/* Flash sale pill */}
+              <div className="inline-flex items-center gap-1.5 bg-discount-red text-white text-[10px] font-black px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
+                ⚡ FLASH SALE
+              </div>
+
+              {/* Countdown */}
+              <div className="flex items-center gap-2 mb-3">
+                {[{ v: pad2(h), l: "h" }, { v: pad2(m), l: "m" }, { v: pad2(s), l: "s" }].map(({ v, l }) => (
+                  <div key={l} className="flex items-center gap-1">
+                    <span className="bg-white/15 text-white font-black text-base px-2.5 py-1 rounded-[8px] tabular-nums min-w-[2.5rem] text-center">{v}</span>
+                    <span className="text-white/50 text-xs">{l}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-white/60 text-sm mb-0.5">Jusqu&apos;à</p>
+              <h1 className="font-display font-black leading-none mb-1" style={{ fontSize: 42 }}>
+                <span className="text-green-400">-70%</span>
+                <span className="text-white"> Off</span>
+              </h1>
+              <p className="text-white/50 text-sm mt-1 mb-5">Surplus direct fabricant certifié</p>
+
+              <Link
+                href="/deals"
+                className="inline-flex items-center gap-2 bg-green-500 text-white font-bold text-sm px-6 py-2.5 rounded-full"
+                style={{ boxShadow: "0 8px 28px rgba(61,184,122,.40)" }}
+              >
+                Découvrir les offres →
+              </Link>
+
+              {/* Dots */}
+              <div className="flex gap-2 mt-6">
+                <div className="h-1.5 w-6 bg-white rounded-full" />
+                <div className="h-1.5 w-2 bg-white/30 rounded-full" />
+                <div className="h-1.5 w-2 bg-white/30 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── CATEGORY PILLS ─────────────────────────────────────────────── */}
+        <div className="px-4 pt-5 pb-1">
+          <h2 className="font-display font-bold text-ink-900 text-sm mb-3">Explorer par catégorie</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {CAT_PILLS.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setActiveCategory(c.key)}
+                className="flex flex-col items-center gap-1.5 shrink-0"
+              >
+                <div
+                  className="w-[62px] h-[62px] rounded-[14px] flex items-center justify-center text-2xl transition-all"
+                  style={{
+                    background: c.bg,
+                    boxShadow: activeCategory === c.key ? `0 4px 16px ${c.bg}55` : "none",
+                    transform: activeCategory === c.key ? "scale(1.08)" : "scale(1)",
+                  }}
+                >
+                  {c.emoji}
+                </div>
+                <span className={`text-[11px] font-display font-medium whitespace-nowrap ${activeCategory === c.key ? "text-green-700 font-bold" : "text-ink-500"}`}>
+                  {c.label}
+                </span>
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* ══ HERO ESSENTIALS BANNER ═════════════════════════════════════════════ */}
-      <div className="hidden md:block max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
-        <HeroEssentials />
-      </div>
-
-      {/* ══ 5. HERO — 3 COLUMNS ════════════════════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-          {/* Left column — main hero */}
-          <div
-            className="md:col-span-1 relative rounded overflow-hidden flex flex-col justify-end p-6"
-            style={{
-              background: "linear-gradient(160deg, #1B4332 0%, #2d6a4f 100%)",
-              minHeight: 320,
-            }}
-          >
-            {/* Floating product image */}
-            <div className="absolute right-4 top-4 w-36 h-36 pointer-events-none">
-              <Image
-                src={PRODUCTS[0].img}
-                alt="Ariel"
-                fill
-                unoptimized
-                className="object-contain drop-shadow-xl"
-              />
-            </div>
-            <div className="relative z-10">
-              <span className="inline-block bg-[#10B981] text-[#1B4332] text-[10px] font-black uppercase px-2 py-0.5 mb-3">
-                {t("hero.badge")}
-              </span>
-              <h2 className="text-white font-black text-2xl leading-tight uppercase mb-2">
-                {t("hero.title1")}
-              </h2>
-              <p className="text-white/60 text-sm mb-4">
-                {t("hero.sub1")}
-              </p>
-              <Link
-                href="/deals"
-                className="inline-flex items-center gap-1 bg-white text-[#1B4332] font-bold text-sm px-4 py-2 rounded hover:bg-[#D1FAE5] transition-colors"
-              >
-                {t("hero.cta")}
+        {/* ── PROMO GRID ─────────────────────────────────────────────────── */}
+        <div className="px-4 pt-5 pb-1">
+          <h2 className="font-display font-bold text-ink-900 text-sm mb-3">Meilleures catégories</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {PROMO_CARDS.map((p) => (
+              <Link href="/deals" key={p.label}>
+                <div className="rounded-[20px] p-4 relative overflow-hidden h-[110px]" style={{ background: p.gradient }}>
+                  <div className="absolute top-3 right-3 text-3xl select-none">{p.emoji}</div>
+                  <p className="text-white/70 text-xs font-medium mb-1">{p.label}</p>
+                  <p className="font-display font-black text-white leading-none" style={{ fontSize: 36 }}>-{p.pct}%</p>
+                </div>
               </Link>
-            </div>
-          </div>
-
-          {/* Center column */}
-          <div
-            className="relative rounded overflow-hidden flex flex-col justify-end p-5"
-            style={{ background: "#065f46", minHeight: 320 }}
-          >
-            <div className="absolute right-3 top-3 w-28 h-28 pointer-events-none">
-              <Image
-                src={PRODUCTS[1].img}
-                alt="Nescafé"
-                fill
-                unoptimized
-                className="object-contain drop-shadow-xl"
-              />
-            </div>
-            <div className="relative z-10">
-              <p className="text-[#10B981] text-[10px] font-bold uppercase tracking-widest mb-1">{t("hero.col2.cat")}</p>
-              <h3 className="text-white font-black text-xl leading-tight mb-1">{t("hero.col2.title")}</h3>
-              <p className="text-white/60 text-xs mb-3">{t("hero.col2.brands")}</p>
-              <Link href="/deals" className="text-white text-xs font-bold underline underline-offset-2 hover:text-[#10B981] transition-colors">
-                {t("hero.discover")}
-              </Link>
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div
-            className="relative rounded overflow-hidden flex flex-col justify-end p-5"
-            style={{ background: "#047857", minHeight: 320 }}
-          >
-            <div className="absolute right-3 top-3 w-28 h-28 pointer-events-none">
-              <Image
-                src={PRODUCTS[4].img}
-                alt="Kelloggs"
-                fill
-                unoptimized
-                className="object-contain drop-shadow-xl"
-              />
-            </div>
-            <div className="relative z-10">
-              <p className="text-[#10B981] text-[10px] font-bold uppercase tracking-widest mb-1">{t("hero.col3.cat")}</p>
-              <h3 className="text-white font-black text-xl leading-tight mb-1">{t("hero.col3.title")}</h3>
-              <p className="text-white/60 text-xs mb-3">{t("hero.col3.brands")}</p>
-              <Link href="/deals" className="text-white text-xs font-bold underline underline-offset-2 hover:text-[#10B981] transition-colors">
-                {t("hero.discover")}
-              </Link>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* ══ 6. FLASH SALE BAR WITH COUNTDOWN ═══════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
-        <div
-          className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded"
-          style={{ background: "#111827" }}
-        >
-          <div className="flex items-center gap-3">
-            <Zap size={18} className="text-yellow-400 fill-yellow-400 shrink-0" />
+        {/* ── PRODUCT SCROLL ─────────────────────────────────────────────── */}
+        <div className="pt-5 pb-2">
+          <div className="px-4 flex items-center justify-between mb-3">
+            <h2 className="font-display font-bold text-ink-900 text-sm">
+              Meilleures offres
+              {activeCategory !== "all" && <span className="text-green-500 ml-1">· {CAT_PILLS.find((c) => c.key === activeCategory)?.label}</span>}
+            </h2>
+            <Link href="/deals" className="text-green-600 text-xs font-semibold">Tout voir →</Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-2 scrollbar-hide">
+            {(filteredProducts.length ? filteredProducts : displayProducts).map((p) => (
+              <MiniCard key={p.id} product={p} onAdd={handleAdd} added={addedIds.has(p.id)} />
+            ))}
+          </div>
+        </div>
+
+        {/* ── SAVINGS SECTION ────────────────────────────────────────────── */}
+        <div className="px-4 pt-4 pb-1">
+          <div className="bg-green-50 rounded-[20px] p-5 flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-200 rounded-[14px] flex items-center justify-center text-2xl shrink-0">♻️</div>
             <div>
-              <p className="text-yellow-400 text-xs font-black uppercase tracking-widest leading-none">
-                {t("flash.label")}
-              </p>
-              <p className="text-white text-sm font-bold mt-0.5">
-                {t("flash.text")}
-              </p>
+              <p className="font-display font-bold text-green-800 text-sm">Économisez sans gaspillage</p>
+              <p className="text-ink-400 text-xs mt-0.5">Achetez le surplus CPG avant destruction. 100% certifié.</p>
             </div>
           </div>
-          {/* Countdown */}
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-xs mr-1">{t("flash.expire")}</span>
-            {[
-              { val: h, label: "H" },
-              { val: m, label: "M" },
-              { val: s, label: "S" },
-            ].map(({ val, label }) => (
-              <div key={label} className="flex flex-col items-center">
-                <span className="bg-[#1B4332] text-white font-black text-lg w-9 h-9 flex items-center justify-center rounded tabular-nums">
-                  {String(val).padStart(2, "0")}
-                </span>
-                <span className="text-gray-500 text-[9px] mt-0.5">{label}</span>
-              </div>
-            ))}
+        </div>
+
+        {/* ── STARS / SOCIAL PROOF ───────────────────────────────────────── */}
+        <div className="px-4 pt-4">
+          <div className="flex items-center gap-1 justify-center mb-1">
+            {[1,2,3,4,5].map((i) => <Star key={i} size={14} className="text-gold fill-gold" />)}
           </div>
-          <Link
-            href="/deals"
-            className="hidden sm:inline-block bg-yellow-400 text-gray-900 font-black text-sm px-4 py-2 rounded hover:bg-yellow-300 transition-colors"
+          <p className="text-center text-xs text-ink-400">4.9 · 2 846 avis clients vérifiés</p>
+        </div>
+
+        {/* ── SUPPLIER BANNER ────────────────────────────────────────────── */}
+        <div className="px-4 pt-5 pb-6">
+          <div
+            className="rounded-[20px] p-5 flex items-center justify-between gap-4"
+            style={{ background: "linear-gradient(135deg, #0F2D1E 0%, #1D4D35 100%)" }}
           >
-            {t("flash.cta")}
-          </Link>
-        </div>
-      </div>
-
-      {/* ══ 7. PROMO BAR ═══════════════════════════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-3">
-        <div
-          className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 rounded"
-          style={{ background: "#10B981" }}
-        >
-          <div className="flex items-center gap-3">
-            <Tag size={18} className="text-[#1B4332] shrink-0" />
-            <p className="text-[#1B4332] font-black text-sm">
-              {t("promo.text")} <span className="bg-[#1B4332] text-white px-2 py-0.5 rounded font-mono tracking-widest text-xs ml-1">
-                SURPLUS10
-              </span>
-            </p>
-          </div>
-          <Link
-            href="/invite"
-            className="bg-[#1B4332] text-white font-bold text-sm px-5 py-1.5 rounded hover:bg-[#065f46] transition-colors whitespace-nowrap shrink-0"
-          >
-            {t("promo.cta")}
-          </Link>
-        </div>
-      </div>
-
-      {/* ══ 8. FEATURED SAVINGS BANNER ═════════════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-4">
-        <div className="bg-white border border-gray-200 rounded overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-            <h2 className="font-black text-gray-900 text-sm uppercase tracking-wide">
-              {t("savings.title")}
-            </h2>
-            <Link href="/deals" className="text-[#1B4332] text-xs font-bold hover:underline">
-              {t("savings.see")}
-            </Link>
-          </div>
-          {/* 4 mini product cards — live Supabase data if available */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-gray-100">
-            {(dbProducts.length ? dbProducts.slice(0, 4) : FEATURED_SAVINGS).map((p) => (
-              <Link
-                key={p.id}
-                href="/deals"
-                className="flex flex-col items-center p-4 hover:bg-gray-50 transition-colors group"
-              >
-                <div className="relative w-20 h-20 mb-2">
-                  <Image
-                    src={p.img}
-                    alt={p.name}
-                    fill
-                    unoptimized
-                    className="object-contain"
-                  />
-                </div>
-                <p className="text-[11px] text-[#1B4332] font-bold uppercase mb-0.5">{p.brand}</p>
-                <p className="text-xs text-gray-700 text-center leading-tight line-clamp-2 mb-2">
-                  {p.name}
-                </p>
-                <div className="mt-auto text-center">
-                  <span className="text-base font-black text-gray-900">
-                    {p.price.toFixed(2).replace(".", ",")} €
-                  </span>
-                  <p className="text-[10px] text-[#10B981] font-bold">
-                    {t("savings.save")} {p.savings.toFixed(2).replace(".", ",")} €
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ══ 9. PRODUCT GRID ════════════════════════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
-              {t("products.best")}
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {(dbProducts.length || PRODUCTS.length)} {t("products.updated")}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 hidden sm:inline">{t("products.sort.by")}</span>
-            <select className="text-xs border border-gray-200 rounded px-2 py-1 text-gray-700 bg-white outline-none">
-              <option>{t("products.sort.savings")}</option>
-              <option>{t("products.sort.price")}</option>
-              <option>{t("products.sort.rated")}</option>
-              <option>{t("products.sort.new")}</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {(dbProducts.length ? dbProducts : PRODUCTS).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-
-        {/* Load more */}
-        <div className="mt-6 flex justify-center">
-          <Link
-            href="/deals"
-            className="bg-[#1B4332] text-white font-bold text-sm px-8 py-3 rounded hover:bg-[#2d6a4f] transition-colors"
-          >
-            {t("products.see-all")}
-          </Link>
-        </div>
-      </div>
-
-      {/* ══ 10. CATEGORY TILES ═════════════════════════════════════════════════ */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-8">
-        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-3">
-          {t("cat.explore")}
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {CATEGORIES.map((cat) => (
+            <div>
+              <p className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pour les fournisseurs</p>
+              <p className="text-white font-display font-bold text-sm leading-snug">
+                Votre surplus mérite mieux que la destruction.
+              </p>
+            </div>
             <Link
-              key={cat.label}
-              href="/deals"
-              className="relative rounded overflow-hidden flex flex-col justify-end group"
-              style={{ background: cat.bg, minHeight: 160 }}
+              href="/supplier/login"
+              className="shrink-0 bg-white text-green-900 font-bold text-xs px-4 py-2.5 rounded-full whitespace-nowrap hover:bg-green-50 transition-colors"
             >
-              {/* Product image top-right */}
-              <div className="absolute right-4 top-4 w-24 h-24 pointer-events-none">
-                <Image
-                  src={cat.img}
-                  alt={cat.label}
-                  fill
-                  unoptimized
-                  className="object-contain drop-shadow-xl transition-transform group-hover:scale-110 duration-300"
-                />
-              </div>
-              <div className="relative z-10 p-5">
-                <h3 className="text-white font-black text-lg leading-tight">{cat.label}</h3>
-                <p className="text-white/60 text-xs mt-0.5 mb-3">{cat.desc}</p>
-                <span className="inline-block text-[#10B981] text-xs font-bold group-hover:underline">
-                  {t("cat.see-offers")}
-                </span>
-              </div>
+              Vendre →
             </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ── SUPPLIER CTA ──────────────────────────────────────────────────────── */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 mt-6">
-        <div className="bg-[#1B4332] rounded p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="text-[#10B981] text-xs font-bold uppercase tracking-widest mb-1">
-              {t("supplier.for-brands")}
-            </p>
-            <p className="text-white font-black text-xl">
-              {t("supplier.tagline")}
-            </p>
-            <p className="text-white/60 text-sm mt-0.5">
-              {t("supplier.sub")}
-            </p>
           </div>
-          <Link
-            href="/supplier/login"
-            className="bg-[#10B981] text-[#1B4332] font-black text-sm px-6 py-2.5 rounded hover:bg-[#D1FAE5] transition-colors whitespace-nowrap shrink-0"
-          >
-            {t("supplier.cta")}
+        </div>
+
+        {/* ── BOTTOM NAV ─────────────────────────────────────────────────── */}
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-white border-t border-ink-100 px-4 py-2 z-40 flex items-center justify-around">
+          <Link href="/" className="flex flex-col items-center gap-1">
+            <HomeIcon size={20} className="text-green-700" />
+            <span className="text-[10px] text-green-700 font-semibold">Accueil</span>
           </Link>
-        </div>
+          <Link href="/deals" className="flex flex-col items-center gap-1">
+            <Grid size={20} className="text-ink-300" />
+            <span className="text-[10px] text-ink-300">Catégories</span>
+          </Link>
+          {/* Center cart button */}
+          <Link href="/cart" className="flex flex-col items-center -mt-5">
+            <div className="relative w-14 h-14 bg-green-800 rounded-[16px] flex items-center justify-center shadow-lg shadow-green-900/30">
+              <ShoppingCart size={22} className="text-white" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-discount-red text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-ink-300 mt-1">Panier</span>
+          </Link>
+          <button className="flex flex-col items-center gap-1">
+            <Bookmark size={20} className="text-ink-300" />
+            <span className="text-[10px] text-ink-300">Favoris</span>
+          </button>
+          <Link href="/account" className="flex flex-col items-center gap-1">
+            <User size={20} className="text-ink-300" />
+            <span className="text-[10px] text-ink-300">Profil</span>
+          </Link>
+        </nav>
+
       </div>
-
-      {/* ── FOOTER ────────────────────────────────────────────────────────────── */}
-      <footer className="mt-10 bg-[#1B4332] border-t border-white/10 pt-8 pb-6 px-4">
-        <div className="max-w-screen-xl mx-auto">
-          {/* Top footer grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8">
-            <div>
-              <p className="text-white font-black text-lg mb-3">
-                fulflo<span className="text-[#10B981]">.</span>
-              </p>
-              <p className="text-white/40 text-xs leading-relaxed">
-                {t("footer.brand")}
-              </p>
-            </div>
-            {([
-              {
-                titleKey: "footer.col.buy",
-                links: [
-                  { label: "Catalogue", href: "/deals" },
-                  { label: "Flash Sales", href: "/deals" },
-                  { label: "FulFlo Pass", href: "/membership" },
-                  { label: "Marques", href: "/deals" },
-                ],
-              },
-              {
-                titleKey: "footer.col.help",
-                links: [
-                  { label: "Livraison & retours", href: "/faq" },
-                  { label: "FAQ", href: "/faq" },
-                  { label: "Comment ça marche", href: "/how-it-works" },
-                  { label: "Contact", href: "mailto:nous@fulflo.app" },
-                ],
-              },
-              {
-                titleKey: "footer.col.company",
-                links: [
-                  { label: "Fournisseurs", href: "/supplier/login" },
-                  { label: "Devenir partenaire", href: "/supplier/login" },
-                  { label: "Presse", href: "mailto:nous@fulflo.app" },
-                  { label: "À propos", href: "/how-it-works" },
-                ],
-              },
-            ] as { titleKey: string; links: { label: string; href: string }[] }[]).map((col) => (
-              <div key={col.titleKey}>
-                <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">
-                  {t(col.titleKey)}
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {col.links.map((l) => (
-                    <Link key={l.label} href={l.href} className="text-white/40 text-xs hover:text-white/80 transition-colors">
-                      {l.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom bar */}
-          <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p className="text-white/30 text-xs">© 2026 Fulflo SAS · France</p>
-            <div className="flex items-center gap-4">
-              {(["footer.legal","footer.terms","footer.privacy"] as const).map((k) => (
-                <a key={k} href="#" className="text-white/30 text-xs hover:text-white/60 transition-colors">
-                  {t(k)}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

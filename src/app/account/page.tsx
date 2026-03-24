@@ -4,7 +4,35 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser, type Customer } from "@/lib/supabase";
-import { User, Copy, LogOut, ShoppingBag, Tag, Gift } from "lucide-react";
+import {
+  ChevronLeft, Copy, LogOut, ShoppingBag, Tag, Gift,
+  ChevronRight, Bell, MapPin, CreditCard, HelpCircle, Star,
+} from "lucide-react";
+
+const MENU_SECTIONS = [
+  {
+    title: "COMMANDES",
+    items: [
+      { icon: "📦", color: "#1D4D35", label: "Mes commandes", href: "/deals" },
+      { icon: "❤️", color: "#DC2626", label: "Mes favoris",   href: "/deals" },
+    ],
+  },
+  {
+    title: "COMPTE",
+    items: [
+      { icon: "💳", color: "#1E40AF", label: "Paiements",      href: "#" },
+      { icon: "📍", color: "#7C3AED", label: "Adresses",        href: "#" },
+      { icon: "🔔", color: "#F4A623", label: "Notifications",   href: "#" },
+    ],
+  },
+  {
+    title: "SUPPORT",
+    items: [
+      { icon: "❓", color: "#4A6155", label: "Aide & Contact",  href: "#" },
+      { icon: "⚙️", color: "#6B8070", label: "Paramètres",     href: "#" },
+    ],
+  },
+];
 
 export default function AccountPage() {
   const router = useRouter();
@@ -15,22 +43,14 @@ export default function AccountPage() {
 
   useEffect(() => {
     const sb = supabaseBrowser();
-
     async function load() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { router.replace("/login"); return; }
-
       setEmail(session.user.email ?? null);
-
-      const { data } = await sb
-        .from("customers")
-        .select("*")
-        .eq("email", session.user.email!)
-        .maybeSingle();
+      const { data } = await sb.from("customers").select("*").eq("email", session.user.email!).maybeSingle();
       setCustomer(data ?? null);
       setLoading(false);
     }
-
     load();
   }, [router]);
 
@@ -49,95 +69,160 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#1B4332] border-t-transparent rounded-full animate-spin" />
+      <div className="max-w-sm mx-auto min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const displayName = customer?.first_name
-    ? customer.first_name
-    : email?.split("@")[0] ?? "Compte";
+  const displayName = customer?.first_name ? customer.first_name : email?.split("@")[0] ?? "Compte";
+  const totalOrders = customer?.total_orders ?? 0;
+  const totalSpent  = Number(customer?.total_spent ?? 0);
+  const totalSavings = totalSpent * 0.35; // estimated 35% savings
+  const ecoKg = Math.round(totalSpent * 0.4);
+  const loyaltyPoints = Math.round(totalSpent * 10);
+  const loyaltyProgress = Math.min(100, (loyaltyPoints % 1000) / 10);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      <nav className="bg-[#1B4332] h-14 flex items-center gap-3 px-6">
-        <Link href="/" className="text-xl font-black text-white tracking-tight shrink-0">
-          fulflo<span className="text-[#10B981]">.</span>
-        </Link>
-        <span className="text-white/30 ml-auto text-sm">{email}</span>
-        <button onClick={signOut}
-          className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
-          <LogOut size={14} /> Déconnexion
-        </button>
-      </nav>
+    <div className="min-h-screen bg-green-50">
+      <div className="max-w-sm mx-auto min-h-screen relative pb-8">
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-4">
+        {/* ── HERO ──────────────────────────────────────────────────────── */}
+        <div
+          className="px-5 pt-5 pb-8"
+          style={{ background: "linear-gradient(160deg, #0F2D1E 0%, #246040 100%)" }}
+        >
+          {/* Top row */}
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/" className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+              <ChevronLeft size={18} className="text-white" />
+            </Link>
+            <span className="text-white font-display font-semibold text-sm">Mon Profil</span>
+            <button onClick={signOut} className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+              <LogOut size={14} className="text-white" />
+            </button>
+          </div>
 
-        {/* Header */}
-        <div className="bg-[#1B4332] rounded-xl p-6 text-white">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center shrink-0">
-              <User size={26} className="text-[#10B981]" />
+          {/* Avatar + name */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 bg-green-500 rounded-[20px] flex items-center justify-center text-3xl font-black text-white shrink-0">
+              {displayName[0]?.toUpperCase() ?? "A"}
             </div>
             <div>
-              <p className="text-white/60 text-xs uppercase tracking-wider font-semibold mb-0.5">Mon compte</p>
-              <p className="text-2xl font-black">Bonjour, {displayName} 👋</p>
-              <p className="text-white/60 text-sm">{email}</p>
+              <p className="text-white font-display font-black text-xl leading-tight">Bonjour, {displayName} 👋</p>
+              <p className="text-white/50 text-xs mt-0.5">{email}</p>
+              <p className="text-white/40 text-[10px] mt-0.5">Membre FulFlo · Tier Or</p>
             </div>
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <ShoppingBag size={16} className="text-[#1B4332]" />
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Commandes</span>
-            </div>
-            <p className="text-3xl font-black text-gray-900">{customer?.total_orders ?? 0}</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Tag size={16} className="text-[#10B981]" />
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total dépensé</span>
-            </div>
-            <p className="text-3xl font-black text-gray-900">
-              {customer?.total_spent
-                ? `€${Number(customer.total_spent).toFixed(2).replace(".", ",")}`
-                : "€0"}
-            </p>
-          </div>
-        </div>
-
-        {/* Referral */}
-        {customer?.referral_code && (
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Gift size={16} className="text-[#10B981]" />
-              <h2 className="font-bold text-gray-900 text-sm">Parrainez vos amis — gagnez €5 chacun</h2>
-            </div>
-            <p className="text-xs text-gray-500 mb-3">
-              Partagez votre lien. Vous recevez €5 de crédit à leur première commande.
-            </p>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 font-mono truncate">
-                fulflo.app/invite?ref={customer.referral_code}
+          {/* Loyalty glassmorphism card */}
+          <div
+            className="rounded-[20px] p-5"
+            style={{ background: "rgba(255,255,255,.14)", border: "1px solid rgba(255,255,255,.18)", backdropFilter: "blur(12px)" }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-white/50 text-[10px] uppercase tracking-widest mb-1">Points fidélité</p>
+                <p className="font-display font-black text-white leading-none" style={{ fontSize: 36 }}>
+                  {loyaltyPoints.toLocaleString("fr-FR")}
+                </p>
               </div>
-              <button onClick={copyCode}
-                className="flex items-center gap-1.5 bg-[#10B981] text-[#1B4332] font-bold text-xs px-4 py-2 rounded-lg hover:bg-[#D1FAE5] transition-colors whitespace-nowrap">
-                <Copy size={12} />
-                {copied ? "Copié ✓" : "Copier"}
-              </button>
+              <div className="flex items-center gap-1.5 bg-gold/20 border border-gold/30 px-3 py-1.5 rounded-full">
+                <Star size={11} className="text-gold fill-gold" />
+                <span className="text-gold text-xs font-bold">Or</span>
+              </div>
+            </div>
+            {/* Progress */}
+            <div className="bg-white/15 rounded-full h-2 mb-2">
+              <div
+                className="h-2 bg-green-400 rounded-full transition-all"
+                style={{ width: `${loyaltyProgress}%` }}
+              />
+            </div>
+            <p className="text-white/40 text-[10px]">
+              {1000 - (loyaltyPoints % 1000)} pts → Platinum
+            </p>
+          </div>
+        </div>
+
+        {/* ── 3 STAT CARDS ──────────────────────────────────────────────── */}
+        <div className="px-4 -mt-5">
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: <ShoppingBag size={18} className="text-green-700" />, value: String(totalOrders), label: "Commandes" },
+              { icon: <span className="text-lg">♻️</span>,                   value: `${ecoKg}kg`,       label: "kg évités" },
+              { icon: <Tag size={18} className="text-green-700" />,          value: `€${Math.round(totalSavings)}`, label: "Économies" },
+            ].map((card) => (
+              <div key={card.label} className="bg-white rounded-[16px] py-4 px-3 text-center shadow-xs">
+                <div className="flex justify-center mb-1">{card.icon}</div>
+                <p className="font-display font-black text-ink-900 text-lg leading-none">{card.value}</p>
+                <p className="text-ink-400 text-[10px] mt-0.5">{card.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── REFERRAL ──────────────────────────────────────────────────── */}
+        {customer?.referral_code && (
+          <div className="px-4 pt-4">
+            <div className="bg-white border border-ink-100 rounded-[20px] p-5 shadow-xs">
+              <div className="flex items-center gap-2 mb-3">
+                <Gift size={16} className="text-green-500" />
+                <h3 className="font-display font-bold text-ink-900 text-sm">Parrainez — gagnez €5 chacun</h3>
+              </div>
+              <p className="text-ink-400 text-xs mb-3">
+                Partagez votre lien et recevez €5 à leur première commande.
+              </p>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-ink-100 rounded-[10px] px-3 py-2 text-xs text-ink-500 font-mono truncate">
+                  fulflo.app/invite?ref={customer.referral_code}
+                </div>
+                <button
+                  onClick={copyCode}
+                  className="flex items-center gap-1.5 bg-green-500 text-white font-bold text-xs px-4 py-2 rounded-[10px] hover:bg-green-400 transition-colors whitespace-nowrap"
+                >
+                  <Copy size={11} />
+                  {copied ? "Copié ✓" : "Copier"}
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* CTA */}
-        <Link href="/deals"
-          className="block bg-[#1B4332] hover:bg-[#2d6a4f] text-white font-bold text-center py-3.5 rounded-xl transition-colors">
-          Voir les offres surplus →
-        </Link>
+        {/* ── MENU SECTIONS ─────────────────────────────────────────────── */}
+        {MENU_SECTIONS.map((section) => (
+          <div key={section.title} className="px-4 pt-5">
+            <p className="text-[10px] font-bold text-ink-300 uppercase tracking-widest mb-2 px-1">{section.title}</p>
+            <div className="bg-white rounded-[20px] overflow-hidden shadow-xs">
+              {section.items.map((item, idx) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex items-center gap-4 px-5 py-4 hover:bg-green-50 transition-colors ${
+                    idx < section.items.length - 1 ? "border-b border-ink-100" : ""
+                  }`}
+                >
+                  <div className="w-9 h-9 rounded-[10px] flex items-center justify-center text-lg" style={{ background: item.color + "18" }}>
+                    {item.icon}
+                  </div>
+                  <span className="flex-1 text-sm font-semibold text-ink-700">{item.label}</span>
+                  <ChevronRight size={16} className="text-ink-300" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* ── CTA → Deals ───────────────────────────────────────────────── */}
+        <div className="px-4 pt-5">
+          <Link
+            href="/deals"
+            className="block bg-green-800 text-white font-display font-bold text-center py-4 rounded-[20px] text-sm hover:bg-green-700 transition-colors"
+            style={{ boxShadow: "0 6px 20px rgba(15,45,30,.18)" }}
+          >
+            Voir les offres surplus →
+          </Link>
+        </div>
 
       </div>
     </div>

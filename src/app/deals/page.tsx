@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import ProductCard, { ProductCardProps } from "@/components/ProductCard";
+import { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
 import { useCart } from "@/lib/cart";
-import AuthNav from "@/components/AuthNav";
 import { useI18n } from "@/lib/i18n";
+import {
+  ChevronLeft, SlidersHorizontal, Plus, Heart, Search, ShoppingCart,
+} from "lucide-react";
+import Link from "next/link";
 
-// Brand → Unsplash image map for cart thumbnails
+// Brand → Unsplash fallback images
 const BRAND_IMG: Record<string, string> = {
   "Ariel":     "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
   "Nestlé":    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80",
@@ -20,7 +23,7 @@ const BRAND_IMG: Record<string, string> = {
   "Maggi":     "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
 };
 
-// ─── Bundle types ─────────────────────────────────────────────────────────────
+// ─── Bundle types ──────────────────────────────────────────────────────────────
 
 interface BundleDeal {
   id: string;
@@ -29,7 +32,7 @@ interface BundleDeal {
   bundle_discount_percent: number;
 }
 
-// ─── Sponsored slot types ─────────────────────────────────────────────────────
+// ─── Sponsored slot types ──────────────────────────────────────────────────────
 
 interface SponsoredSlot {
   productId: string | null;
@@ -39,14 +42,10 @@ interface SponsoredSlot {
   supplierName?: string;
 }
 
-// ─── Sponsored card component ─────────────────────────────────────────────────
+// ─── Sponsored card ────────────────────────────────────────────────────────────
 
 function SponsoredCard({
-  product,
-  slot,
-  userSession,
-  onAddToCart,
-  added,
+  product, slot, userSession, onAddToCart, added,
 }: {
   product: ProductCardProps;
   slot: SponsoredSlot;
@@ -58,22 +57,13 @@ function SponsoredCard({
   const impressionFired = useRef(false);
   const { t } = useI18n();
 
-  // Fire impression once when card enters viewport
   useEffect(() => {
     if (!ref.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !impressionFired.current) {
           impressionFired.current = true;
-          fetch("/api/ads/impression", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              campaignId: slot.campaignId,
-              productId: slot.productId,
-              userSession,
-            }),
-          }).catch(() => {});
+          fetch("/api/ads/impression", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: slot.campaignId, productId: slot.productId, userSession }) }).catch(() => {});
         }
       },
       { threshold: 0.5 }
@@ -83,120 +73,118 @@ function SponsoredCard({
   }, [slot.campaignId, slot.productId, userSession]);
 
   const handleClick = async () => {
-    await fetch("/api/ads/click", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        campaignId: slot.campaignId,
-        productId: slot.productId,
-        userSession,
-      }),
-    }).catch(() => {});
+    await fetch("/api/ads/click", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: slot.campaignId, productId: slot.productId, userSession }) }).catch(() => {});
     onAddToCart(product.id);
   };
 
-  const discount = Math.round(
-    ((product.original_price - product.current_price) / product.original_price) * 100
-  );
+  const discount = Math.round(((product.original_price - product.current_price) / product.original_price) * 100);
+  const catEmoji = product.category === "hygiene" ? "🧴" : product.category === "alimentation" ? "🍝" : product.category === "entretien" ? "🧹" : product.category === "boissons" ? "💧" : "📦";
 
   return (
-    <div
-      ref={ref}
-      className="relative bg-white rounded-2xl border-l-2 border-[#10B981] shadow-sm overflow-hidden group transition-all hover:shadow-md"
-    >
+    <div ref={ref} className="bg-white rounded-[20px] shadow-sm overflow-hidden relative">
       {/* Sponsored badge */}
-      <div className="absolute top-3 left-3 z-10">
-        <span className="text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
-          {t("deals.sponsored")}
-        </span>
+      <div className="absolute top-2.5 left-2.5 z-10">
+        <span className="text-[9px] font-bold text-ink-400 bg-ink-100 px-2 py-0.5 rounded-full">{t("deals.sponsored")}</span>
       </div>
 
-      {/* Brand circle */}
-      <div className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center">
-        <span className="text-white text-xs font-bold">{product.brand[0]}</span>
-      </div>
-
-      {/* Added overlay */}
       {added && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#10B981]/10 rounded-2xl backdrop-blur-sm">
-          <div className="bg-[#1B4332] text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
-            ✅ {t("deals.added")}
-          </div>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-green-500/10 rounded-[20px]">
+          <div className="bg-green-800 text-white font-bold text-xs px-4 py-2 rounded-full">✅ {t("deals.added")}</div>
         </div>
       )}
 
-      <div className="p-4 pt-10">
-        {/* Product info */}
-        <div className="bg-slate-50 rounded-xl h-32 flex items-center justify-center mb-3 overflow-hidden">
-          <span className="text-4xl">
-            {product.category === "hygiene" ? "🧴"
-              : product.category === "alimentation" ? "🍝"
-              : product.category === "entretien" ? "🧹"
-              : product.category === "boissons" ? "💧"
-              : "📦"}
-          </span>
+      <div className="h-[120px] bg-green-50 flex items-center justify-center relative">
+        {discount > 0 && (
+          <span className="absolute top-2 right-2 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
+        )}
+        <span className="text-4xl">{catEmoji}</span>
+      </div>
+
+      <div className="p-3">
+        <p className="text-[9px] font-black text-ink-400 uppercase tracking-widest mb-0.5">{product.brand}</p>
+        <p className="font-semibold text-ink-900 text-[13px] leading-tight line-clamp-2 mb-2">{product.name}</p>
+        <p className="text-green-500 text-[11px] font-bold mb-2">Économisez €{(product.original_price - product.current_price).toFixed(2)}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-black text-ink-900 text-base">€{product.current_price.toFixed(2)}</p>
+            <p className="text-ink-300 text-[10px] line-through">€{product.original_price.toFixed(2)}</p>
+          </div>
+          <button
+            onClick={handleClick}
+            className="w-8 h-8 bg-green-800 rounded-full flex items-center justify-center hover:bg-green-700 transition-colors"
+          >
+            <Plus size={15} className="text-white" />
+          </button>
         </div>
-
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{product.brand}</p>
-        <p className="font-bold text-gray-900 text-sm leading-snug mb-1">{product.name}</p>
-        {product.size && <p className="text-xs text-gray-400 mb-2">{product.size}</p>}
-
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg font-black text-[#1B4332]">€{product.current_price.toFixed(2)}</span>
-          <span className="text-xs text-gray-400 line-through">€{product.original_price.toFixed(2)}</span>
-          <span className="text-[10px] font-black bg-[#ff955a] text-[#552100] px-1.5 py-0.5 rounded-md ml-auto">
-            -{discount}%
-          </span>
-        </div>
-
-        <button
-          onClick={handleClick}
-          className="w-full bg-[#1B4332] text-white font-bold text-sm py-2 rounded-xl hover:bg-[#2d6a4f] transition-colors mb-2"
-        >
-          {t("deals.add")}
-        </button>
-
-        <a
-          href="#"
-          className="block text-center text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          {t("deals.learn-more")} {product.brand} →
-        </a>
       </div>
     </div>
   );
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Organic product card ──────────────────────────────────────────────────────
 
-type Category =
-  | "all"
-  | "alimentation"
-  | "hygiene"
-  | "entretien"
-  | "beaute"
-  | "boissons"
-  | "bebe"
-  | "animaux"
-  | "sport"
-  | "pharmacie"
-  | "electromenager";
+function DealsCard({ product, onAdd, added }: { product: ProductCardProps; onAdd: (id: string) => void; added: boolean }) {
+  const [liked, setLiked] = useState(false);
+  const discount = Math.round(((product.original_price - product.current_price) / product.original_price) * 100);
+  const catEmoji = product.category === "hygiene" ? "🧴" : product.category === "alimentation" ? "🍝" : product.category === "entretien" ? "🧹" : product.category === "boissons" ? "💧" : product.category === "beaute" ? "💄" : "📦";
+
+  return (
+    <div className="bg-white rounded-[20px] shadow-xs overflow-hidden relative">
+      {added && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-green-500/10 rounded-[20px]">
+          <div className="bg-green-800 text-white font-bold text-xs px-3 py-1.5 rounded-full">✅ Ajouté</div>
+        </div>
+      )}
+
+      {/* Image area */}
+      <div className="h-[120px] bg-green-50 flex items-center justify-center relative">
+        {discount >= 10 && (
+          <span className="absolute top-2 left-2 text-[10px] font-black text-discount-red bg-discount-bg px-2 py-0.5 rounded-full">-{discount}%</span>
+        )}
+        <button onClick={() => setLiked((l) => !l)} className="absolute top-2 right-2 w-6 h-6 bg-white rounded-[6px] flex items-center justify-center shadow-xs">
+          <Heart size={11} className={liked ? "fill-red-500 text-red-500" : "text-ink-300"} />
+        </button>
+        <span className="text-4xl">{catEmoji}</span>
+      </div>
+
+      <div className="p-3">
+        <p className="text-[9px] font-black text-ink-400 uppercase tracking-widest mb-0.5">{product.brand}</p>
+        <p className="font-semibold text-ink-900 text-[13px] leading-tight line-clamp-2 mb-1.5">{product.name}</p>
+        <p className="text-green-500 text-[11px] font-bold mb-2">Économisez €{(product.original_price - product.current_price).toFixed(2)}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-black text-ink-900 text-base leading-none">€{product.current_price.toFixed(2)}</p>
+            <p className="text-ink-300 text-[10px] line-through">€{product.original_price.toFixed(2)}</p>
+          </div>
+          <button
+            onClick={() => onAdd(product.id)}
+            className="w-8 h-8 bg-green-800 rounded-full flex items-center justify-center hover:bg-green-700 transition-colors"
+          >
+            <Plus size={15} className="text-white" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+type Category = "all" | "alimentation" | "hygiene" | "entretien" | "beaute" | "boissons" | "bebe" | "animaux" | "sport" | "pharmacie" | "electromenager";
 type SortKey  = "price_asc" | "discount_max" | "expiry_soon";
 
-// ─── Filter / sort config ─────────────────────────────────────────────────────
-
-const CATEGORIES: { key: Category; label: string; image: string }[] = [
-  { key: "all",            label: "Tout",           image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=120&q=80" },
-  { key: "alimentation",   label: "Alimentation",   image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&q=80" },
-  { key: "hygiene",        label: "Hygiène",        image: "https://images.unsplash.com/photo-1585770536735-27993a080586?w=120&q=80" },
-  { key: "entretien",      label: "Entretien",      image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=120&q=80" },
-  { key: "beaute",         label: "Beauté",         image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=120&q=80" },
-  { key: "boissons",       label: "Boissons",       image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=120&q=80" },
-  { key: "bebe",           label: "Bébé",           image: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=120&q=80" },
-  { key: "animaux",        label: "Animaux",        image: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=120&q=80" },
-  { key: "sport",          label: "Sport",          image: "https://images.unsplash.com/photo-1461897104016-0b3b00cc81ee?w=120&q=80" },
-  { key: "pharmacie",      label: "Pharmacie",      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=120&q=80" },
-  { key: "electromenager", label: "Électroménager", image: "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=120&q=80" },
+const CATEGORIES: { key: Category; label: string; emoji: string }[] = [
+  { key: "all",            label: "Tout",          emoji: "⭐" },
+  { key: "alimentation",   label: "Alimentation",  emoji: "🍝" },
+  { key: "hygiene",        label: "Hygiène",        emoji: "🧴" },
+  { key: "entretien",      label: "Entretien",      emoji: "🧹" },
+  { key: "beaute",         label: "Beauté",         emoji: "💄" },
+  { key: "boissons",       label: "Boissons",       emoji: "💧" },
+  { key: "bebe",           label: "Bébé",           emoji: "👶" },
+  { key: "animaux",        label: "Animaux",        emoji: "🐾" },
+  { key: "sport",          label: "Sport",          emoji: "⚽" },
+  { key: "pharmacie",      label: "Pharmacie",      emoji: "💊" },
+  { key: "electromenager", label: "Électroménager", emoji: "🔌" },
 ];
 
 const SORT_KEYS: { key: SortKey; tKey: string }[] = [
@@ -205,54 +193,38 @@ const SORT_KEYS: { key: SortKey; tKey: string }[] = [
   { key: "expiry_soon",  tKey: "deals.sort.expiry" },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Data fetching ─────────────────────────────────────────────────────────────
 
 async function fetchProducts(): Promise<ProductCardProps[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return [];
-
   try {
     const { createClient } = await import("@supabase/supabase-js");
     const sb = createClient(url, key);
-    const { data, error } = await sb
-      .from("products")
+    const { data, error } = await sb.from("products")
       .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, expiry_date, is_active, category, image_url, typical_duration_days, description, is_sponsored")
-      .eq("is_active", true)
-      .gt("stock_units", 0)
-      .order("discount_percent", { ascending: false });
-
+      .eq("is_active", true).gt("stock_units", 0).order("discount_percent", { ascending: false });
     if (error || !data?.length) return [];
-
-    // Map DB column names → ProductCardProps
     return (data as Record<string, unknown>[]).map((row) => ({
-      id:                 String(row.id ?? ""),
-      brand:              String(row.brand ?? ""),
-      name:               String(row.name ?? ""),
-      size:               "",
-      original_price:     Number(row.price_retail_eur ?? 0),
-      current_price:      Number(row.price_surplus_eur ?? 0),
-      stock_units:        Number(row.stock_units ?? 0),
-      expiry_date:        String(row.expiry_date ?? new Date().toISOString().slice(0, 10)),
-      flash_sale_end_time: null,
-      ai_pricing_enabled: false,
-      category:           String(row.category ?? ""),
-      image_url:          String(row.image_url ?? ""),
+      id: String(row.id ?? ""), brand: String(row.brand ?? ""), name: String(row.name ?? ""), size: "",
+      original_price: Number(row.price_retail_eur ?? 0), current_price: Number(row.price_surplus_eur ?? 0),
+      stock_units: Number(row.stock_units ?? 0),
+      expiry_date: String(row.expiry_date ?? new Date().toISOString().slice(0, 10)),
+      flash_sale_end_time: null, ai_pricing_enabled: false,
+      category: String(row.category ?? ""), image_url: String(row.image_url ?? ""),
     })) as ProductCardProps[];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-// Stable session ID for impression/click tracking
 function getSession(): string {
   if (typeof window === "undefined") return "ssr";
   let s = sessionStorage.getItem("fulflo_session");
   if (!s) { s = crypto.randomUUID(); sessionStorage.setItem("fulflo_session", s); }
   return s;
 }
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DealsPage() {
   const cart = useCart();
@@ -262,6 +234,7 @@ export default function DealsPage() {
   const [category, setCategory]   = useState<Category>("all");
   const [sort, setSort]           = useState<SortKey>("discount_max");
   const [search, setSearch]       = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [addedIds, setAddedIds]   = useState<Set<string>>(new Set());
   const [toast, setToast]         = useState<string | null>(null);
   const [sponsored, setSponsored] = useState<SponsoredSlot[]>([]);
@@ -277,65 +250,33 @@ export default function DealsPage() {
     if (sbUrl && sbKey && sbKey !== "placeholder") {
       import("@supabase/supabase-js").then(({ createClient }) => {
         const sb = createClient(sbUrl, sbKey);
-        const channel = sb
-          .channel("stock-updates")
-          .on(
-            "postgres_changes",
-            { event: "UPDATE", schema: "public", table: "products" },
+        const channel = sb.channel("stock-updates")
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "products" },
             (payload: { new: Record<string, unknown> }) => {
-              setProducts((prev) =>
-                prev.map((p) =>
-                  p.id === payload.new.id
-                    ? {
-                        ...p,
-                        stock_units: Number(payload.new.stock_units ?? payload.new.stock_quantity ?? p.stock_units),
-                      }
-                    : p
-                )
-              );
-            }
-          )
+              setProducts((prev) => prev.map((p) => p.id === payload.new.id ? { ...p, stock_units: Number(payload.new.stock_units ?? payload.new.stock_quantity ?? p.stock_units) } : p));
+            })
           .subscribe();
         return () => { sb.removeChannel(channel); };
       });
-    }
 
-    // Fetch sponsored slots directly from Supabase
-    if (sbUrl && sbKey && sbKey !== "placeholder") {
+      // Fetch sponsored slots
       import("@supabase/supabase-js").then(({ createClient }) => {
         const sb = createClient(sbUrl, sbKey);
         Promise.resolve(
-          sb.from("ad_campaigns")
-            .select("id, supplier_id, product_id, cpc_eur, daily_budget_eur, daily_spend_eur, impressions, clicks")
-            .eq("status", "active")
-            .order("cpc_eur", { ascending: false })
-            .limit(6)
+          sb.from("ad_campaigns").select("id, supplier_id, product_id, cpc_eur, daily_budget_eur, daily_spend_eur").eq("status", "active").order("cpc_eur", { ascending: false }).limit(6)
         ).then(({ data }) => {
           if (!data?.length) return;
-          const eligible = data.filter(
-            (c) => Number(c.daily_spend_eur) < Number(c.daily_budget_eur)
-          );
-          const slots: SponsoredSlot[] = eligible.slice(0, 3).map((c, i) => ({
-            productId: (c.product_id as string) ?? null,
-            campaignId: c.id as string,
-            cpcEur: Number(c.cpc_eur),
-            position: (i + 1) as 1 | 2 | 3,
-            supplierName: c.supplier_id as string,
-          }));
+          const eligible = data.filter((c) => Number(c.daily_spend_eur) < Number(c.daily_budget_eur));
+          const slots: SponsoredSlot[] = eligible.slice(0, 3).map((c, i) => ({ productId: (c.product_id as string) ?? null, campaignId: c.id as string, cpcEur: Number(c.cpc_eur), position: (i + 1) as 1 | 2 | 3, supplierName: c.supplier_id as string }));
           if (slots.length) setSponsored(slots);
         }).catch(() => {});
       });
-    }
 
-    // Fetch active bundle deals
-    if (sbUrl && sbKey && sbKey !== "placeholder") {
+      // Fetch bundle deals
       import("@supabase/supabase-js").then(({ createClient }) => {
         const sb = createClient(sbUrl, sbKey);
         Promise.resolve(
-          sb.from("bundle_campaigns")
-            .select("id, name, bundle_price_eur, bundle_discount_percent")
-            .eq("status", "active")
-            .limit(2)
+          sb.from("bundle_campaigns").select("id, name, bundle_price_eur, bundle_discount_percent").eq("status", "active").limit(2)
         ).then(({ data }) => {
           if (data?.length) setBundles(data as BundleDeal[]);
         }).catch(() => {});
@@ -346,18 +287,8 @@ export default function DealsPage() {
   const handleAddToCart = (id: string) => {
     const product = products.find((p) => p.id === id);
     if (product) {
-      cart.addItem({
-        productId:     product.id,
-        name:          product.name,
-        brand:         product.brand,
-        size:          product.size ?? "",
-        price:         product.current_price,
-        originalPrice: product.original_price,
-        image:         (product as unknown as Record<string, string>).image_url || BRAND_IMG[product.brand] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
-        category:      product.category,
-      });
-      // Toast notification
-      setToast(`${product.brand} ${product.name} ajouté au panier ✓`);
+      cart.addItem({ productId: product.id, name: product.name, brand: product.brand, size: product.size ?? "", price: product.current_price, originalPrice: product.original_price, image: (product as unknown as Record<string, string>).image_url || BRAND_IMG[product.brand] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80", category: product.category });
+      setToast(`${product.brand} ${product.name} ajouté ✓`);
       setTimeout(() => setToast(null), 2500);
     }
     setAddedIds((prev) => new Set(prev).add(id));
@@ -366,30 +297,18 @@ export default function DealsPage() {
 
   const filtered = useMemo(() => {
     let list = [...products];
-
-    // Search
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.brand.toLowerCase().includes(q) ||
-          p.name.toLowerCase().includes(q) ||
-          (p.category ?? "").toLowerCase().includes(q)
-      );
+      list = list.filter((p) => p.brand.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q));
     }
-
-    // Category filter
     if (category !== "all") {
       list = list.filter((p) => {
         const c = (p.category ?? "").toLowerCase();
-        // Map DB values to filter keys
         if (category === "entretien") return c === "entretien" || c === "cleaning";
         if (category === "alimentation") return c === "alimentation" || c === "food";
         return c === category;
       });
     }
-
-    // Sort
     list.sort((a, b) => {
       if (sort === "price_asc") return a.current_price - b.current_price;
       if (sort === "expiry_soon") return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
@@ -400,306 +319,202 @@ export default function DealsPage() {
       }
       return 0;
     });
-
     return list;
   }, [products, category, sort, search]);
 
-  const totalSavings = useMemo(
-    () => filtered.reduce((sum, p) => sum + (p.original_price - p.current_price), 0),
-    [filtered]
-  );
+  const totalSavings = useMemo(() => filtered.reduce((sum, p) => sum + (p.original_price - p.current_price), 0), [filtered]);
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-green-50">
+      <div className="max-w-sm mx-auto bg-white min-h-screen pb-6 shadow-md">
 
-      {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <header className="bg-white border-b border-mint-light sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <a href="/" className="text-2xl font-bold text-forest tracking-tight shrink-0">
-            fulflo<span className="text-mint">.</span>
-          </a>
+        {/* ── HEADER ────────────────────────────────────────────────────── */}
+        <div className="bg-green-800 px-4 py-3 sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+              <ChevronLeft size={18} className="text-white" />
+            </Link>
+            <span className="text-white font-display font-bold text-base flex-1">
+              {loading ? "Chargement…" : `${filtered.length} offres surplus`}
+            </span>
+            <button
+              onClick={() => setShowSearch((v) => !v)}
+              className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center"
+            >
+              <Search size={15} className="text-white" />
+            </button>
+            <button className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
+              <SlidersHorizontal size={15} className="text-white" />
+            </button>
+          </div>
 
-          {/* Search */}
-          <div className="flex-1 max-w-sm">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-mid text-sm">🔍</span>
+          {/* Search input — collapsible */}
+          {showSearch && (
+            <div className="mt-2 relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                type="text"
+                autoFocus
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("deals.search")}
-                className="w-full pl-8 pr-4 py-2 rounded-xl border border-mint-light bg-surface text-sm text-forest placeholder:text-text-mid/50 focus:outline-none focus:ring-2 focus:ring-mint"
+                className="w-full bg-white rounded-[12px] pl-9 pr-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
               />
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <a href="/invite" className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-text-dark hover:text-forest transition-colors">
-              🎁 <span>€5 offerts</span>
-            </a>
-            {/* Cart indicator — links to cart page */}
-            {cart.itemCount > 0 && (
-              <a href="/cart" className="flex items-center gap-1.5 bg-forest text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-[#2d6a4f] transition-colors">
-                🛒 {cart.itemCount}
-              </a>
-            )}
-            <AuthNav />
-            <a href="/" className="text-xs text-text-mid hover:text-forest transition-colors">{t("deals.home")}</a>
+        {/* ── SUBCAT CHIPS ──────────────────────────────────────────────── */}
+        <div className="px-4 pt-3 pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setCategory(c.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
+                  category === c.key
+                    ? "bg-green-100 border border-green-500 text-green-800"
+                    : "bg-ink-100 text-ink-500 border border-transparent"
+                }`}
+              >
+                <span>{c.emoji}</span>
+                {c.label}
+              </button>
+            ))}
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* ── PAGE TITLE ────────────────────────────────────────────────── */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-forest mb-1">{t("deals.title")}</h1>
-          <p className="text-text-mid text-sm">
-            {loading ? t("deals.loading") : (
-              <>
-                <span className="font-semibold text-forest">{filtered.length} produits</span>
-                {" "}— économies potentielles jusqu&apos;à{" "}
-                <span className="font-semibold text-mint">€{totalSavings.toFixed(0)}</span>
-              </>
-            )}
+        {/* ── SORT BAR ──────────────────────────────────────────────────── */}
+        <div className="px-4 py-2 flex items-center justify-between">
+          <p className="text-[11px] text-ink-400">
+            {loading ? "…" : <><span className="font-bold text-ink-700">{filtered.length}</span> produits · Écon. <span className="font-bold text-green-500">€{totalSavings.toFixed(0)}</span></>}
           </p>
-        </div>
-
-        {/* ── FILTER + SORT BAR ─────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
-          {/* Category filters — Noon-style circular photo cards */}
-          <div className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-            <div className="flex items-start gap-3 flex-nowrap">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.key}
-                  onClick={() => setCategory(c.key)}
-                  className="flex flex-col items-center gap-1.5 flex-shrink-0 group"
-                  style={{ width: 72 }}
-                >
-                  <div className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-all duration-200 ${
-                    category === c.key
-                      ? "border-[#10B981] shadow-md shadow-[#10B981]/20 scale-105"
-                      : "border-transparent hover:border-[#10B981]/50 hover:scale-105"
-                  }`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={c.image}
-                      alt={c.label}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className={`text-[11px] font-medium text-center leading-tight line-clamp-2 ${
-                    category === c.key
-                      ? "text-[#1B4332] font-semibold"
-                      : "text-gray-500 group-hover:text-gray-700"
-                  }`}>
-                    {c.label}
-                    {category === c.key && c.key !== "all" && (
-                      <span className="block text-[10px] text-[#10B981] font-bold">
-                        {filtered.length}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Sort */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-text-mid">{t("deals.sort.by")}</span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="text-sm font-semibold text-forest bg-white border border-mint-light rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mint cursor-pointer"
-            >
-              {SORT_KEYS.map((s) => (
-                <option key={s.key} value={s.key}>{t(s.tKey)}</option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="text-xs font-semibold text-ink-700 bg-ink-100 border-0 rounded-[10px] px-3 py-2 focus:outline-none cursor-pointer"
+          >
+            {SORT_KEYS.map((s) => <option key={s.key} value={s.key}>{t(s.tKey)}</option>)}
+          </select>
         </div>
 
         {/* ── PRODUCT GRID ──────────────────────────────────────────────── */}
-        {loading ? (
-          // Skeleton
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-4xl mb-4">📦</p>
-            <p className="text-forest font-semibold text-lg mb-2">{t("deals.empty.no-products")}</p>
-            <p className="text-text-mid text-sm">{t("deals.empty.no-products-sub")}</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-4xl mb-4">🔍</p>
-            <p className="text-forest font-semibold text-lg mb-2">{t("deals.empty.no-results")}</p>
-            <p className="text-text-mid text-sm mb-4">{t("deals.empty.no-results-sub")}</p>
-            <button
-              onClick={() => { setCategory("all"); setSearch(""); }}
-              className="bg-forest text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-forest-mid transition-colors"
-            >
-              {t("deals.empty.reset")}
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* ── SPONSORED SLOTS (top 3) ─────────────────────────────── */}
-            {sponsored.length > 0 && (
-              <>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
-                  {sponsored.slice(0, 3).map((slot) => {
-                    const product = (slot.productId ? products.find((p) => p.id === slot.productId) : null)
-                      ?? filtered[slot.position - 1]
-                      ?? filtered[0];
-                    if (!product) return null;
-                    return (
-                      <SponsoredCard
-                        key={slot.campaignId}
-                        product={product}
-                        slot={slot}
-                        userSession={userSession.current}
-                        onAddToCart={handleAddToCart}
-                        added={addedIds.has(product.id)}
-                      />
-                    );
-                  })}
-                </div>
-                {/* Separator */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex-1 border-t border-gray-100" />
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    {t("deals.sponsored-other")}
-                  </span>
-                  <div className="flex-1 border-t border-gray-100" />
-                </div>
-              </>
-            )}
-
-            {/* ── BUNDLE DEALS ────────────────────────────────────────── */}
-            {bundles.length > 0 && (
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-1 border-t border-gray-100" />
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Bundles du Moment
-                  </span>
-                  <div className="flex-1 border-t border-gray-100" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {bundles.map((b) => {
-                    const originalPrice = (Number(b.bundle_price_eur) / (1 - Number(b.bundle_discount_percent) / 100));
-                    return (
-                      <div key={b.id} className="bg-white rounded-2xl border border-[#7C3AED]/20 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                        <div className="bg-[#7C3AED] px-4 py-2 flex items-center gap-2">
-                          <span className="text-white text-[10px] font-black uppercase tracking-wider">BUNDLE</span>
-                          <span className="text-white/80 text-[10px]">·</span>
-                          <span className="text-white text-[10px] font-bold">-{b.bundle_discount_percent}%</span>
-                        </div>
-                        <div className="p-4">
-                          {/* Product images placeholder */}
-                          <div className="flex gap-1.5 mb-3">
-                            {["☕", "🥣"].map((emoji, i) => (
-                              <div key={i} className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xl">
-                                {emoji}
-                              </div>
-                            ))}
-                            <div className="w-10 h-10 flex items-center justify-center text-gray-400 font-bold text-xs">
-                              +1
-                            </div>
-                          </div>
-                          <p className="font-bold text-gray-900 text-sm mb-2 leading-snug">{b.name}</p>
-                          <div className="flex items-baseline gap-2 mb-3">
-                            <span className="text-2xl font-black text-gray-900">
-                              €{Number(b.bundle_price_eur).toFixed(2)}
-                            </span>
-                            <span className="text-xs text-gray-400 line-through">
-                              au lieu de €{originalPrice.toFixed(2)}
-                            </span>
-                          </div>
-                          <button className="w-full bg-[#7C3AED] text-white font-bold text-sm py-2.5 rounded-xl hover:bg-[#6D28D9] transition-colors">
-                            Ajouter le bundle →
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* ── ORGANIC PRODUCTS ───────────────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((p) => (
-                <div key={p.id} className="relative">
-                  {addedIds.has(p.id) && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-mint/10 rounded-2xl backdrop-blur-sm">
-                      <div className="bg-forest text-white font-bold text-sm px-4 py-2.5 rounded-full flex items-center gap-2">
-                        ✅ {t("deals.added")}
-                      </div>
-                    </div>
-                  )}
-                  <ProductCard
-                    {...p}
-                    onAddToCart={handleAddToCart}
-                    featured={!!p.flash_sale_end_time}
-                  />
-                </div>
+        <div className="px-4">
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-ink-100 rounded-[20px] h-52 animate-pulse" />
               ))}
             </div>
-          </>
-        )}
+          ) : products.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-4xl mb-4">📦</p>
+              <p className="font-display font-bold text-ink-700 text-lg mb-2">{t("deals.empty.no-products")}</p>
+              <p className="text-ink-400 text-sm">{t("deals.empty.no-products-sub")}</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-4xl mb-4">🔍</p>
+              <p className="font-display font-bold text-ink-700 text-lg mb-2">{t("deals.empty.no-results")}</p>
+              <button onClick={() => { setCategory("all"); setSearch(""); }} className="bg-green-800 text-white font-bold px-6 py-2.5 rounded-full text-sm mt-3">
+                {t("deals.empty.reset")}
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Sponsored slots */}
+              {sponsored.length > 0 && (
+                <>
+                  <p className="text-[10px] font-bold text-ink-300 uppercase tracking-widest mb-2">
+                    {t("deals.sponsored")}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {sponsored.slice(0, 2).map((slot) => {
+                      const product = (slot.productId ? products.find((p) => p.id === slot.productId) : null) ?? filtered[slot.position - 1] ?? filtered[0];
+                      if (!product) return null;
+                      return (
+                        <SponsoredCard key={slot.campaignId} product={product} slot={slot} userSession={userSession.current} onAddToCart={handleAddToCart} added={addedIds.has(product.id)} />
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-1 border-t border-ink-100" />
+                    <span className="text-[10px] font-bold text-ink-300 uppercase tracking-widest">{t("deals.sponsored-other")}</span>
+                    <div className="flex-1 border-t border-ink-100" />
+                  </div>
+                </>
+              )}
 
-        {/* ── TOAST NOTIFICATION ────────────────────────────────────────── */}
+              {/* Bundle deals */}
+              {bundles.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-[10px] font-bold text-ink-300 uppercase tracking-widest mb-2">Bundles du Moment</p>
+                  <div className="space-y-3">
+                    {bundles.map((b) => {
+                      const originalPrice = Number(b.bundle_price_eur) / (1 - Number(b.bundle_discount_percent) / 100);
+                      return (
+                        <div key={b.id} className="bg-white rounded-[20px] border border-[#7C3AED]/20 overflow-hidden shadow-xs">
+                          <div className="bg-[#7C3AED] px-4 py-2 flex items-center gap-2">
+                            <span className="text-white text-[10px] font-black uppercase tracking-wider">BUNDLE</span>
+                            <span className="text-white text-[10px] font-bold">-{b.bundle_discount_percent}%</span>
+                          </div>
+                          <div className="p-4 flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-ink-900 text-sm mb-1 leading-snug">{b.name}</p>
+                              <div className="flex items-baseline gap-2">
+                                <span className="font-black text-ink-900 text-lg">€{Number(b.bundle_price_eur).toFixed(2)}</span>
+                                <span className="text-ink-300 text-xs line-through">€{originalPrice.toFixed(2)}</span>
+                              </div>
+                            </div>
+                            <button className="bg-[#7C3AED] text-white font-bold text-xs px-4 py-2.5 rounded-full hover:bg-[#6D28D9] transition-colors whitespace-nowrap">
+                              Ajouter →
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 border-t border-ink-100" />
+                    <span className="text-[10px] font-bold text-ink-300 uppercase tracking-widest">Toutes les offres</span>
+                    <div className="flex-1 border-t border-ink-100" />
+                  </div>
+                </div>
+              )}
+
+              {/* Organic products grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {filtered.map((p) => (
+                  <DealsCard key={p.id} product={p} onAdd={handleAddToCart} added={addedIds.has(p.id)} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── TOAST ─────────────────────────────────────────────────────── */}
         {toast && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-            <div className="bg-[#1B4332] text-white rounded-full shadow-xl px-5 py-2.5 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+            <div className="bg-green-800 text-white rounded-full shadow-xl px-5 py-2.5 text-xs font-semibold whitespace-nowrap">
               ✓ {toast}
             </div>
           </div>
         )}
 
-        {/* ── CART STICKY BAR (when items in cart) ───────────────────────── */}
+        {/* ── STICKY CART BAR ───────────────────────────────────────────── */}
         {cart.itemCount > 0 && !toast && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-            <div className="bg-forest text-white rounded-2xl shadow-xl px-6 py-4 flex items-center gap-4">
+            <Link href="/cart" className="flex items-center gap-3 bg-green-800 text-white rounded-2xl shadow-xl px-5 py-3.5">
+              <ShoppingCart size={16} />
               <div>
-                <p className="font-bold text-sm">
-                  {cart.itemCount} {cart.itemCount > 1 ? t("cart.articles") : t("cart.article")} · {cart.subtotal.toFixed(2).replace(".", ",")} €
-                </p>
-                <p className="text-white/60 text-xs">{t("deals.savings")} -{cart.totalSavings.toFixed(2).replace(".", ",")} €</p>
+                <p className="font-bold text-sm">{cart.itemCount} {cart.itemCount > 1 ? t("cart.articles") : t("cart.article")} · €{cart.subtotal.toFixed(2)}</p>
+                <p className="text-white/60 text-[10px]">Économies -{cart.totalSavings.toFixed(2)} €</p>
               </div>
-              <a
-                href="/cart"
-                className="bg-mint text-forest font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-mint-light transition-colors whitespace-nowrap"
-              >
-                {t("deals.cart.see")}
-              </a>
-            </div>
+              <ChevronLeft size={16} className="rotate-180 ml-1 text-green-400" />
+            </Link>
           </div>
         )}
 
-        {/* ── REFERRAL NUDGE ────────────────────────────────────────────── */}
-        <div className="mt-12 bg-forest rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="text-mint font-bold text-sm uppercase tracking-wider mb-1">{t("referral.title")}</p>
-            <p className="text-white font-semibold text-lg">{t("referral.sub")} <span className="text-mint">€5</span></p>
-            <p className="text-white/60 text-sm">{t("referral.note")}</p>
-          </div>
-          <a
-            href="/invite"
-            className="bg-mint text-forest font-bold px-6 py-3 rounded-xl text-sm hover:bg-mint-light transition-colors whitespace-nowrap shrink-0"
-          >
-            {t("referral.cta")}
-          </a>
-        </div>
-
-      </main>
+      </div>
     </div>
   );
 }

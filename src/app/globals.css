@@ -67,6 +67,41 @@
   --font-mono: var(--font-geist-mono);
   --animate-ticker: ticker 20s linear infinite;
   --animate-fade-up: fadeUp 600ms ease-out both;
+
+  /* ── Sprint 14 Design System ─────────────────────────────────────── */
+  --color-green-900: #0F2D1E;
+  --color-green-800: #1D4D35;
+  --color-green-700: #246040;
+  --color-green-600: #2E7A50;
+  --color-green-500: #3DB87A;
+  --color-green-400: #5ECB92;
+  --color-green-300: #8FDDAF;
+  --color-green-200: #C2EDD5;
+  --color-green-100: #E8F5EE;
+  --color-green-50:  #F4FAF6;
+
+  --color-ink-900: #0D1412;
+  --color-ink-700: #243328;
+  --color-ink-500: #4A6155;
+  --color-ink-400: #6B8070;
+  --color-ink-300: #9EB8A5;
+  --color-ink-200: #C8DACD;
+  --color-ink-100: #EDF4EF;
+
+  --color-discount-red: #E8382A;
+  --color-discount-bg:  #FEF0EE;
+
+  --color-gold:    #F4A623;
+  --color-gold-bg: #FEF8EC;
+
+  --font-display: 'Sora', var(--font-geist-sans), sans-serif;
+  --font-body: 'DM Sans', var(--font-geist-sans), sans-serif;
+
+  --shadow-xs:    0 1px 3px rgba(15,45,30,.06);
+  --shadow-sm:    0 2px 8px rgba(15,45,30,.09);
+  --shadow-md:    0 6px 20px rgba(15,45,30,.13);
+  --shadow-lg:    0 12px 40px rgba(15,45,30,.18);
+  --shadow-green: 0 8px 28px rgba(61,184,122,.30);
 }
 
 :root {
@@ -124,6 +159,17 @@ body {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(39, 46, 66, 0.10);
 }
+
+/* Sprint 14 animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%       { transform: translateY(-10px) rotate(2deg); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Material Symbols font */
 .material-symbols-outlined {

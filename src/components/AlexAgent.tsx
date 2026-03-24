@@ -59,7 +59,7 @@ export default function AlexAgent() {
       {/* Floating mic button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#1B4332] rounded-full shadow-xl flex items-center justify-center hover:bg-[#10B981] transition-all duration-200 hover:scale-110"
+        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 w-14 h-14 bg-[#1B4332] rounded-full shadow-xl flex items-center justify-center hover:bg-[#10B981] transition-all duration-200 hover:scale-110"
         aria-label="Alex Assistant FulFlo"
       >
         <span className="text-2xl">🎙️</span>
