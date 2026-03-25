@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
@@ -241,7 +241,7 @@ function getSession(): string {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function DealsPage() {
+function DealsPageInner() {
   const cart = useCart();
   const { t } = useI18n();
   const searchParams = useSearchParams();
@@ -540,5 +540,13 @@ export default function DealsPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function DealsPage() {
+  return (
+    <Suspense>
+      <DealsPageInner />
+    </Suspense>
   );
 }
