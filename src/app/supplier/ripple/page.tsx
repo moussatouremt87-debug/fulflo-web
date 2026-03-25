@@ -21,7 +21,7 @@ interface RippleCampaign {
 const DEMO: RippleCampaign[] = [
   {
     id: "demo-1",
-    campaign_name: "Nescafé Gold — Programme Ambassadeur",
+    campaign_name: "Crème de Riz Bio — Programme Ambassadeur",
     status: "active",
     sharer_voucher_eur: 3,
     friend_voucher_eur: 2,
@@ -65,7 +65,7 @@ export default function RipplePage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/ripple/campaigns?supplierId=demo-nestle")
+    fetch("/api/ripple/campaigns?supplierId=maison-favrichon")
       .then((r) => r.json())
       .then((data) => {
         setCampaigns(Array.isArray(data) && data.length ? data : DEMO);
@@ -81,7 +81,7 @@ export default function RipplePage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        supplierId: "demo-nestle",
+        supplierId: "maison-favrichon",
         campaignName: form.campaignName,
         totalBudget: form.totalBudget,
         sharerVoucher: form.sharerVoucher,
@@ -166,7 +166,7 @@ export default function RipplePage() {
                 <input
                   value={form.campaignName}
                   onChange={(e) => setForm((f) => ({ ...f, campaignName: e.target.value }))}
-                  placeholder="ex: Nescafé Gold — Ambassadeurs Printemps"
+                  placeholder="ex: Crème de Riz Bio — Ambassadeurs Printemps"
                   className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#10B981]"
                 />
               </div>

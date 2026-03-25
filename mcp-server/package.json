@@ -1,0 +1,21 @@
+{
+  "name": "fulflo-mcp-server",
+  "version": "1.0.0",
+  "description": "FulFlo autonomous agent MCP server for Claude Code",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "start": "npx tsx index.ts",
+    "dev": "npx tsx watch index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.99.3",
+    "stripe": "^20.4.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5"
+  }
+}

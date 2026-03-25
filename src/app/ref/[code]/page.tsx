@@ -181,12 +181,9 @@ export default function ReferralLandingPage() {
               </p>
             </div>
 
-            {/* Stars + reviews */}
-            <div className="flex items-center justify-center gap-1 py-3 border-b border-gray-100">
-              {[1,2,3,4,5].map((i) => (
-                <Star key={i} size={14} className="text-yellow-400 fill-yellow-400" />
-              ))}
-              <span className="text-xs text-gray-500 ml-1.5">(1 246 avis · 4.8/5)</span>
+            {/* Anti-waste trust signal */}
+            <div className="flex items-center justify-center gap-2 py-3 border-b border-gray-100">
+              <span className="text-xs text-[#10B981] font-semibold">♻️ Produit surplus certifié · Zéro gaspillage</span>
             </div>
 
             <div className="p-6 space-y-3">
@@ -311,7 +308,7 @@ export default function ReferralLandingPage() {
         {[
           { icon: "🏭", label: "Surplus fabricant" },
           { icon: "✅", label: "100% authentique" },
-          { icon: "🚚", label: "Livraison 24h" },
+          { icon: "🚚", label: "Livraison 3-5j" },
         ].map((p) => (
           <div key={p.label} className="bg-white rounded-2xl py-4 px-2 shadow-sm">
             <div className="text-2xl mb-1">{p.icon}</div>

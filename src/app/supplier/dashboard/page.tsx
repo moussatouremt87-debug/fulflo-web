@@ -12,19 +12,19 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarCha
 // ─── Demo data ────────────────────────────────────────────────────────────────
 
 const DEMO_PRODUCTS = [
-  { id: "1", brand: "Nestlé", name: "Nescafé Gold Blend", stock_units: 183, expiry_date: new Date(Date.now() + 110 * 86400000).toISOString(), current_price: 3.99, original_price: 8.90, ai_pricing_enabled: false, flash_sale_end_time: null },
-  { id: "2", brand: "Nestlé", name: "KitKat Chunky Box", stock_units: 44,  expiry_date: new Date(Date.now() + 6  * 86400000).toISOString(), current_price: 5.49, original_price: 11.90, ai_pricing_enabled: true,  flash_sale_end_time: null },
-  { id: "3", brand: "Nestlé", name: "Maggi Bouillon ×72", stock_units: 320, expiry_date: new Date(Date.now() + 35  * 86400000).toISOString(), current_price: 1.59, original_price: 3.80,  ai_pricing_enabled: false, flash_sale_end_time: null },
-  { id: "4", brand: "Nestlé", name: "Nespresso Blend 12", stock_units: 12,  expiry_date: new Date(Date.now() + 12  * 86400000).toISOString(), current_price: 7.20, original_price: 14.50, ai_pricing_enabled: true,  flash_sale_end_time: null },
-  { id: "5", brand: "Nestlé", name: "Milo Activ-Go 400g", stock_units: 560, expiry_date: new Date(Date.now() + 55  * 86400000).toISOString(), current_price: 4.10, original_price: 8.20,  ai_pricing_enabled: false, flash_sale_end_time: null },
+  { id: "1", brand: "Favrichon", name: "Crème de Riz Bio 400g",       stock_units: 183, expiry_date: new Date(Date.now() + 110 * 86400000).toISOString(), current_price: 2.49, original_price: 5.90, ai_pricing_enabled: false, flash_sale_end_time: null },
+  { id: "2", brand: "Favrichon", name: "Galettes Riz Chocolat ×10",   stock_units: 44,  expiry_date: new Date(Date.now() + 6   * 86400000).toISOString(), current_price: 3.29, original_price: 6.90, ai_pricing_enabled: true,  flash_sale_end_time: null },
+  { id: "3", brand: "Favrichon", name: "Muesli Croustillant Bio 1kg", stock_units: 320, expiry_date: new Date(Date.now() + 35  * 86400000).toISOString(), current_price: 3.99, original_price: 8.50,  ai_pricing_enabled: false, flash_sale_end_time: null },
+  { id: "4", brand: "Favrichon", name: "Granola Fruits Rouges 400g",  stock_units: 12,  expiry_date: new Date(Date.now() + 12  * 86400000).toISOString(), current_price: 2.99, original_price: 6.50, ai_pricing_enabled: true,  flash_sale_end_time: null },
+  { id: "5", brand: "Favrichon", name: "Flocons Avoine Bio 750g",     stock_units: 560, expiry_date: new Date(Date.now() + 55  * 86400000).toISOString(), current_price: 1.89, original_price: 4.20,  ai_pricing_enabled: false, flash_sale_end_time: null },
 ];
 
 const ACTIVITY = [
-  { event: "Prix IA appliqué",      product: "KitKat Chunky Box",  change: "-5%",   date: "il y a 2h",    type: "price" },
-  { event: "Flash Sale terminée",   product: "Nescafé Gold Blend", change: "+44 ventes", date: "hier",    type: "sale" },
-  { event: "Stock bas détecté",     product: "Nespresso Blend 12", change: "12 unités",  date: "hier",    type: "alert" },
-  { event: "Nouveau lot ajouté",    product: "Milo Activ-Go 400g", change: "+560u",  date: "il y a 3j", type: "new" },
-  { event: "Remise manuelle",       product: "Maggi Bouillon ×72", change: "-10%",   date: "il y a 4j", type: "price" },
+  { event: "Prix IA appliqué",      product: "Galettes Riz Chocolat",  change: "-5%",   date: "il y a 2h",    type: "price" },
+  { event: "Flash Sale terminée",   product: "Crème de Riz Bio",       change: "+44 ventes", date: "hier",    type: "sale" },
+  { event: "Stock bas détecté",     product: "Granola Fruits Rouges",  change: "12 unités",  date: "hier",    type: "alert" },
+  { event: "Nouveau lot ajouté",    product: "Flocons Avoine Bio",     change: "+560u",  date: "il y a 3j", type: "new" },
+  { event: "Remise manuelle",       product: "Muesli Croustillant Bio", change: "-10%",  date: "il y a 4j", type: "price" },
 ];
 
 const eventIconMap: Record<string, string> = {
@@ -46,7 +46,7 @@ export default function SupplierDashboard() {
     ? JSON.parse(localStorage.getItem("fulflo_demo_supplier") ?? "null")
     : null;
   const isDemo = !!demoSupplier?.isDemo;
-  const companyName = demoSupplier?.company_name ?? session.company ?? "Nestlé Suisse SA";
+  const companyName = demoSupplier?.company_name ?? session.company ?? "Maison Favrichon";
   const firstName = companyName.split(" ")[0];
 
   return (

@@ -29,7 +29,10 @@ export default function AlexAgent() {
   const conversation = useConversation({
     onConnect: () => console.log('Alex connected'),
     onDisconnect: () => console.log('Alex disconnected'),
-    onError: (message: string) => console.error('Alex error:', message),
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error)
+      console.error('Alex error:', msg)
+    },
   })
 
   const startCall = async () => {
@@ -45,8 +48,9 @@ export default function AlexAgent() {
           },
         },
       })
-    } catch (e) {
-      console.error('Mic permission denied or error:', e)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('Alex start error:', msg)
     }
   }
 

@@ -21,7 +21,7 @@ const CLIENT_STEPS = [
   },
   {
     icon: "📦",
-    title: "Recevez en 24-48h",
+    title: "Recevez en 3-5 jours",
     desc: "Livraison directe depuis les entrepôts du fabricant. Suivi en temps réel.",
   },
   {

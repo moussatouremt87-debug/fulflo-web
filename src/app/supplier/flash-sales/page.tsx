@@ -33,9 +33,9 @@ interface SupplierProduct {
 const DEMO_SLOTS: FlashSlot[] = [
   {
     id: "slot-1",
-    supplier_id: "demo-nestle",
+    supplier_id: "maison-favrichon",
     product_id: null,
-    campaign_name: "Nescafé Gold Flash — Lundi soir",
+    campaign_name: "Crème de Riz Bio Flash — Lundi soir",
     status: "ended",
     bid_eur: 150,
     slot_date: new Date(Date.now() - 3 * 86400000).toISOString(),
@@ -47,9 +47,9 @@ const DEMO_SLOTS: FlashSlot[] = [
   },
   {
     id: "slot-2",
-    supplier_id: "demo-nestle",
+    supplier_id: "maison-favrichon",
     product_id: null,
-    campaign_name: "Ariel Pods Flash — Vendredi",
+    campaign_name: "Granola Fruits Rouges Flash — Vendredi",
     status: "active",
     bid_eur: 200,
     slot_date: new Date(Date.now() + 2 * 86400000).toISOString(),
@@ -62,11 +62,11 @@ const DEMO_SLOTS: FlashSlot[] = [
 ];
 
 const DEMO_PRODUCTS: SupplierProduct[] = [
-  { id: "1", name: "Nescafé Gold Blend 500g",  brand: "Nestlé",  price_surplus_eur: 3.99, stock_units: 183 },
-  { id: "2", name: "KitKat Chunky Box ×24",    brand: "Nestlé",  price_surplus_eur: 5.49, stock_units: 44  },
-  { id: "3", name: "Maggi Bouillon Cube ×72",   brand: "Nestlé",  price_surplus_eur: 1.59, stock_units: 320 },
-  { id: "4", name: "Nespresso Blend 12 ×30",    brand: "Nestlé",  price_surplus_eur: 7.20, stock_units: 12  },
-  { id: "5", name: "Milo Activ-Go 400g",        brand: "Nestlé",  price_surplus_eur: 4.10, stock_units: 560 },
+  { id: "1", name: "Crème de Riz Bio 400g",       brand: "Favrichon", price_surplus_eur: 2.49, stock_units: 183 },
+  { id: "2", name: "Galettes Riz Chocolat ×10",  brand: "Favrichon", price_surplus_eur: 3.29, stock_units: 44  },
+  { id: "3", name: "Muesli Croustillant Bio 1kg", brand: "Favrichon", price_surplus_eur: 3.99, stock_units: 320 },
+  { id: "4", name: "Granola Fruits Rouges 400g",  brand: "Favrichon", price_surplus_eur: 2.99, stock_units: 12  },
+  { id: "5", name: "Flocons Avoine Bio 750g",     brand: "Favrichon", price_surplus_eur: 1.89, stock_units: 560 },
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -134,8 +134,8 @@ export default function FlashSalesPage() {
   });
 
   const supplierId = typeof window !== "undefined"
-    ? JSON.parse(sessionStorage.getItem("supplier_session") ?? "{}").supplier_id ?? "demo-nestle"
-    : "demo-nestle";
+    ? JSON.parse(sessionStorage.getItem("supplier_session") ?? "{}").supplier_id ?? "maison-favrichon"
+    : "maison-favrichon";
 
   // Fetch real data from Supabase
   useEffect(() => {
@@ -408,7 +408,7 @@ export default function FlashSalesPage() {
                   required
                   value={form.campaignName}
                   onChange={(e) => setForm((f) => ({ ...f, campaignName: e.target.value }))}
-                  placeholder="Ex: Nescafé Gold Flash — Semaine 13"
+                  placeholder="Ex: Crème de Riz Bio Flash — Semaine 13"
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                 />
               </div>

@@ -16,8 +16,8 @@ interface ProductDetail {
   stock_units: number;
   expiry_date: string;
   description: string;
-  rating: number;
-  reviews: number;
+  rating?: number;
+  reviews?: number;
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -71,8 +71,8 @@ export default function ProductDetailPage() {
               stock_units: Number(d.stock_units ?? 0),
               expiry_date: String(d.expiry_date ?? new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)),
               description: String(d.description ?? "Produit surplus certifié directement du fabricant."),
-              rating: 4.7,
-              reviews: 248,
+              rating: undefined,
+              reviews: undefined,
             });
           }
           setLoading(false);
@@ -82,17 +82,17 @@ export default function ProductDetailPage() {
       // Demo fallback
       setProduct({
         id,
-        brand: "Nestlé",
-        name: "Nescafé Gold Blend, Café Soluble Premium, 200g × 3",
-        price: 30.39,
-        originalPrice: 36.99,
-        savingsPct: 18,
+        brand: "Favrichon",
+        name: "Favrichon Muesli Croustillant Bio, 500g × 4",
+        price: 14.99,
+        originalPrice: 23.96,
+        savingsPct: 37,
         category: "alimentation",
         stock_units: 47,
         expiry_date: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
-        description: "Nescafé Gold Blend — surplus fabricant certifié. Même produit, prix réduit, aucun gaspillage.",
-        rating: 4.7,
-        reviews: 871,
+        description: "Muesli croustillant bio Favrichon — surplus fabricant certifié. Même produit, prix réduit, aucun gaspillage.",
+        rating: undefined,
+        reviews: undefined,
       });
       setLoading(false);
     }
@@ -139,11 +139,11 @@ export default function ProductDetailPage() {
   const dlcDays = daysUntil(product.expiry_date);
 
   return (
-    <div className="min-h-screen bg-green-50">
-      <div className="max-w-sm mx-auto bg-white min-h-screen relative pb-28">
+    <div className="min-h-screen bg-[#FAFCFB]">
+      <div className="max-w-4xl mx-auto bg-white min-h-screen relative pb-28">
 
         {/* ── HEADER ────────────────────────────────────────────────────── */}
-        <div className="bg-green-800 px-4 py-3 flex items-center justify-between">
+        <div className="bg-green-800 px-4 md:px-8 py-3 flex items-center justify-between">
           <button
             onClick={() => router.back()}
             className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center"
@@ -183,15 +183,10 @@ export default function ProductDetailPage() {
 
         {/* ── PRODUCT INFO ──────────────────────────────────────────────── */}
         <div className="px-5 pt-5">
-          {/* Brand + stars */}
+          {/* Brand + trust signal */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-black text-ink-400 uppercase tracking-widest">{product.brand}</span>
-            <div className="flex items-center gap-1">
-              {[1,2,3,4,5].map((i) => (
-                <Star key={i} size={11} className={i <= Math.round(product.rating) ? "text-gold fill-gold" : "text-ink-200 fill-ink-200"} />
-              ))}
-              <span className="text-[10px] text-ink-400 ml-1">({product.reviews})</span>
-            </div>
+            <span className="text-[10px] text-[#10B981] font-semibold">♻️ Surplus certifié</span>
           </div>
 
           {/* Name */}
@@ -215,7 +210,7 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-3 gap-3 mb-5">
             {[
               { icon: "📦", value: `${product.stock_units}`, label: "unités" },
-              { icon: "🚚", value: "24h",   label: "livraison" },
+              { icon: "🚚", value: "3-5j",  label: "livraison" },
               { icon: "📅", value: `${dlcDays}j`, label: "avant DLC" },
             ].map((card) => (
               <div key={card.label} className="bg-green-50 rounded-[14px] py-3 flex flex-col items-center gap-1">

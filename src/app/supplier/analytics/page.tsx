@@ -56,10 +56,10 @@ const GEO_DATA = [
 ];
 
 const PRODUCT_ROWS = [
-  { name: "Nescafé Gold Blend",   units: 183, revenue: 730.17, discount: 55, days: 12, score: 94 },
-  { name: "Maggi Bouillon ×72",   units: 320, revenue: 508.80, discount: 58, days: 18, score: 88 },
-  { name: "KitKat Chunky Box",    units:  44, revenue: 241.56, discount: 54, days:  6, score: 82 },
-  { name: "Nespresso Blend 12",   units:  12, revenue:  86.40, discount: 50, days:  4, score: 71 },
+  { name: "Crème de Riz Bio 400g",       units: 183, revenue: 456.17, discount: 58, days: 12, score: 94 },
+  { name: "Muesli Croustillant Bio 1kg", units: 320, revenue: 508.80, discount: 53, days: 18, score: 88 },
+  { name: "Galettes Riz Chocolat ×10",  units:  44, revenue: 144.76, discount: 52, days:  6, score: 82 },
+  { name: "Granola Fruits Rouges 400g", units:  12, revenue:  35.88, discount: 54, days:  4, score: 71 },
 ];
 
 const SCORE_METRICS = [
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
       Promise.resolve(
         sb.from("ad_campaigns")
           .select("id, campaign_name, status, impressions, clicks, daily_spend_eur, total_spend_eur, cpc_eur")
-          .eq("supplier_id", "demo-nestle")
+          .eq("supplier_id", "maison-favrichon")
           .order("created_at", { ascending: false })
       ).then(({ data }) => {
         if (data?.length) setCampaigns(data as Campaign[]);
@@ -336,7 +336,7 @@ export default function AnalyticsPage() {
               Supplier Pro · Données temps réel
             </span>
           </div>
-          <p className="text-sm text-gray-500">Nestlé Suisse SA · Analytics avancées</p>
+          <p className="text-sm text-gray-500">Maison Favrichon · Analytics avancées</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">

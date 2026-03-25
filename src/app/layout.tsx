@@ -8,12 +8,14 @@ import ClientAlexAgent from "@/components/ClientAlexAgent";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fulflo — Les grandes marques à -40% à -70%",
-  description: "Fulflo est la première plateforme européenne de surplus CPG. Colgate, Nestlé, Ariel, P&G — directement du fabricant, sans gaspillage.",
+  title: "FulFlo — Marques premium en surplus à -40% à -70%",
+  description: "Achetez les surplus certifiés de marques françaises (Favrichon, Michel et Augustin, Coslys...) à prix réduits. Livraison 3-5 jours. Zéro artifice.",
   openGraph: {
-    title: "Fulflo — Surplus. Zéro gaspillage. Vraies économies.",
-    description: "Les grandes marques jusqu'à -70%. Livraison 24h. France.",
+    title: "Découvrez les surplus premium des vraies marques françaises",
+    description: "-40% à -70% sur produits de longue conservation certifiés. Favrichon, Michel et Augustin, Coslys, et plus. Livraison rapide et transparente.",
     locale: "fr_FR",
+    siteName: "FulFlo",
+    type: "website",
   },
 };
 

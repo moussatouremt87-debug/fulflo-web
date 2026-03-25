@@ -24,7 +24,7 @@ const DEMO_BUNDLES: BundleCampaign[] = [
     id: "b1",
     name: "Bundle Petit-Déjeuner Premium",
     status: "active",
-    supplier_ids: ["demo-nestle"],
+    supplier_ids: ["maison-favrichon"],
     bundle_price_eur: 7.99,
     bundle_discount_percent: 55,
     activation_fee_eur: 299,
@@ -38,7 +38,7 @@ const DEMO_BUNDLES: BundleCampaign[] = [
     id: "b2",
     name: "Bundle Hygiène Famille",
     status: "active",
-    supplier_ids: ["demo-nestle"],
+    supplier_ids: ["maison-favrichon"],
     bundle_price_eur: 9.49,
     bundle_discount_percent: 48,
     activation_fee_eur: 299,
@@ -51,9 +51,9 @@ const DEMO_BUNDLES: BundleCampaign[] = [
 ];
 
 const CO_BRANDS = [
-  { name: "Colgate", emoji: "🦷", desc: "Complémentaire à vos produits boissons" },
-  { name: "Ariel",   emoji: "🧺", desc: "Affinité audience 72% — ménages actifs" },
-  { name: "Dove",    emoji: "🕊️", desc: "Co-achat fréquent avec café & céréales" },
+  { name: "Lamazuna", emoji: "🦷", desc: "Complémentaire à vos produits bio" },
+  { name: "Coslys",   emoji: "🧺", desc: "Affinité audience 72% — ménages éco-responsables" },
+  { name: "Melvita",  emoji: "🌸", desc: "Co-achat fréquent avec céréales & alimentation bio" },
 ];
 
 export default function BundlesPage() {
@@ -67,7 +67,7 @@ export default function BundlesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/bundles/create?supplierId=demo-nestle")
+    fetch("/api/bundles/create?supplierId=maison-favrichon")
       .then((r) => r.json())
       .then((data) => {
         setBundles(Array.isArray(data) && data.length ? data : DEMO_BUNDLES);
@@ -84,7 +84,7 @@ export default function BundlesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: form.name,
-        supplierId: "demo-nestle",
+        supplierId: "maison-favrichon",
         bundlePriceEur: 9.99,
         bundleDiscountPercent: form.discount,
       }),
@@ -132,7 +132,7 @@ export default function BundlesPage() {
             {[
               { icon: "💸", text: "Coût partagé entre 2–3 marques → €99–150/marque au lieu de €299" },
               { icon: "🛒", text: "Panier moyen +40% vs produit seul" },
-              { icon: "📊", text: "Données co-achat exclusives (qui achète Nescafé + Colgate ensemble ?)" },
+              { icon: "📊", text: "Données co-achat exclusives (qui achète Favrichon + Coslys ensemble ?)" },
               { icon: "👥", text: "Visibilité croisée sur les audiences des autres marques" },
             ].map((item) => (
               <div key={item.text} className="flex items-start gap-2">
@@ -288,13 +288,13 @@ export default function BundlesPage() {
             </div>
             <div className="space-y-2">
               <div className="bg-white border border-gray-100 rounded-xl p-3">
-                <p className="text-gray-700 text-sm">68% des acheteurs de Nescafé achètent aussi un produit hygiène le même jour</p>
+                <p className="text-gray-700 text-sm">68% des acheteurs de Favrichon achètent aussi un produit bio hygiène le même jour</p>
               </div>
               <div className="bg-white border border-gray-100 rounded-xl p-3">
                 <p className="text-gray-700 text-sm">Bundle Café + Dentifrice : panier moyen €8.40</p>
               </div>
               <div className="bg-white border border-gray-100 rounded-xl p-3">
-                <p className="text-gray-700 text-sm">Top co-achat : Nescafé + Colgate (43%) · Nescafé + Ariel (31%) · Nescafé + Dove (22%)</p>
+                <p className="text-gray-700 text-sm">Top co-achat : Favrichon + Coslys (43%) · Favrichon + Lamazuna (31%) · Favrichon + Melvita (22%)</p>
               </div>
             </div>
           </div>

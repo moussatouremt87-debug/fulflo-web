@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const supplierId = req.nextUrl.searchParams.get("supplierId") ?? "demo-nestle";
+  const supplierId = req.nextUrl.searchParams.get("supplierId") ?? "maison-favrichon";
 
   const sb = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

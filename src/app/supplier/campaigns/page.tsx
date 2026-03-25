@@ -29,7 +29,7 @@ interface DemoProduct {
 const DEMO_CAMPAIGNS: Campaign[] = [
   {
     id: "11111111-1111-1111-1111-111111111111",
-    campaign_name: "Nescafé Gold - Boost Q1",
+    campaign_name: "Crème de Riz Bio - Boost Q1",
     status: "active",
     cpc_eur: 1.50,
     daily_budget_eur: 100.00,
@@ -40,7 +40,7 @@ const DEMO_CAMPAIGNS: Campaign[] = [
   },
   {
     id: "22222222-2222-2222-2222-222222222222",
-    campaign_name: "Maggi Bouillon Flash",
+    campaign_name: "Granola Fruits Rouges Flash",
     status: "active",
     cpc_eur: 2.00,
     daily_budget_eur: 75.00,
@@ -52,11 +52,11 @@ const DEMO_CAMPAIGNS: Campaign[] = [
 ];
 
 const DEMO_PRODUCTS: DemoProduct[] = [
-  { id: "1", name: "Nescafé Gold Blend", brand: "Nestlé" },
-  { id: "2", name: "KitKat Chunky Box", brand: "Nestlé" },
-  { id: "3", name: "Maggi Bouillon ×72", brand: "Nestlé" },
-  { id: "4", name: "Nespresso Blend 12", brand: "Nestlé" },
-  { id: "5", name: "Milo Activ-Go 400g", brand: "Nestlé" },
+  { id: "1", name: "Crème de Riz Bio 400g",       brand: "Favrichon" },
+  { id: "2", name: "Galettes Riz Chocolat ×10",  brand: "Favrichon" },
+  { id: "3", name: "Muesli Croustillant Bio 1kg", brand: "Favrichon" },
+  { id: "4", name: "Granola Fruits Rouges 400g",  brand: "Favrichon" },
+  { id: "5", name: "Flocons Avoine Bio 750g",     brand: "Favrichon" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -122,8 +122,8 @@ export default function CampaignsPage() {
   });
 
   const supplierId = typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("fulflo_demo_supplier") ?? "{}").id ?? "demo-nestle"
-    : "demo-nestle";
+    ? JSON.parse(localStorage.getItem("fulflo_demo_supplier") ?? "{}").id ?? "maison-favrichon"
+    : "maison-favrichon";
 
   // Fetch campaigns directly from Supabase
   useEffect(() => {
@@ -432,7 +432,7 @@ export default function CampaignsPage() {
                 value={form.campaign_name}
                 onChange={(e) => setForm((f) => ({ ...f, campaign_name: e.target.value }))}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                placeholder="Ex: Nescafé Gold - Boost Q2"
+                placeholder="Ex: Crème de Riz Bio - Boost Q2"
               />
             </div>
 

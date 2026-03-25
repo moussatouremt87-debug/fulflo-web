@@ -72,7 +72,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="max-w-sm mx-auto min-h-screen bg-white flex items-center justify-center">
+      <div className="max-w-3xl mx-auto min-h-screen bg-white flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -97,7 +97,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-green-50">
-      <div className="max-w-sm mx-auto min-h-screen relative pb-8">
+      <div className="max-w-3xl mx-auto min-h-screen relative pb-8">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
         <div

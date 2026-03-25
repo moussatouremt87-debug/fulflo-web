@@ -77,8 +77,8 @@ export default function CartPage() {
   // ── Empty state ──────────────────────────────────────────────────────────────
   if (!items.length) {
     return (
-      <div className="min-h-screen bg-green-50">
-        <div className="max-w-sm mx-auto bg-white min-h-screen flex flex-col">
+      <div className="min-h-screen bg-[#FAFCFB]">
+        <div className="max-w-3xl mx-auto bg-white min-h-screen flex flex-col">
           <div className="bg-green-800 px-4 py-3 flex items-center gap-3">
             <Link href="/" className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
               <ChevronLeft size={18} className="text-white" />
@@ -99,8 +99,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-green-50">
-      <div className="max-w-sm mx-auto bg-white min-h-screen pb-32">
+    <div className="min-h-screen bg-[#FAFCFB]">
+      <div className="max-w-3xl mx-auto bg-white min-h-screen pb-32">
 
         {/* ── HEADER ────────────────────────────────────────────────────── */}
         <div className="bg-green-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-40">
@@ -202,7 +202,7 @@ export default function CartPage() {
         <div className="px-4 pt-5">
           <p className="text-[11px] font-bold text-ink-400 uppercase tracking-widest mb-3">Vous aimerez aussi</p>
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-            {[{ emoji: "🧴", name: "Gel douche Dove 250ml", price: 1.29, original: 3.49 }, { emoji: "🍝", name: "Pâtes Barilla 500g ×3", price: 2.19, original: 4.99 }, { emoji: "☕", name: "Nescafé Gold 100g", price: 3.99, original: 8.90 }].map((p) => (
+            {[{ emoji: "🧴", name: "Melvita Gel Douche Bio 200ml", price: 2.49, original: 5.90 }, { emoji: "🥣", name: "Favrichon Flocons Avoine 750g", price: 1.89, original: 4.20 }, { emoji: "🌿", name: "Coslys Shampooing Bio 250ml", price: 2.99, original: 6.50 }].map((p) => (
               <div key={p.name} className="shrink-0 w-[120px] bg-white border border-ink-100 rounded-[14px] p-3 shadow-xs">
                 <span className="text-2xl">{p.emoji}</span>
                 <p className="text-[11px] font-semibold text-ink-900 leading-tight mt-1 line-clamp-2">{p.name}</p>

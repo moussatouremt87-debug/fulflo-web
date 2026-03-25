@@ -13,7 +13,7 @@ const SECTIONS = [
       },
       {
         q: "D'où viennent les produits ?",
-        a: "Directement des fabricants (Nestlé, Colgate, P&G, etc.) ou de leurs distributeurs officiels. Aucun produit ne transite par des circuits gris ou non officiels. FulFlo est un partenaire de liquidation certifié.",
+        a: "Directement des fabricants (Favrichon, Coslys, Melvita, Michel et Augustin, etc.) ou de leurs distributeurs officiels. Aucun produit ne transite par des circuits gris ou non officiels. FulFlo est un partenaire de liquidation certifié.",
       },
       {
         q: "Les produits sont-ils authentiques ?",
@@ -26,7 +26,7 @@ const SECTIONS = [
     items: [
       {
         q: "Quels sont les délais de livraison ?",
-        a: "Livraison en 24-48h en France métropolitaine via Colissimo ou Mondial Relay. Livraison offerte dès €40 d'achat.",
+        a: "Livraison en 3-5 jours en France métropolitaine via Colissimo ou Mondial Relay. Livraison offerte dès €40 d'achat.",
       },
       {
         q: "Livrez-vous en dehors de France ?",

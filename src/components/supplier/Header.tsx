@@ -11,8 +11,8 @@ interface HeaderProps {
 export default function Header({ title, subtitle, action }: HeaderProps) {
   const { t, dir } = useI18n();
   const name = typeof window !== "undefined"
-    ? (JSON.parse(sessionStorage.getItem("supplier_session") ?? "{}").company ?? "Nestlé Suisse SA")
-    : "Nestlé Suisse SA";
+    ? (JSON.parse(sessionStorage.getItem("supplier_session") ?? "{}").company ?? "Maison Favrichon")
+    : "Maison Favrichon";
 
   return (
     <div
@@ -27,7 +27,7 @@ export default function Header({ title, subtitle, action }: HeaderProps) {
         {action}
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center text-white text-xs font-bold">
-            N
+            F
           </div>
           <div className="hidden sm:block text-right">
             <p className="text-xs font-semibold text-gray-700">{name}</p>

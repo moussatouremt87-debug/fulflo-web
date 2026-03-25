@@ -77,8 +77,8 @@ const DEMO_ANALYTICS = {
   campaigns: [
     {
       id: "11111111-1111-1111-1111-111111111111",
-      supplier_id: "demo-nestle",
-      campaign_name: "Nescafé Gold - Boost Q1",
+      supplier_id: "maison-favrichon",
+      campaign_name: "Crème de Riz Bio - Boost Q1",
       status: "active",
       cpc_eur: 1.50,
       daily_budget_eur: 100.00,
@@ -89,8 +89,8 @@ const DEMO_ANALYTICS = {
     },
     {
       id: "22222222-2222-2222-2222-222222222222",
-      supplier_id: "demo-nestle",
-      campaign_name: "Maggi Bouillon Flash",
+      supplier_id: "maison-favrichon",
+      campaign_name: "Granola Fruits Rouges Flash",
       status: "active",
       cpc_eur: 2.00,
       daily_budget_eur: 75.00,

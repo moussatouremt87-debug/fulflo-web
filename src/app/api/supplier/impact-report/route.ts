@@ -23,7 +23,7 @@ function db() {
 }
 
 export async function GET(req: NextRequest) {
-  const supplierId  = req.nextUrl.searchParams.get("supplierId") ?? "demo-nestle";
+  const supplierId  = req.nextUrl.searchParams.get("supplierId") ?? "maison-favrichon";
   const companyName = req.nextUrl.searchParams.get("company") ?? "Fournisseur FulFlo";
   const today       = new Date().toLocaleDateString("fr-FR", {
     day: "2-digit", month: "long", year: "numeric",

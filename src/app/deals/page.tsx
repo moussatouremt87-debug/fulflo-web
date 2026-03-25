@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProductCardProps } from "@/components/ProductCard";
 import { calculateAIPrice } from "@/lib/aiPricing";
 import { useCart } from "@/lib/cart";
@@ -14,15 +15,14 @@ import { ProductGridSkeleton } from "@/components/ui/Skeletons";
 
 // Brand → Unsplash fallback images
 const BRAND_IMG: Record<string, string> = {
-  "Ariel":     "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
-  "Nestlé":    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80",
-  "Colgate":   "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=400&q=80",
-  "Evian":     "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80",
-  "Dove":      "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400&q=80",
-  "Kellogg's": "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400&q=80",
-  "Gillette":  "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?w=400&q=80",
-  "L'Oréal":   "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
-  "Maggi":     "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
+  "Coslys":              "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=400&q=80",
+  "Favrichon":           "https://images.unsplash.com/photo-1517093728584-720867594c6b?w=400&q=80",
+  "Lamazuna":            "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=400&q=80",
+  "Melvita":             "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400&q=80",
+  "Alpina Savoie":       "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400&q=80",
+  "Michel et Augustin":  "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80",
+  "Cristalline":         "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80",
+  "Le Petit Marseillais": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
 };
 
 // ─── Bundle types ──────────────────────────────────────────────────────────────
@@ -244,9 +244,11 @@ function getSession(): string {
 export default function DealsPage() {
   const cart = useCart();
   const { t } = useI18n();
+  const searchParams = useSearchParams();
+  const initialCat = (searchParams.get("cat") as Category) || "all";
   const [products, setProducts]   = useState<ProductCardProps[]>([]);
   const [loading, setLoading]     = useState(true);
-  const [category, setCategory]   = useState<Category>("all");
+  const [category, setCategory]   = useState<Category>(initialCat);
   const [sort, setSort]           = useState<SortKey>("discount_max");
   const [search, setSearch]       = useState("");
   const [showSearch, setShowSearch] = useState(false);
@@ -340,52 +342,61 @@ export default function DealsPage() {
   const totalSavings = useMemo(() => filtered.reduce((sum, p) => sum + (p.original_price - p.current_price), 0), [filtered]);
 
   return (
-    <div className="min-h-screen bg-green-50">
-      <div className="max-w-sm mx-auto bg-white min-h-screen pb-6 shadow-md">
+    <div className="min-h-screen bg-[#FAFCFB]">
 
-        {/* ── HEADER ────────────────────────────────────────────────────── */}
-        <div className="bg-green-800 px-4 py-3 sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center">
-              <ChevronLeft size={18} className="text-white" />
-            </Link>
-            <span className="text-white font-display font-bold text-base flex-1">
-              {t("deals.pageTitle")}
-            </span>
-            <button
-              onClick={() => setShowSearch((v) => !v)}
-              className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center"
-            >
-              <Search size={15} className="text-white" />
-            </button>
-            <button className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center relative">
-              <SlidersHorizontal size={15} className="text-white" />
-              {(category !== "all" || search.trim()) && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full text-[9px] font-black text-green-900 flex items-center justify-center">
-                  {(category !== "all" ? 1 : 0) + (search.trim() ? 1 : 0)}
-                </span>
-              )}
-            </button>
+      {/* ── HEADER ────────────────────────────────────────────────────── */}
+      <div className="bg-green-800 px-4 md:px-8 py-3 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <Link href="/" className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center md:hidden">
+            <ChevronLeft size={18} className="text-white" />
+          </Link>
+          <Link href="/" className="hidden md:block font-display font-black text-xl text-white tracking-tight">
+            fulflo<span className="text-mint">.</span>
+          </Link>
+          <span className="text-white font-display font-bold text-base flex-1 md:ml-6">
+            {t("deals.pageTitle")}
+          </span>
+          <div className="relative flex-1 max-w-md hidden md:block">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("deals.search")}
+              className="w-full bg-white rounded-xl pl-9 pr-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+            />
           </div>
-
-          {/* Search input — collapsible */}
-          {showSearch && (
-            <div className="mt-2 relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                autoFocus
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("deals.search")}
-                className="w-full bg-white rounded-[12px] pl-9 pr-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
-              />
-            </div>
-          )}
+          <button
+            onClick={() => setShowSearch((v) => !v)}
+            className="w-8 h-8 bg-white/10 rounded-[6px] flex items-center justify-center md:hidden"
+          >
+            <Search size={15} className="text-white" />
+          </button>
+          <Link href="/cart" className="hidden md:flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+            <ShoppingCart size={15} className="text-white" />
+            <span className="text-white text-xs font-bold">{cart.itemCount}</span>
+          </Link>
         </div>
 
+        {/* Mobile search — collapsible */}
+        {showSearch && (
+          <div className="mt-2 relative md:hidden">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("deals.search")}
+              className="w-full bg-white rounded-[12px] pl-9 pr-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="max-w-7xl mx-auto pb-6">
+
         {/* ── SUBCAT CHIPS ──────────────────────────────────────────────── */}
-        <div className="px-4 pt-3 pb-1">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="px-4 md:px-0 pt-3 pb-1">
+          <div className="flex flex-wrap gap-2 pb-1">
             {CATEGORIES.map((c) => (
               <button
                 key={c.key}
@@ -404,7 +415,7 @@ export default function DealsPage() {
         </div>
 
         {/* ── SORT BAR ──────────────────────────────────────────────────── */}
-        <div className="px-4 py-2 flex items-center justify-between">
+        <div className="px-4 md:px-0 py-2 flex items-center justify-between">
           <p className="text-[11px] text-ink-400">
             {loading ? "…" : <><span className="font-bold text-ink-700">{filtered.length}</span> produits · Écon. <span className="font-bold text-green-500">€{totalSavings.toFixed(0)}</span></>}
           </p>
@@ -418,7 +429,7 @@ export default function DealsPage() {
         </div>
 
         {/* ── PRODUCT GRID ──────────────────────────────────────────────── */}
-        <div className="px-4">
+        <div className="px-4 md:px-0">
           {loading ? (
             <ProductGridSkeleton count={6} />
           ) : products.length === 0 ? (
@@ -498,7 +509,7 @@ export default function DealsPage() {
               )}
 
               {/* Organic products grid */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                 {filtered.map((p) => (
                   <DealsCard key={p.id} product={p} onAdd={handleAddToCart} added={addedIds.has(p.id)} />
                 ))}

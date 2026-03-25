@@ -14,14 +14,14 @@ const EAN_FALLBACKS: Record<string, string[]> = {
 
 // One verified representative EAN per category — explicit, never positional
 export const CATEGORY_EANS: Record<string, string> = {
-  hygiene:        "3029330003533", // Colgate Total Whitening
+  hygiene:        "3029330003533", // Coslys Bio
   alimentaire:    "3017620422003", // Nutella
   alimentation:   "3017620422003", // alias
   boissons:       "3168930010265", // Evian 1.5L
-  entretien:      "0037000013488", // Ariel Pods
+  entretien:      "0037000013488", // Coslys Lessive Bio
   bebe:           "8001841956954", // Pampers Baby-Dry
   snacks:         "7622300441937", // Oreo
-  beaute:         "3600542396035", // L'Oréal Elvive
+  beaute:         "3600542396035", // Melvita Bio
   sport:          "3175681851093",
   pharmacie:      "3400935100018",
   electromenager: "8710103895435",

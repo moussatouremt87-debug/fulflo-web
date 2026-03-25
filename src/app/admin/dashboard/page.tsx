@@ -174,7 +174,7 @@ function Dashboard() {
       ] = await Promise.all([
         supabase.from("ad_campaigns").select("daily_budget_eur, status"),
         supabase.from("supplier_pilots").select("plan, status").eq("status", "active"),
-        supabase.from("orders").select("total_aed, created_at").gte("created_at", since),
+        supabase.from("orders").select("total_eur, created_at").gte("created_at", since),
         supabase.from("customers").select("ltv_eur"),
         supabase.from("products").select("clearance_velocity_days").not("clearance_velocity_days", "is", null),
       ]);
@@ -189,10 +189,9 @@ function Dashboard() {
         .reduce((s: number, p: Record<string, unknown>) => s + (saasPlans[p.plan as string] ?? 0), 0);
       const mrr = Math.round(adMrr + saasMrr);
 
-      // GMV: convert total_aed → EUR (1 AED ≈ 0.25 EUR) — placeholder rate
-      const AED_EUR = 0.25;
+      // GMV: total_eur is already in EUR
       const orders = (ordersRes.data ?? []) as Record<string, unknown>[];
-      const gmv = Math.round(orders.reduce((s, o) => s + Number(o.total_aed) * AED_EUR, 0));
+      const gmv = Math.round(orders.reduce((s, o) => s + Number(o.total_eur), 0));
 
       // GMV by day (last 30 days)
       const gmvMap: Record<string, number> = {};
@@ -202,7 +201,7 @@ function Dashboard() {
       }
       orders.forEach((o) => {
         const day = String(o.created_at).slice(0, 10);
-        if (day in gmvMap) gmvMap[day] = (gmvMap[day] ?? 0) + Number(o.total_aed) * AED_EUR;
+        if (day in gmvMap) gmvMap[day] = (gmvMap[day] ?? 0) + Number(o.total_eur);
       });
       const gmvByDay = Object.entries(gmvMap).map(([date, amount]) => ({ date, amount }));
 

@@ -149,17 +149,17 @@ export async function recordClick(
 
 const DEMO_SPONSORED: SponsoredProduct[] = [
   {
-    productId: "2",       // Nescafé Gold (matches DEMO product id in deals page)
+    productId: "2",       // Favrichon Muesli (matches DEMO product id in deals page)
     campaignId: "11111111-1111-1111-1111-111111111111",
     cpcEur: 1.50,
     position: 1,
-    supplierName: "Nestlé",
+    supplierName: "Favrichon",
   },
   {
-    productId: "6",       // Maggi Bouillon
+    productId: "6",       // Michel et Augustin Biscuits
     campaignId: "22222222-2222-2222-2222-222222222222",
     cpcEur: 2.00,
     position: 2,
-    supplierName: "Nestlé",
+    supplierName: "Favrichon",
   },
 ];

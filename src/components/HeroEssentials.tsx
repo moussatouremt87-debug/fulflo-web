@@ -4,17 +4,17 @@
 const IMGS = [
   {
     src: "https://images.unsplash.com/photo-1585670080336-57b8a9b7e461?w=300&q=80",
-    alt: "Ariel détergent lessive",
+    alt: "Coslys lessive bio",
     height: 140,
   },
   {
     src: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300&q=80",
-    alt: "Nescafé café soluble",
+    alt: "Favrichon muesli bio",
     height: 170,
   },
   {
     src: "https://images.unsplash.com/photo-1571782742078-30d6c6c5b3d1?w=300&q=80",
-    alt: "Colgate dentifrice",
+    alt: "Lamazuna dentifrice solide",
     height: 150,
   },
 ];

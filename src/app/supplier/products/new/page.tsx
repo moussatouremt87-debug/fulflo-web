@@ -26,7 +26,7 @@ interface FormData {
 }
 
 const EMPTY: FormData = {
-  brand: "Nestlé", name: "", category: "alimentation", size: "", ean: "",
+  brand: "", name: "", category: "alimentation", size: "", ean: "",
   description: "", stock_units: "", retail_price: "", expiry_date: "",
   warehouse: "Paris CDG", moq: "1", use_ai_price: true, override_price: "", image_url: "",
 };
@@ -174,7 +174,7 @@ export default function NewProduct() {
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("newProduct.fields.brand")} *</label>
                 <input value={form.brand} onChange={(e) => set("brand", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                  placeholder="Nestlé" />
+                  placeholder="ex: Favrichon, Coslys, Melvita" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("newProduct.fields.category")} *</label>
@@ -188,7 +188,7 @@ export default function NewProduct() {
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("newProduct.fields.name")} *</label>
               <input value={form.name} onChange={(e) => set("name", e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                placeholder="Nescafé Gold Blend 200g" />
+                placeholder="ex: Muesli Croustillant Bio 500g" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

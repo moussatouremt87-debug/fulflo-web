@@ -19,11 +19,11 @@ interface Product {
 }
 
 const DEMO_PRODUCTS: Product[] = [
-  { id: "1", brand: "Nestlé", name: "Nescafé Gold Blend",  size: "200g",       category: "alimentation", stock_units: 183, current_price: 3.99,  original_price: 8.90,  expiry_date: new Date(Date.now() + 110 * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: false },
-  { id: "2", brand: "Nestlé", name: "KitKat Chunky Box",   size: "×24",        category: "alimentation", stock_units: 44,  current_price: 5.49,  original_price: 11.90, expiry_date: new Date(Date.now() + 6   * 86400000).toISOString(), flash_sale_end_time: new Date(Date.now() + 2 * 3600000).toISOString(), ai_pricing_enabled: true  },
-  { id: "3", brand: "Nestlé", name: "Maggi Bouillon ×72",  size: "×72 cubes",  category: "alimentation", stock_units: 320, current_price: 1.59,  original_price: 3.80,  expiry_date: new Date(Date.now() + 35  * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: false },
-  { id: "4", brand: "Nestlé", name: "Nespresso Blend 12",  size: "×50 pods",   category: "boissons",     stock_units: 12,  current_price: 7.20,  original_price: 14.50, expiry_date: new Date(Date.now() + 12  * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: true  },
-  { id: "5", brand: "Nestlé", name: "Milo Activ-Go 400g",  size: "400g",       category: "boissons",     stock_units: 560, current_price: 4.10,  original_price: 8.20,  expiry_date: new Date(Date.now() + 55  * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: false },
+  { id: "1", brand: "Favrichon", name: "Crème de Riz Bio",       size: "400g",       category: "alimentation", stock_units: 183, current_price: 2.49,  original_price: 5.90,  expiry_date: new Date(Date.now() + 110 * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: false },
+  { id: "2", brand: "Favrichon", name: "Galettes Riz Chocolat", size: "×10",        category: "alimentation", stock_units: 44,  current_price: 3.29,  original_price: 6.90,  expiry_date: new Date(Date.now() + 6   * 86400000).toISOString(), flash_sale_end_time: new Date(Date.now() + 2 * 3600000).toISOString(), ai_pricing_enabled: true  },
+  { id: "3", brand: "Favrichon", name: "Muesli Croustillant Bio", size: "1kg",      category: "alimentation", stock_units: 320, current_price: 3.99,  original_price: 8.50,  expiry_date: new Date(Date.now() + 35  * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: false },
+  { id: "4", brand: "Favrichon", name: "Granola Fruits Rouges",  size: "400g",       category: "alimentation", stock_units: 12,  current_price: 2.99,  original_price: 6.50,  expiry_date: new Date(Date.now() + 12  * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: true  },
+  { id: "5", brand: "Favrichon", name: "Flocons Avoine Bio",     size: "750g",       category: "alimentation", stock_units: 560, current_price: 1.89,  original_price: 4.20,  expiry_date: new Date(Date.now() + 55  * 86400000).toISOString(), flash_sale_end_time: null, ai_pricing_enabled: false },
 ];
 
 function getStatus(p: Product): "flash" | "critical" | "active" | "expired" {

@@ -58,8 +58,8 @@ export default function ImpactPage() {
       typeof window !== "undefined"
         ? JSON.parse(sessionStorage.getItem("supplier_session") ?? "{}")
         : {};
-    const supplierId = session.supplier_id ?? "demo-nestle";
-    const companyName = session.company ?? "Nestlé Suisse SA";
+    const supplierId = session.supplier_id ?? "maison-favrichon";
+    const companyName = session.company ?? "Maison Favrichon";
 
     const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
