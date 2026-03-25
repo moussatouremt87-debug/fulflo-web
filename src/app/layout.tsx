@@ -30,6 +30,37 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "FulFlo",
+              url: "https://fulflo.app",
+              description: "Marketplace de surplus de marques premium françaises à -40% à -70%",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://fulflo.app/deals?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "FulFlo",
+              url: "https://fulflo.app",
+              description: "Première marketplace française de surplus CPG. Marques premium à prix réduits, zéro gaspillage.",
+              foundingDate: "2026",
+              areaServed: { "@type": "Country", name: "France" },
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col antialiased">
         <I18nProvider><CartProvider>{children}</CartProvider></I18nProvider>
