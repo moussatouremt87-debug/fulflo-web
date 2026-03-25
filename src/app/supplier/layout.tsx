@@ -3,7 +3,7 @@ import { I18nProvider } from "@/lib/i18n";
 import SupplierShell from "@/components/supplier/SupplierShell";
 
 export const metadata = {
-  title: "Fulflo — Portail Fournisseur",
+  title: "Fulflo — Portail Partenaires",
   description: "Gérez vos stocks surplus avec l'IA",
 };
 

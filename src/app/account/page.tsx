@@ -20,6 +20,7 @@ const MENU_SECTIONS = [
   {
     title: "COMPTE",
     items: [
+      { icon: "⭐", color: "#F4A623", label: "FulFlo Pass", href: "/membership", badge: "PREMIUM" },
       { icon: "💳", color: "#1E40AF", label: "Paiements",      href: "#" },
       { icon: "📍", color: "#7C3AED", label: "Adresses",        href: "#" },
       { icon: "🎁", color: "#059669", label: "Mon code parrainage", href: "#" },
@@ -138,6 +139,7 @@ export default function AccountPage() {
                   {loyaltyPoints.toLocaleString("fr-FR")}
                 </p>
                 <p className="text-white/40 text-[10px] mt-1">points</p>
+                <p className="text-[#A7F3D0] text-xs mt-0.5">≈ €{(loyaltyPoints * 0.01).toFixed(2)} à dépenser · 1pt = €0.01</p>
               </div>
               <div className="flex items-center gap-1.5 bg-gold/20 border border-gold/30 px-3 py-1.5 rounded-full">
                 <Star size={11} className="text-gold fill-gold" />
@@ -154,7 +156,20 @@ export default function AccountPage() {
             <p className="text-white/40 text-[10px]">
               {1000 - (loyaltyPoints % 1000)} pts → Platinum
             </p>
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-wide mb-2">Vos avantages</p>
+              {(TIER_PERKS[tierLabel] ?? []).slice(0, 3).map((b) => (
+                <p key={b} className="text-white/70 text-xs mb-1">✓ {b}</p>
+              ))}
+            </div>
           </div>
+          <button
+            onClick={() => router.push("/membership")}
+            className="w-full mt-3 py-3 rounded-[14px] font-bold text-sm flex items-center justify-center gap-2 shadow-md"
+            style={{ background: "linear-gradient(90deg, #F4A623 0%, #E8831A 100%)", color: "#fff" }}
+          >
+            ⭐ Passer au FulFlo Pass Premium · €9.99/mois
+          </button>
         </div>
 
         {/* ── 3 STAT CARDS ──────────────────────────────────────────────── */}
@@ -172,35 +187,13 @@ export default function AccountPage() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* ── TIER ADVANTAGES ───────────────────────────────────────────── */}
-        <div className="px-4 pt-4">
-          <div className="bg-white border border-ink-100 rounded-[20px] p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-display font-bold text-ink-900 text-sm">Avantages Tier {tierLabel}</h3>
-              <Star size={14} className="text-gold fill-gold" />
+          {/* Eco badge */}
+          <div className="mt-3 bg-[#E8F5EE] rounded-[14px] p-4 flex items-center gap-3 border border-[#C2EDD5]">
+            <span className="text-2xl shrink-0">♻️</span>
+            <div>
+              <span className="font-bold text-[#1D4D35] text-base">{ecoKg} kg</span>
+              <span className="text-sm text-ink-500"> de déchets évités depuis votre inscription</span>
             </div>
-            <div className="space-y-2">
-              {(TIER_PERKS[tierLabel] ?? []).map((perk) => (
-                <div key={perk} className="flex items-center gap-2">
-                  <span className="text-green-500 text-xs font-bold">✓</span>
-                  <span className="text-ink-600 text-xs">{perk}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── FULFLO PASS PREMIUM ───────────────────────────────────────── */}
-        <div className="px-4 pt-4">
-          <div className="rounded-[20px] p-5 text-center" style={{ background: "linear-gradient(135deg, #1D4D35 0%, #246040 100%)" }}>
-            <p className="text-white/70 text-xs mb-1">✦ FulFlo Pass</p>
-            <p className="font-display font-black text-white text-lg mb-1">Passez en Premium</p>
-            <p className="text-white/60 text-xs mb-4">Livraison offerte · -10% sur tout · Accès exclusif</p>
-            <Link href="/membership" className="inline-block bg-white text-green-800 font-bold text-sm px-8 py-2.5 rounded-full hover:bg-green-50 transition-colors">
-              Découvrir FulFlo Pass →
-            </Link>
           </div>
         </div>
 
@@ -231,6 +224,37 @@ export default function AccountPage() {
           </div>
         )}
 
+        {/* ── RECENT ORDERS ─────────────────────────────────────────────── */}
+        {totalOrders > 0 && (
+          <div className="px-4 pt-5">
+            <p className="text-[10px] font-bold text-ink-300 uppercase tracking-widest mb-2 px-1">Dernières commandes</p>
+            <div className="bg-white rounded-[20px] overflow-hidden shadow-xs">
+              {[
+                { id: "ORD-001", created_at: new Date(Date.now() - 2 * 86400000).toISOString(), total_eur: 34.80, status: "delivered", items_count: 3 },
+                { id: "ORD-002", created_at: new Date(Date.now() - 10 * 86400000).toISOString(), total_eur: 18.50, status: "pending",   items_count: 2 },
+              ].map((order, idx, arr) => (
+                <div key={order.id} className={`flex items-center justify-between py-3.5 px-5 ${idx < arr.length - 1 ? "border-b border-ink-100" : ""}`}>
+                  <div>
+                    <p className="text-sm font-semibold text-ink-900">
+                      {new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                    </p>
+                    <p className="text-xs text-ink-400">{order.items_count} article(s)</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-ink-900 text-sm">€{order.total_eur.toFixed(2)}</span>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                      order.status === "delivered" ? "bg-[#E8F5EE] text-[#1D4D35]" :
+                      order.status === "pending"   ? "bg-[#EEF4FE] text-[#2A7AE8]" : "bg-[#FEF0EE] text-[#E8382A]"
+                    }`}>
+                      {order.status === "delivered" ? "Livré" : order.status === "pending" ? "En cours" : "Annulé"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── MENU SECTIONS ─────────────────────────────────────────────── */}
         {MENU_SECTIONS.map((section) => (
           <div key={section.title} className="px-4 pt-5">
@@ -248,6 +272,11 @@ export default function AccountPage() {
                     {item.icon}
                   </div>
                   <span className="flex-1 text-sm font-semibold text-ink-700">{item.label}</span>
+                  {"badge" in item && item.badge && (
+                    <span className="text-[9px] font-black px-2 py-0.5 rounded-full mr-1" style={{ background: "#F4A62320", color: "#F4A623" }}>
+                      {item.badge}
+                    </span>
+                  )}
                   <ChevronRight size={16} className="text-ink-300" />
                 </Link>
               ))}

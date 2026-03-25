@@ -102,7 +102,7 @@ export default function HowItWorksPage() {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t === "client" ? "Pour les clients" : "Pour les fournisseurs"}
+              {t === "client" ? "Pour les clients" : "Pour les Partenaires"}
             </button>
           ))}
         </div>
@@ -156,7 +156,7 @@ export default function HowItWorksPage() {
             href="/supplier/login"
             className="inline-block bg-[#10B981] text-[#1B4332] font-black px-8 py-3 rounded-xl hover:bg-[#D1FAE5] transition-colors"
           >
-            Créer un compte fournisseur →
+            Devenir Partenaire →
           </Link>
         </div>
       )}

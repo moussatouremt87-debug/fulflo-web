@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
@@ -24,12 +24,22 @@ export default function CartPage() {
   const { t } = useI18n();
   const { items, removeItem, updateQuantity, subtotal, serviceFee, shipping, total, totalSavings, clearCart } = useCart();
 
-  const [email]                  = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [delivery, setDelivery] = useState<Delivery>("standard");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+
+  useEffect(() => {
+    import("@/lib/supabase").then(({ supabaseBrowser }) => {
+      supabaseBrowser().auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.email) setUserEmail(session.user.email);
+      });
+    });
+  }, []);
+
+  const email = userEmail ?? "";
 
   const deliveryFee = DELIVERY_OPTIONS.find((d) => d.key === delivery)?.price ?? 0;
   const finalDelivery = delivery === "standard" ? shipping : deliveryFee;
@@ -205,26 +215,29 @@ export default function CartPage() {
 
         {/* ── PROMO CODE ────────────────────────────────────────────────── */}
         <div className="px-4 pt-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
-              <input
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                placeholder="Code promo"
-                className="w-full bg-ink-100 rounded-[12px] pl-9 pr-3 py-3 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-green-400 uppercase"
-              />
-            </div>
-            <button
-              onClick={() => setPromoApplied(!!promoCode)}
-              className="bg-ink-900 text-white font-bold text-sm px-5 rounded-[12px] whitespace-nowrap"
-            >
-              Appliquer
-            </button>
+          <div className={`rounded-[14px] p-3 transition-all ${promoApplied ? "bg-[#E8F5EE] border-2 border-[#3DB87A]" : "border-2 border-dashed border-[#3DB87A] bg-white"}`}>
+            {promoApplied ? (
+              <p className="text-[#3DB87A] text-sm font-bold text-center">✓ {promoCode} — −€10.00 appliqué</p>
+            ) : (
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3DB87A]" />
+                  <input
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="Code promo"
+                    className="w-full bg-transparent rounded-[10px] pl-9 pr-3 py-2.5 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none uppercase"
+                  />
+                </div>
+                <button
+                  onClick={() => setPromoApplied(!!promoCode)}
+                  className="bg-[#1D4D35] text-white font-bold text-sm px-5 rounded-[10px] whitespace-nowrap"
+                >
+                  Appliquer
+                </button>
+              </div>
+            )}
           </div>
-          {promoApplied && (
-            <p className="text-green-500 text-xs font-semibold mt-2">✓ Code {promoCode} appliqué</p>
-          )}
         </div>
 
         {/* ── ORDER SUMMARY ─────────────────────────────────────────────── */}
@@ -268,6 +281,26 @@ export default function CartPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ── EMAIL CONFIRMATION ────────────────────────────────────────── */}
+        <div className="px-4 pt-3">
+          {userEmail ? (
+            <p className="text-xs text-ink-400 text-center py-2">
+              ✓ Confirmation envoyée à <span className="font-medium text-ink-700">{userEmail}</span>
+            </p>
+          ) : (
+            <div>
+              <label className="text-[10px] font-bold text-ink-400 uppercase tracking-widest mb-1.5 block">
+                {t("cart.email-label")}
+              </label>
+              <input
+                type="email"
+                placeholder={t("cart.email-ph")}
+                className="w-full bg-ink-100 border-0 rounded-[12px] px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+          )}
         </div>
 
         {/* ── ECO BADGE ─────────────────────────────────────────────────── */}

@@ -33,7 +33,7 @@ export default function Sidebar() {
       <div className="h-16 flex items-center px-6 border-b border-white/10">
         <a href="/" className="text-xl font-bold text-white tracking-tight">
           fulflo<span className="text-[#10B981]">.</span>
-          <span className="ml-2 text-xs text-white/40 font-normal">Supplier</span>
+          <span className="ml-2 text-xs text-white/40 font-normal">{t("supplier.sidebar.title")}</span>
         </a>
       </div>
 

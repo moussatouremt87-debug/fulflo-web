@@ -65,21 +65,32 @@ export default function SupplierDashboard() {
       />
 
       {/* ── DLC Alert Banner ────────────────────────────────────────────── */}
-      {DEMO_PRODUCTS.filter(p => {
-        const daysLeft = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
-        return daysLeft <= 14;
-      }).length > 0 && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-4">
-          <span className="text-2xl">⚠️</span>
-          <div className="flex-1">
-            <p className="font-bold text-amber-800 text-sm">{t("dashboard.dlcAlert")}</p>
-            <p className="text-amber-600 text-xs mt-0.5">
-              {DEMO_PRODUCTS.filter(p => Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000) <= 14).map(p => p.name).join(", ")}
-            </p>
+      {(() => {
+        const expiring = DEMO_PRODUCTS.filter(p => {
+          const daysLeft = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
+          return daysLeft <= 14 && daysLeft > 0;
+        });
+        if (!expiring.length) return null;
+        return (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-xl">⚠️</span>
+              <p className="font-bold text-amber-800 text-sm">
+                {t("dashboard.dlcAlert").replace("{count}", String(expiring.length))}
+              </p>
+              <a href="/supplier/products" className="ml-auto text-xs font-bold text-amber-700 hover:underline whitespace-nowrap">Gérer →</a>
+            </div>
+            {expiring.map(p => {
+              const days = Math.ceil((new Date(p.expiry_date).getTime() - Date.now()) / 86400000);
+              return (
+                <p key={p.id} className="text-amber-700 text-xs ml-8">
+                  • {p.name} — expire dans {days} jour{days > 1 ? "s" : ""} ({new Date(p.expiry_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })})
+                </p>
+              );
+            })}
           </div>
-          <a href="/supplier/products" className="text-xs font-bold text-amber-700 hover:underline whitespace-nowrap">Gérer →</a>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── KPI row ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

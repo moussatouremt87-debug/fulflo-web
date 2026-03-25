@@ -30,6 +30,7 @@ interface Product {
   category?: string;
   ean?: string;
   image_url?: string;
+  expiry_date?: string;
 }
 
 // ─── Static Data ────────────────────────────────────────────────────────────────
@@ -77,6 +78,7 @@ function dbRowToProduct(row: Record<string, unknown>, idx: number): Product {
     category: String(row.category ?? ""),
     ean: row.ean ? String(row.ean) : undefined,
     image_url: row.image_url ? String(row.image_url) : undefined,
+    expiry_date: row.expiry_date ? String(row.expiry_date) : undefined,
   };
 }
 
@@ -158,11 +160,17 @@ function MiniCard({ product, onAdd, added }: { product: Product; onAdd: (p: Prod
       {/* Body */}
       <div className="p-3">
         <p className="text-[9px] font-black text-ink-400 uppercase tracking-wider mb-0.5 truncate">{product.brand}</p>
-        <p className="text-[13px] font-semibold text-ink-900 leading-tight line-clamp-2 mb-2 min-h-[2.5rem]">{product.name}</p>
+        <p className="text-[13px] font-semibold text-ink-900 leading-tight line-clamp-2 mb-1 min-h-[2.5rem]">{product.name}</p>
+        {product.expiry_date && (
+          <p className="text-[10px] text-ink-300 mb-1">📅 DLC: {new Date(product.expiry_date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</p>
+        )}
+        {product.savings > 0 && (
+          <p className="text-[11px] font-semibold text-[#3DB87A] mb-1">Économisez €{product.savings.toFixed(2)}</p>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <p className="text-green-800 font-black text-[15px] leading-none">€{product.price.toFixed(2)}</p>
-            <p className="text-ink-300 text-[10px] line-through">€{product.originalPrice.toFixed(2)}</p>
+            <p className="text-[13px] font-medium text-[#E8382A] opacity-60 line-through">€{product.originalPrice.toFixed(2)}</p>
           </div>
           <button
             onClick={() => onAdd(product)}
@@ -200,7 +208,7 @@ export default function Home() {
       const sb = createClient(url, key);
       Promise.resolve(
         sb.from("products")
-          .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, image_url, category, ean")
+          .select("id, brand, name, price_retail_eur, price_surplus_eur, discount_percent, stock_units, image_url, category, ean, expiry_date")
           .eq("is_active", true).gt("stock_units", 0)
           .order("discount_percent", { ascending: false }).limit(8)
       ).then(({ data }) => {
@@ -444,7 +452,7 @@ export default function Home() {
             style={{ background: "linear-gradient(135deg, #0F2D1E 0%, #1D4D35 100%)" }}
           >
             <div>
-              <p className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pour les fournisseurs</p>
+              <p className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pour les Partenaires</p>
               <p className="text-white font-display font-bold text-sm leading-snug">
                 Votre surplus mérite mieux que la destruction.
               </p>
