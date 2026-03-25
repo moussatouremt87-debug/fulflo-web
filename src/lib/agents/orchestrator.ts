@@ -16,6 +16,8 @@ import {
 import { getAgentConfig } from "./configs";
 import { executeAgentTool } from "./tools";
 import { getGrowthSubAgent } from "./growth-team";
+import { getOperationsSubAgent } from "./operations-team";
+import { getFinanceSubAgent } from "./finance-team";
 
 // Service role client for agent operations (bypasses RLS)
 function getServiceClient() {
@@ -65,8 +67,12 @@ export async function handleAgentEvent(event: AgentEvent): Promise<AgentResponse
 
     // 3b. If a specific sub-agent is requested, use its specialized prompt
     let systemPrompt = config.system_prompt;
-    if (routing.sub_agent && routing.agent === "growth") {
-      const subAgent = getGrowthSubAgent(routing.sub_agent);
+    if (routing.sub_agent) {
+      const subAgent =
+        routing.agent === "growth" ? getGrowthSubAgent(routing.sub_agent) :
+        routing.agent === "operations" ? getOperationsSubAgent(routing.sub_agent) :
+        routing.agent === "finance" ? getFinanceSubAgent(routing.sub_agent) :
+        undefined;
       if (subAgent) {
         systemPrompt = subAgent.system_prompt;
       }

@@ -13,3 +13,5 @@ export type {
 } from "./types";
 export { EVENT_ROUTING } from "./types";
 export { GROWTH_SUB_AGENTS, GROWTH_PODS, getGrowthSubAgent, getGrowthSubAgentsByPod } from "./growth-team";
+export { OPERATIONS_SUB_AGENTS, OPERATIONS_PODS, getOperationsSubAgent, getOperationsSubAgentsByPod } from "./operations-team";
+export { FINANCE_SUB_AGENTS, FINANCE_PODS, getFinanceSubAgent, getFinanceSubAgentsByPod } from "./finance-team";
